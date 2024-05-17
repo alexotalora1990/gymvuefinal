@@ -6,36 +6,52 @@
       <div class="flex justify-end">
         <q-btn color="green" icon="add" @click="agregarProducto">Agregar</q-btn>
       </div>
-      <div class="formulario" v-show="verFormulario">
-        <q-page>
+      
 
-          <h5>{{ tituloFormulario }}</h5>
+      <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
+    <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
 
-          <q-form class="row q-col-gutter-md" @submit.prevent="procesarFormulario">
-
-            <div>
-              <q-input v-model="descripcion" label="Descripción"
-                :rules="[val => !!val || 'Producto no puede estar vacio ']" />
-            </div>
-            <div>
-              <q-input v-model="cantidad" label="Cantidad"
-                :rules="[val => /^[0-9]+$/.test(val) || 'Precio no puede estar vacio y solo recibe numeros']" />
-            </div>
-            <div>
-              <q-input v-model="valor" label="Valor"
-                :rules="[val => /^[0-9]+$/.test(val) || 'Precio no puede estar vacio y solo recibe numeros']" />
-            </div>
-            <div class="col-12">
-              <q-btn label="Guardar" color="green" type="submit" />
-              <q-btn label="❌" color="red" outline class="q-ml-sm" @click="cerrarFormulario()" />
-            </div>
-
-          </q-form>
-
-        </q-page>
+      
+      <div class="q-flex q-justify-between q-items-center">
+        <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">{{ tituloFormulario }}</h5>
+       
       </div>
 
-      <q-table title="PRODUCTOS" :rows="rows" :columns="columns" row-key="name">
+      <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
+        
+        <q-input
+          filled
+          v-model="descripcion"
+          label="Descripción"
+          :rules="[val => !!val || 'Descripción no puede estar vacía']"
+        />
+        
+       
+        <q-input
+          filled
+          v-model="cantidad"
+          label="Cantidad"
+          type="number"
+          :rules="[val => val && val > 0 || 'Cantidad debe ser un número positivo']"
+        />
+
+        <q-input
+          filled
+          v-model="valor"
+          label="Valor"
+          type="number"
+          :rules="[val => val && val > 0 || 'Valor debe ser un número positivo']"
+        />
+
+        <div class="q-mt-md">
+          <q-btn label="Agregar" color="green" type="submit" />
+          <q-btn label="❌" color="red" outline @click="cerrarFormulario" />
+        </div>
+      </q-form>
+    </q-page>
+  </div>
+
+      <q-table title="PRODUCTOS" title-class="table-title" :rows="rows" :columns="columns" row-key="name">
 
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
@@ -89,7 +105,7 @@ onMounted(() => {
 
 const procesarFormulario = async () => {
   try {
-        if (productoSeleccionado !== null && productoSeleccionado.value !== null)  {
+    if (productoSeleccionado !== null && productoSeleccionado.value !== null) {
       // Si hay un producto seleccionado, se actualiza
       const product = await useProductos.putProducts(productoSeleccionado.value._id, {
         descripcion: descripcion.value,
@@ -100,7 +116,7 @@ const procesarFormulario = async () => {
     } else {
       // Si no hay un producto seleccionado, se agrega
 
-          const product = await useProductos.postProducts( {
+      const product = await useProductos.postProducts({
         descripcion: descripcion.value,
         valor: valor.value,
         cantidad: cantidad.value
@@ -134,7 +150,7 @@ function agregarProducto() {
   productoSeleccionado.value = null
   verFormulario.value = (true)
   tituloFormulario.value = 'Agregar Producto'
-  
+
 
 }
 
@@ -156,30 +172,42 @@ function limpiar() {
 
 <style scoped>
 
-.formulario {
-    position: absolute;      
-     left: 50%; 
-    transform: translate(-50%, 0); 
-    z-index: 1; 
-    background-color: white; 
-    padding: 20px;
-    border: 1px solid #ccc; 
-    border-radius: 5px; 
-width: 60%;
-height: auto;
-margin-bottom: auto;
-   
-  }
+.form-container {
+  min-width: 60%;
+  position: absolute;
+  z-index: 1000;
+  margin-left: 20%;
+ 
 
-.q-card-primary {
-  background-color: green;
+
 }
 
-h5 {
-  background-color: green;
-  width: 100%;
-  color: #ffff;
+.form-content {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: #ffffff;
+  margin-bottom: 10%;
+}
+
+.form-title {
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
   text-align: center;
+  font-weight: bold;
+}
+
+.shadow-2 {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.rounded-borders {
+  border-radius: 8px;
+}
+
+.table-title {
+  text-align: center;
+  position: relative;
+  z-index: 999;
 }
 
 </style>

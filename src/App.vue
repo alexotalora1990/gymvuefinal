@@ -7,15 +7,15 @@
           <q-avatar>
             <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
           </q-avatar>
-          Title
+          GYM
         </q-toolbar-title>
 
         <q-btn dense flat round icon="menu" @click="toggleRightDrawer" />
       </q-toolbar>
     </q-header>
 
-    <q-drawer v-model="rightDrawerOpen" side="right" overlay behavior="desktop">
-      <q-tabs vertical>
+    <q-drawer v-model="rightDrawerOpen" side="right" overlay behavior="desktop" >
+      <q-tabs vertical class="bg-secondary ">
         <q-route-tab to="/" label="inicio" />
         <q-route-tab to="/productos" label="productos" />
         <q-route-tab to="/usuarios" label="usuarios" />
@@ -37,10 +37,7 @@
     <q-footer class="bg-grey-8 text-white">
       <q-toolbar>
         <q-toolbar-title>
-          <q-avatar>
-            <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
-          </q-avatar>
-          <div>Title</div>
+              <div >Todos los derechos reservados</div>
         </q-toolbar-title>
       </q-toolbar>
     </q-footer>
@@ -64,3 +61,21 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+.q-header{
+  height: 60px;
+}
+.q-tab {
+  background-color: green; 
+  color: #ffff;
+    width: 50%;
+  border-radius: 8px;
+    margin: 2%;
+    margin-left: 25%;
+}
+.q-footer{
+  height: 40px;
+  text-align: center;
+}
+</style>

@@ -1,6 +1,46 @@
 <template>
   <div class="q-pa-md">
-    <q-table title="Treats" :rows="rows" :columns="columns" row-key="nombre">
+
+    <div class="flex justify-end">
+        <q-btn color="green" icon="add" >Agregar</q-btn>
+      </div>
+
+      <div class="formulario" >
+        <q-page>
+
+          <h5>{{ tituloFormulario }}</h5>
+
+          <q-form class="row q-col-gutter-md">
+
+            <div>
+              <q-input v-model="nombre" label="Nombre"
+                :rules="[val => !!val || 'Nombre no puede estar vacio ']" />
+            </div>
+            <div>
+              <q-input v-model="telefono" label="Telefono"
+                :rules="[val => /^[0-9]+$/.test(val) || 'Telefono no puede estar vacio y solo recibe numeros']" />
+            </div>
+            <div>
+              <q-input v-model="email" label="Email"
+                :rules="[val => /^[0-9]+$/.test(val) || 'Email no puede estar vacio y solo recibe numeros']" />
+            </div>
+            <div>
+              <q-input v-model="IdSede" label="IdSede"
+                :rules="[val => /^[0-9]+$/.test(val) || 'sede no puede estar vacio y solo recibe numeros']" />
+            </div>
+            <div class="col-12">
+              <q-btn label="Guardar" color="green" type="submit" />
+              <q-btn label="❌" color="red" outline class="q-ml-sm" @click="cerrarFormulario()" />
+            </div>
+
+          </q-form>
+
+        </q-page>
+      </div>
+
+
+
+    <q-table title="Usuarios" :rows="rows" :columns="columns" row-key="nombre">
       <template v-slot:body-cell-estado="props">
         <q-td :props="props">
           <p :style="{ color: props.row.estado === 1 ? 'green' : 'red' }">
@@ -25,8 +65,13 @@
 <script setup>
 import { ref, onMounted } from "vue"
 import { useUsuariosStore } from "../store/usuarios.js"
+const tituloFormulario= ref('Agregar')
 
 const useUsuarios = useUsuariosStore()
+const nombre=ref()
+const telefono =ref()
+const email = ref()
+const sede= ref()
 
 const rows = ref([])
 const columns = ref([
