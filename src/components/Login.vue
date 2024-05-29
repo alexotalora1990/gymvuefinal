@@ -3,7 +3,7 @@
     <h2 class="form-title">Iniciar Sesión</h2>
 
     <div class="form-content">
-      <q-form @submit="onSubmit" @reset="onReset" class="q-gutter-md">
+      <q-form @submit="onSubmit()" @reset="onReset" class="q-gutter-md">
         <q-input
           filled
           type="email"
@@ -23,13 +23,13 @@
           :rules="[val => val && val.length > 0 || 'Contraseña no puede estar vacía']"
         />
 
-        <q-select
+        <!-- <q-select
           filled
-          v-model="role"
+          v-model="roll"
           label="Roll*"
           :options="rollOptions"
           :rules="[val => !!val || 'Debe seleccionar un rol']"
-        />
+        /> -->
 
         <div class="q-mt-md">
           <q-btn label="Ingresar" type="submit" color="primary" />
@@ -40,14 +40,32 @@
 </template>
 
 <script setup>
+
+
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
+import { useUsuariosStore } from "../store/usuarios.js";
 
 const email = ref('');
 const password = ref('');
-const role = ref('');
-const rollOptions = ['Administrador', 'Instructor', 'Recepción'];
 
+const usuariosStore = useUsuariosStore();
+const router = useRouter();
 
+async function onSubmit() {
+  try {
+   let r = await usuariosStore.login(email.value, password.value);
+   console.log(r);
+    router.push('/home');
+  } catch (error) {
+    console.error("Error en el inicio de sesión:", error);
+  }
+}
+
+function onReset() {
+  email.value = '';
+  password.value = '';
+}
 </script>
 
 <style scoped>

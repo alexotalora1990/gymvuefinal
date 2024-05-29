@@ -1,185 +1,208 @@
+
+
 <template>
   <div>
-
     <div class="q-pa-md">
-
       <div class="flex justify-end">
         <q-btn color="green" icon="add" @click="agregarProducto">Agregar</q-btn>
+        <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
+          <q-list>
+            <q-item clickable v-ripple @click="listar('todos')">
+              <q-item-section>Listar Todos</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="listar('activos')">
+              <q-item-section>Listar Activos</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="listar('inactivos')">
+              <q-item-section>Listar Inactivos</q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </div>
-      
 
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
-    <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
+        <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
+          <div class="q-flex q-justify-between q-items-center">
+            <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">{{ tituloFormulario }}</h5>
+          </div>
 
-      
-      <div class="q-flex q-justify-between q-items-center">
-        <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">{{ tituloFormulario }}</h5>
-       
+          <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
+            <q-input filled v-model="nombre" label="Nombre" :rules="[val => !!val || 'Descripción no puede estar vacía']" />
+            <q-input filled v-model="cantidad" label="Cantidad" type="number" :rules="[val => val && val > 0 || 'Cantidad debe ser un número positivo']" />
+            <q-input filled v-model="valor" label="Valor" type="number" :rules="[val => val && val > 0 || 'Valor debe ser un número positivo']" />
+            <div class="q-mt-md">
+              <q-btn label="Agregar" color="green" type="submit" />
+              <q-btn label="❌" color="red" outline @click="cerrarFormulario" />
+            </div>
+          </q-form>
+        </q-page>
       </div>
 
-      <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
-        
-        <q-input
-          filled
-          v-model="descripcion"
-          label="Descripción"
-          :rules="[val => !!val || 'Descripción no puede estar vacía']"
-        />
-        
-       
-        <q-input
-          filled
-          v-model="cantidad"
-          label="Cantidad"
-          type="number"
-          :rules="[val => val && val > 0 || 'Cantidad debe ser un número positivo']"
-        />
-
-        <q-input
-          filled
-          v-model="valor"
-          label="Valor"
-          type="number"
-          :rules="[val => val && val > 0 || 'Valor debe ser un número positivo']"
-        />
-
-        <div class="q-mt-md">
-          <q-btn label="Agregar" color="green" type="submit" />
-          <q-btn label="❌" color="red" outline @click="cerrarFormulario" />
-        </div>
-      </q-form>
-    </q-page>
-  </div>
-
-      <q-table title="PRODUCTOS" title-class="table-title" :rows="rows" :columns="columns" row-key="name">
-
+      <q-table title="Productos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id">
+        <template v-slot:header="props">
+          <q-tr :props="props" style="background-color: #F2630D; color: white; font-size: 24px; ">
+            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+          </q-tr>
+        </template>
+        <template v-slot:body-cell-estado="props">
+          <q-td :props="props">
+            <p :style="{ color: props.row.estado === 1 ? 'green' : 'red' }">{{ props.row.estado === 1 ? 'Activo' : 'Inactivo' }}</p>
+          </q-td>
+        </template>
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
-            <q-btn @click="editarProducto(props.row)">
-              🖋️
-            </q-btn>
+            <q-btn @click="editarProducto(props.row)">🖋️</q-btn>
+            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)">❌</q-btn>
+            <q-btn v-else @click="activar(props.row._id)">✅</q-btn>
           </q-td>
         </template>
       </q-table>
     </div>
-
   </div>
-
 </template>
 
+
 <script setup>
-import { ref, onMounted } from "vue"
-import { useProductsStore } from "../store/productos.js"
-import axios from 'axios';
+import { ref, onMounted } from "vue";
+import { useProductsStore } from "../store/productos.js";
+import { useQuasar,Notify } from 'quasar';
 
-const verFormulario = ref(false)
-
+const $q = useQuasar();
+const verFormulario = ref(false);
 const productoSeleccionado = ref(null);
-const tituloFormulario = ref('Agregar Producto')
+const tituloFormulario = ref('Agregar Producto');
 
-const useProductos = useProductsStore()
-const descripcion = ref()
-const cantidad = ref()
-const valor = ref()
+const useProductos = useProductsStore();
+const nombre = ref();
+const cantidad = ref();
+const valor = ref();
 
-const rows = ref([])
+const rows = ref([]);
 const columns = ref([
-  { name: "descripcion", label: "Nombre", field: "descripcion", align: "center" },
+  { name: "nombre", label: "Nombre", field: "nombre", align: "center" },
   { name: "cantidad", label: "Cantidad", field: "cantidad", align: "center" },
   { name: "valor", label: "Precio", field: "valor", align: "center" },
+  { name: "estado", label: "Estado", field: "estado", align: "center" },
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
-
-])
+]);
 
 async function listarProductos() {
-
-  const r = await useProductos.getProducts()
+  const r = await useProductos.getProducts();
   console.log(r.data.producto);
-  rows.value = r.data.producto
+  rows.value = r.data.producto;
 }
 
+async function listarProductosActivos() {
+  const r = await useProductos.getProductsActivos();
+  console.log(r.data.productosActivos);
+  rows.value = r.data.productosActivos;
+}
+
+async function listarProductosInactivos() {
+  const r = await useProductos.getProductsInactivos();
+  console.log(r.data.productosInactivos);
+  rows.value = r.data.productosInactivos;
+}
 
 onMounted(() => {
-  listarProductos()
-})
+  listarProductos();
+});
 
 const procesarFormulario = async () => {
   try {
-    if (productoSeleccionado !== null && productoSeleccionado.value !== null) {
-      // Si hay un producto seleccionado, se actualiza
-      const product = await useProductos.putProducts(productoSeleccionado.value._id, {
-        descripcion: descripcion.value,
+    if (productoSeleccionado.value !== null) {
+      // Actualiza
+      await useProductos.putProducts(productoSeleccionado.value._id, {
+        nombre: nombre.value,
         valor: valor.value,
-        cantidad: cantidad.value
-
+        cantidad: cantidad.value,
       });
     } else {
-      // Si no hay un producto seleccionado, se agrega
-
-      const product = await useProductos.postProducts({
-        descripcion: descripcion.value,
+      // Agrega
+      await useProductos.postProducts({
+        nombre: nombre.value,
         valor: valor.value,
-        cantidad: cantidad.value
+        cantidad: cantidad.value,
       });
     }
 
     listarProductos();
     cerrarFormulario();
     limpiar();
-    productoSeleccionado.value = null;
   } catch (error) {
     console.error('Error al procesar el formulario:', error);
   }
 };
 
+async function editarProducto(producto) {
+  if (producto.estado !== 1) {
+    Notify.create({
+      type: 'warning',
+      message: 'Para editar un producto debe estar activo',
+      classes: 'customNotify',
+      icon: 'warning',
+      position: 'top',
+      timeout: 3000,
+      actions: [{ label: '❌', color: 'black' }]
+      
+    });
+    return;
+  }
 
+  productoSeleccionado.value = producto;
+  tituloFormulario.value = 'Editar Producto';
 
-function editarProducto(producto) {
-
-  productoSeleccionado.value = producto
-  tituloFormulario.value = 'Editar Producto'
-
-  descripcion.value = producto.descripcion;
+  nombre.value = producto.nombre;
   cantidad.value = producto.cantidad;
   valor.value = producto.valor;
-  verFormulario.value = (true)
-
+  verFormulario.value = true;
 }
 
-function agregarProducto() {
-  productoSeleccionado.value = null
-  verFormulario.value = (true)
-  tituloFormulario.value = 'Agregar Producto'
+async function agregarProducto() {
+  productoSeleccionado.value = null;
+  verFormulario.value = true;
+  tituloFormulario.value = 'Agregar Producto';
+}
 
+async function activar(id) {
+  await useProductos.putProductsActivar(id);
+  listarProductos();
+}
 
+async function desactivar(id) {
+  await useProductos.putProductsDesactivar(id);
+  listarProductos();
 }
 
 function cerrarFormulario() {
-  verFormulario.value = (false)
+  verFormulario.value = false;
   productoSeleccionado.value = null;
-  limpiar()
+  limpiar();
 }
+
 function limpiar() {
-
-  descripcion.value = ("")
-  valor.value = ("")
-  cantidad.value = ("")
+  nombre.value = "";
+  valor.value = "";
+  cantidad.value = "";
 }
 
+function listar(tipo) {
+  if (tipo === 'activos') {
+    listarProductosActivos();
+  } else if (tipo === 'inactivos') {
+    listarProductosInactivos();
+  } else {
+    listarProductos();
+  }
+}
 </script>
 
-
-
 <style scoped>
-
 .form-container {
   min-width: 60%;
   position: absolute;
   z-index: 1000;
   margin-left: 20%;
- 
-
-
 }
 
 .form-content {
@@ -209,5 +232,12 @@ function limpiar() {
   position: relative;
   z-index: 999;
 }
-
+.customNotify {
+  font-size: 18px;
+  background-color: red; /* Cambia el color de fondo a rojo */
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+}
 </style>
+

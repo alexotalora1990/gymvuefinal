@@ -1,32 +1,72 @@
-import Login from "../components/Login.vue"
-import productos from "../components/productos.vue"
-import usuarios from "../components/usuarios.vue"
-import clientes from "../components/clientes.vue"
-import ingresos from "../components/ingresos.vue"
-import sedes from "../components/sedes.vue"
-import mantenimientos from "../components/mantenimientos.vue"
-import maquinas from "../components/maquinas.vue"
-import pagos from "../components/pagos.vue"
-import planes from "../components/planes.vue"
-import ventas from "../components/ventas.vue"
 
-import { createRouter, createWebHashHistory } from "vue-router"
 
-const routes=[
-{path:"/",component:Login},
-{path:"/productos",component:productos},
-{path:"/usuarios",component:usuarios},
-{path:"/clientes",component:clientes},
-{path:"/ingresos",component:ingresos},
-{path:"/sedes",component:sedes},
-{path:"/mantenimientos",component:mantenimientos},
-{path:"/maquinas",component:maquinas},
-{path:"/pagos",component:pagos},
-{path:"/planes",component:planes},
-{path:"/ventas",component:ventas}
+import { createRouter, createWebHashHistory } from 'vue-router';
+import { useUsuariosStore } from '../store/usuarios.js'; 
 
-]
-export const router=createRouter({
-history:createWebHashHistory(),
-routes
-})
+import Login from '../components/Login.vue';
+import Productos from '../components/productos.vue';
+import Usuarios from '../components/usuarios.vue';
+import Clientes from '../components/clientes.vue';
+import Ingresos from '../components/ingresos.vue';
+import Sedes from '../components/sedes.vue';
+import Mantenimientos from '../components/mantenimientos.vue';
+import Maquinas from '../components/maquinas.vue';
+import Pagos from '../components/pagos.vue';
+import Planes from '../components/planes.vue';
+import Ventas from '../components/ventas.vue';
+import Home from "../components/home.vue"
+
+const auth = (to, from, next) => {
+  if (checkAuth()) {
+      const userUsuario = useUsuariosStore()
+      const rol = userUsuario.user.roll
+      if (!to.meta.rol.includes(rol)) {
+          return next({ name: 'login' })
+      }
+      next()
+  } else {
+      return next({ name: 'login' })
+  }
+}
+
+const checkAuth = () => {
+  const useUsuario = useUsuariosStore()
+
+  const token = useUsuario.token
+
+  if (!token) return false
+  return true
+};
+
+const routes = [
+  { path: '/',name:"login", component: Login },
+  { path: '/home', component: Home, children:[
+
+    { path: '/productos', component: Productos, beforeEnter: auth, meta: { rol: ['Administrador','Recepcion' ] } },
+    { path: '/usuarios', component: Usuarios, beforeEnter: auth, meta: { rol: ['Administrador' ] } },
+    { path: '/clientes', component: Clientes,beforeEnter: auth, meta: { rol: ['Administrador','Recepcion','Instructor' ] } },
+    { path: '/ingresos', component: Ingresos, beforeEnter: auth, meta: { rol: ['Administrador','Recepcion' ] } },
+    { path: '/sedes', component: Sedes, beforeEnter: auth, meta: { rol: ['Administrador' ] } },
+    { path: '/mantenimientos', component: Mantenimientos, beforeEnter: auth, meta: { rol: ['Administrador' ] }},
+    { path: '/maquinas', component: Maquinas, beforeEnter: auth, meta: { rol: ['Administrador' ] } },
+    { path: '/pagos', component: Pagos,beforeEnter: auth, meta: { rol: ['Administrador' ] } },
+    { path: '/planes', component: Planes,beforeEnter: auth, meta: { rol: ['Administrador','Recepcion' ] } },
+    { path: '/ventas', component: Ventas, beforeEnter: auth, meta: { rol: ['Administrador','Recepcion' ] } }
+  ]},
+];
+
+const router = createRouter({
+  history: createWebHashHistory(),
+  routes
+});
+
+router.beforeEach((to, from, next) => {
+  const usuariosStore = useUsuariosStore();
+  if (to.matched.some(record => record.meta.requiresAuth) && !usuariosStore.token) {
+    next({ path: '/' }); // Redirige al login si no está autenticado
+  } else {
+    next();
+  }
+});
+
+export default router;

@@ -57,7 +57,7 @@
   
   <script setup>
   import { ref, onMounted } from "vue"
-  import { useMantenimientoStore } from "../store/mantenimientos.js"
+  import { useMaintenanceStore } from "../store/mantenimientos.js"
   import axios from 'axios';
   
   const verFormulario = ref(false)
@@ -65,7 +65,7 @@
   const mantenimientoSeleccionado = ref(null);
   const tituloFormulario = ref('Agregar Mantenimiento')
   
-  const useMantenimiento = useMantenimientoStore()
+  const useMantenimiento = useMaintenanceStore()
   const idmaquina = ref()
   const responsable = ref()
   const descripcion = ref()
@@ -83,7 +83,7 @@
   
   async function listarMantenimiento() {
   
-    const r = await useMantenimiento.getMantenimiento()
+    const r = await useMantenimiento.getMaintenance()
     console.log(r);
     rows.value = r.data.mantenimientos
   }
