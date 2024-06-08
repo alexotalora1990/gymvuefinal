@@ -14,7 +14,29 @@ export const useClientesStore = defineStore("clientes", ()=>{
         }
     };
 
-    const postCustomer = async(cliente)=>{
+
+    const getClientesActivos = async()=>{
+        try {
+            const r = await axios.get("http://localhost:4000/api/clientes/activos",{
+              
+        });
+            return r
+        } catch (error) {
+            return error
+        }
+    };
+    const getClientesInactivos = async()=>{
+        try {
+            const r = await axios.get("http://localhost:4000/api/clientes/inactivos",{
+               
+        });
+            return r
+        } catch (error) {
+            return error
+        }
+    };
+
+    const postClientes = async(cliente)=>{
         try {
             const r = await axios.post("http://localhost:4000/api/clientes", cliente)
             return r
@@ -23,7 +45,16 @@ export const useClientesStore = defineStore("clientes", ()=>{
         }
     };
 
-    const putCustomer =async (id, cliente)=>{
+    const postSeguimiento = async(id, seguimiento)=>{
+        try {
+            const r = await axios.post(`http://localhost:4000/api/clientes/segumiento/${id}`, seguimiento)
+            return r.data.seguimiento
+        } catch (error) {
+            return error
+        }
+    };
+
+    const putClientes =async (id, cliente)=>{
         try {
             const r = await axios.put(`http://localhost:4000/api/clientes/${id}`,cliente)
             return r
@@ -31,7 +62,7 @@ export const useClientesStore = defineStore("clientes", ()=>{
             return error
         }
     };
-    const putCustomerActivar=async(id)=>{
+    const putClientesActivar=async(id)=>{
         try {
             const r = await axios.put(`http://localhost:4000/api/clientes/activar/${id}`)
             return r
@@ -40,7 +71,7 @@ export const useClientesStore = defineStore("clientes", ()=>{
             return error
         }
     };
-    const putCustomerDesactivar=async(id)=>{
+    const putClientesDesactivar=async(id)=>{
         try {
             const r = await axios.put(`http://localhost:4000/api/clientes/desactivar/${id}`)
             return r
@@ -52,6 +83,6 @@ export const useClientesStore = defineStore("clientes", ()=>{
 
    
 
-    return{ getCliente, postCustomer, putCustomer, putCustomerActivar, putCustomerDesactivar}
+    return{ getCliente, postClientes, postSeguimiento,putClientes,putClientesActivar,putClientesDesactivar, getClientesActivos, getClientesInactivos}
 
 })

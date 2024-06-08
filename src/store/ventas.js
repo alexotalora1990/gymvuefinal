@@ -12,7 +12,27 @@ export const useVentasStore = defineStore("ventas", ()=>{
         } catch (error) {
             return error
         }
-    }
+    };
 
-    return{ getVentas}
+    const postVentas=async(venta)=>{
+try {
+    const r=await axios.post("http://localhost:4000/api/ventas", venta)
+    return r
+} catch (error) {
+    return error
+    
+}
+    };
+
+    const putVentas=async(id,venta)=>{
+        try {
+            const r=await axios.put(`http://localhost:4000/api/ventas/${id}`, venta)
+            return r
+        } catch (error) {
+            return error
+            
+        }
+            };
+
+    return{ getVentas, postVentas, putVentas}
 })

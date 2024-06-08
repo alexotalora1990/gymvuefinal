@@ -12,10 +12,37 @@ export const useSedesStore=defineStore("sedes", ()=>{
             return error
         }
     };
-
-    const postSede=async(sede)=>{
+    const getSedesActivas = async()=>{
         try {
-            const r = await axios.post("localhost:4000/api/sedes", sede)
+            const r = await axios.get("http://localhost:4000/api/sedes/activos",{
+            //     headers:{
+            //         "x-token":useUsuarios.token
+            // },
+        });
+            return r
+        } catch (error) {
+            return error
+        }
+    };
+    const getSedesInactivas = async()=>{
+        try {
+            const r = await axios.get("http://localhost:4000/api/sedes/inactivos",{
+            //     headers:{
+            //         "x-token":useUsuarios.token
+            // },
+        });
+            return r
+        } catch (error) {
+            return error
+        }
+    };
+
+
+
+
+    const postSede = async(sede)=>{
+        try {
+            const r = await axios.post("http://localhost:4000/api/sedes", sede)
             return r
         } catch (error) {
             return error
@@ -53,5 +80,5 @@ export const useSedesStore=defineStore("sedes", ()=>{
     }
 
 
-    return{getSede, postSede, putSede, putSedeActivar, putSedeDesactivar}
+    return{getSede, getSedesActivas, getSedesInactivas, postSede, putSede, putSedeActivar, putSedeDesactivar}
 });

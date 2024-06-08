@@ -2,25 +2,34 @@ import {defineStore} from "pinia"
 import axios from "axios"
 import {ref} from "vue"
 
+
 export const useMaintenanceStore = defineStore("mantenimiento", ()=>{
 
     
     const getMaintenance = async()=>{
         try {
-            const res = await axios.get("http://localhost:4000/api/mantenimientos")
-            return res
+            const r = await axios.get("http://localhost:4000/api/mantenimientos")
+            return r
         } catch (error) {
             return error
         }
     };
-    const postMaintenance=async(maintenance)=>{
+    const postMaintenance=async(mantenimiento)=>{
         try {
-            const newMaintenance= await axios.post("http://localhost:4000/api/mantenimientos", maintenance)
-            return newMaintenance
+            const r= await axios.post("http://localhost:4000/api/mantenimientos", mantenimiento)
+            return r
+        } catch (error) {
+            return error
+        }
+    };
+
+    const putMaintenance=async(id, mantenimiento)=>{
+        try {
+            const r= await axios.put(`http://localhost:4000/api/mantenimientos/${id}`, mantenimiento)
+            return r
         } catch (error) {
             return error
         }
     }
-
-    return{ getMaintenance, postMaintenance}
+    return{ getMaintenance, postMaintenance, putMaintenance}
 })

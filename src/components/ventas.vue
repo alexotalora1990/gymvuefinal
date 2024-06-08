@@ -6,12 +6,15 @@
       <div class="q-pa-md">
   
         <div class="flex justify-end">
-          <q-btn color="green" icon="add" @click="agregarVenta">Agregar</q-btn>
+          <q-btn color="green" icon="add" @click="agregarVenta()">Agregar</q-btn>
         </div>
-        <div class="formulario" v-show="verFormulario">
-          <q-page>
+        <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
+        <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
   
-            <h5>{{ tituloFormulario }}</h5>
+          <div class="q-flex q-justify-between q-items-center">
+            <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">{{ tituloFormulario }}</h5>
+
+          </div>
   
             <q-form class="row q-col-gutter-md" @submit.prevent="procesarFormulario">
   
@@ -31,14 +34,8 @@
                 <q-input v-model="cantidad" label="Cantidad"
                   :rules="[val => /^[0-9]+$/.test(val) || 'La cantidad no puede estar vacio y solo recibe numeros']" />
               </div>
-              <div>
-                <q-input v-model="valorUnidad" label="Valor Unidad"
-                  :rules="[val => /^[0-9]+$/.test(val) || 'Precio no puede estar vacio y solo recibe numeros']" />
-              </div>
-              <div>
-                <q-input v-model="total" label="Total"
-                  :rules="[val => /^[0-9]+$/.test(val) || 'El total no puede estar vacio y solo recibe numeros']" />
-              </div>
+              
+             
               <div class="col-12">
                 <q-btn label="Guardar" color="green" type="submit" />
                 <q-btn label="❌" color="red" outline class="q-ml-sm" @click="cerrarFormulario()" />
@@ -49,11 +46,17 @@
           </q-page>
         </div>
   
-        <q-table title="VENTAS" :rows="rows" :columns="columns" row-key="name">
-  
+        <q-table title="Ingresos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id">
+
+        
+<template v-slot:header="props">
+  <q-tr :props="props" style="background-color: #F2630D; color: white; font-size: 24px; ">
+    <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+  </q-tr>
+</template>
           <template v-slot:body-cell-opciones="props">
             <q-td :props="props">
-              <q-btn @click="editarVenta(props.row)">
+              <q-btn @click="editar(props.row)">
                 🖋️
               </q-btn>
             </q-td>
@@ -69,6 +72,7 @@
   import { ref, onMounted } from "vue"
   import { useVentasStore } from "../store/ventas.js"
   import axios from 'axios';
+  import { useQuasar,Notify } from 'quasar';
   
   const verFormulario = ref(false)
   
@@ -80,8 +84,7 @@
   const idproducto = ref ()
   const idsede = ref()
   const cantidad = ref()
-  const valorUnidad = ref()
-  const total = ref()
+  
   
   const rows = ref([])
   const columns = ref([
@@ -111,27 +114,43 @@
     try {
       if (ventaSeleccionada.value !== null) {
         
-        await axios.put(`http://localhost:4000/api/ventas/${ventaSeleccionada.value._id}`, {
+       const venta= await useVentas.putVentas(ventaSeleccionada.value._id, {
           idcliente: idcliente.value,
           idproducto: idproducto.value,
-          idsede: idsede.value,
-          valorUnidad: valorUnidad.value,
-          cantidad: cantidad.value,
-          total: total.value
+          idsede: idsede.value,         
+          cantidad: cantidad.value,      
   
         });
+        Notify.create({
+        type: 'positive',
+        message: 'Venta editada exitosamente',
+        classes: 'customNotify',
+        icon: 'check',
+        position: 'top',
+        timeout: 3000,
+        actions: [{ label: '❌', color: 'black' }]
+      });
       } else {
         
   
-        await axios.post('http://localhost:4000/api/ventas', {
+     const venta=   await useVentas.postVentas({
            
           idcliente: idcliente.value,
           idproducto: idproducto.value,
           idsede: idsede.value,
-          valorUnidad: valorUnidad.value,
+          
           cantidad: cantidad.value,
-          total: total.value
+          
         });
+        Notify.create({
+        type: 'positive',
+        message: 'Venta editada exitosamente',
+        classes: 'customNotify',
+        icon: 'check',
+        position: 'top',
+        timeout: 3000,
+        actions: [{ label: '❌', color: 'black' }]
+      });
       }
   
       listarVentas();
@@ -145,8 +164,8 @@
   
   
   
-  function editarVenta(venta) {
-  
+  function editar(venta) {
+    
     ventaSeleccionada.value = venta
     tituloFormulario.value = 'Editar Venta'
   
@@ -154,8 +173,6 @@
     idproducto.value = venta.idproducto;
     idsede.value = venta.idsede;
     cantidad.value = venta.cantidad;
-    valorUnidad.value = venta.valorUnidad;
-    total.value = venta.total;
     verFormulario.value = (true)
   
   }
@@ -178,9 +195,9 @@
     idcliente.value = ("")
     idproducto.value = ("")
     idsede.value = ("")
-    valor.value = ("")
+    
     cantidad.value = ("")
-    total.value = ("")
+    
 
   }
   
@@ -189,31 +206,41 @@
   
   
   <style scoped>
+  .form-container {
+    min-width: 60%;
+    position: absolute;
+    z-index: 1000;
+    margin-left: 20%;
   
-  .formulario {
-      position: absolute;      
-       left: 50%; 
-      transform: translate(-50%, 0); 
-      z-index: 1; 
-      background-color: white; 
-      padding: 20px;
-      border: 1px solid #ccc; 
-      border-radius: 5px; 
-  width: 60%;
-  height: auto;
-  margin-bottom: auto;
-     
-    }
   
-  .q-card-primary {
-    background-color: green;
+  
   }
   
-  h5 {
-    background-color: green;
-    width: 100%;
-    color: #ffff;
+  .form-content {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    background-color: #ffffff;
+    margin-bottom: 10%;
+  }
+  
+  .form-title {
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
     text-align: center;
+    font-weight: bold;
   }
   
+  .shadow-2 {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  
+  .rounded-borders {
+    border-radius: 8px;
+  }
+  
+  .table-title {
+    text-align: center;
+    position: relative;
+    z-index: 999;
+  }
   </style>

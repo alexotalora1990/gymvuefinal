@@ -26,8 +26,8 @@
             <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">{{ tituloFormulario }}</h5>
           </div>
 
-          <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
-            <q-input filled v-model="nombre" label="Nombre" :rules="[val => !!val || 'Descripción no puede estar vacía']" />
+          <q-form class="row q-col-gutter-md" @submit.prevent="procesarFormulario">
+            <q-input v-model="nombre" label="Nombre" :rules="[val => !!val || 'Descripción no puede estar vacía']" />
             <q-input filled v-model="cantidad" label="Cantidad" type="number" :rules="[val => val && val > 0 || 'Cantidad debe ser un número positivo']" />
             <q-input filled v-model="valor" label="Valor" type="number" :rules="[val => val && val > 0 || 'Valor debe ser un número positivo']" />
             <div class="q-mt-md">

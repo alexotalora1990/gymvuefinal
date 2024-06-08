@@ -1,354 +1,24 @@
-<!-- <template>
-  <div>
-    <div class="q-pa-md">
-      <div class="flex justify-end">
-        <q-btn color="green" icon="add" @click="agregar()">Agregar</q-btn>
-      </div>
 
-      <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
-        <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
-          <div class="q-flex q-justify-between q-items-center">
-            <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">
-              {{ tituloFormulario }}
-            </h5>
-          </div>
-
-          <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
-            <q-input
-              filled
-              v-model="nombre"
-              label="Nombre"
-              :rules="[(val) => !!val || 'Descripción no puede estar vacía']"
-            />
-
-            <q-input
-              filled
-              v-model="documento"
-              label="Documento"
-              type="number"
-              :rules="[
-                (val) => (val && val > 0) || 'Cantidad debe ser un número positivo',
-              ]"
-            />
-
-            <q-input
-              filled
-              v-model="email"
-              label="email"
-              type="mail"
-              :rules="[(val) => !!val || 'email no debe estar vacio']"
-            />
-
-            <q-input
-              filled
-              v-model="direccion"
-              label="Dirección"
-              type="text"
-              :rules="[(val) => !!val || 'Direccion no debe estar vacio']"
-            />
-
-            <q-input
-              filled
-              v-model="telefono"
-              label="telefono"
-              type="number"
-              :rules="[(val) => (val && val > 0) || 'Valor debe ser un número positivo']"
-            />
-
-            <q-input
-              filled
-              v-model="fechaNacimiento"
-              label="Fecha Nacimiento"
-              type="text"
-              :rules="[(val) => !!val || 'Fecha de nacimiento no debe estar vacio']"
-            />
-
-            <q-input
-              filled
-              v-model="idPlan"
-              label="Id Plan"
-              type="text"
-              :rules="[(val) => !!val || 'Id plan no debe estar vacio']"
-            />
-
-            <q-input
-              filled
-              v-model="foto"
-              label="Link Foto"
-              type="text"
-              :rules="[(val) => !!val || 'Foto no debe estar vacio']"
-            />
-
-            <q-input
-              filled
-              v-model="objetivo"
-              label="Objetivos"
-              type="text"
-              :rules="[(val) => !!val || 'Objetivo no debe estar vacio']"
-            />
-
-            <q-input
-              filled
-              v-model="observaciones"
-              label="Observaciones"
-              type="text"
-              :rules="[(val) => !!val || 'Observaciones no debe estar vacio']"
-            />
-
-            <q-input
-              filled
-              v-model="fechaVencimiento"
-              label="Fecha Vencimiento"
-              type="text"
-              :rules="[(val) => !!val || 'Fecha Vencimiento debe ser un número positivo']"
-            />
-
-            <div class="q-mt-md">
-              <q-btn label="Agregar" color="green" type="submit" />
-              <q-btn label="❌" color="red" outline @click="cerrarFormulario()" />
-            </div>
-          </q-form>
-        </q-page>
-      </div>
-
-      <q-table title="Clientes" :rows="rows" :columns="columns" row-key="name">
-        <template v-slot:body-cell-estado="props">
-          <q-td :props="props">
-            <p style="color: green" v-if="props.row.estado == 1">Activo</p>
-            <p style="color: red" v-else>Inactivo</p>
-          </q-td>
-        </template>
-        <template v-slot:body-cell-opciones="props">
-          <q-td :props="props">
-            <q-btn @click="editar(props.row)"> 🖋️ </q-btn>
-
-            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)" >❌</q-btn>
-
-            <q-btn v-else @click="activar(props.row._id)">✅</q-btn>
-
-          </q-td>
-        </template>
-      </q-table>
-    </div>
-  </div>
-</template>
-
-<script setup>
-import { ref, onMounted } from "vue";
-import { useClientesStore } from "../store/clientes.js";
-import axios from 'axios';
-
-const useClientes = useClientesStore();
-
-const verFormulario = ref(false);
-
-const clienteSeleccionado = ref(null);
-const tituloFormulario = ref("Agregar Producto");
-const nombre = ref();
-const documento = ref();
-const email = ref();
-const direccion = ref();
-const telefono = ref();
-const fechaNacimiento = ref();
-const idPlan = ref();
-const foto = ref();
-const objetivo = ref();
-const observaciones = ref();
-const fechaVencimiento = ref();
-
-const rows = ref([]);
-const columns = ref([
-  { name: "nombre", label: "Nombre Usuario", field: "nombre", align: "center" },
-  { name: "documento", label: "Numero Documento", field: "documento", align: "center" },
-  { name: "email", label: "Email", field: "email", align: "center" },
-  { name: "direccion", label: "Direccion", field: "direccion", align: "center" },
-  { name: "telefono", label: "Telefono", field: "telefono", align: "center" },
-  {
-    name: "fechaNacimiento",
-    label: "Fecha nacimiento",
-    field: "fechaNacimiento",
-    align: "center",
-  },
-  { name: "estado", label: "Estado", field: "estado", align: "center" },
-  { name: "plan", label: "Tipo de Plan", field: "plan", align: "center" },
-  { name: "foto", label: "Foto", field: "foto", align: "center" },
-  { name: "objetivo", label: "Objetivo", field: "objetivo", align: "center" },
-  {
-    name: "observaciones",
-    label: "Observaciones",
-    field: "observaciones",
-    align: "center",
-  },
-  {
-    name: "fechaVencimiento",
-    label: "Fecha de Vencimiento",
-    field: "fechaVencimiento",
-    align: "center",
-  },
-  // {name:"fecha",          label:"Fecha de Seguimiento", field:"fecha",          align: "center"},
-  // {name:"peso",           label:"Peso",                 field:"peso",           align: "center"},
-  // {name:"imc",            label:"IMC",                  field:"imc",            align: "center"},
-  // {name:"tbrazo",         label:"Talla de Brazo",       field:"tbrazo",         align: "center"},
-  // {name:"tpierna",        label:"Talla de Pierna",      field:"tpierna",        align: "center"},
-  // {name:"tcintura",       label:"Talla Cintura",        field:"tcintura",       align: "center"},
-  // {name:"estatura",       label:"Estatura",             field:"estatura",       align: "center"},
-  {name:"opciones", label:"Opciones", field:"opciones", align: "center"},
-]);
-
-async function listarClientes() {
-  const r = await useClientes.getCliente();
-  console.log(r.data.Cliente);
-  rows.value = r.data.Cliente;
-}
-
-
-
-onMounted(() => {
-  listarClientes();
-});
-
-const procesarFormulario = async () => {
-  try {
-    if (clienteSeleccionado !== null && clienteSeleccionado.value !== null) {
-      const cliente = await useClientes.putCustomer(clienteSeleccionado.value._id, {
-        
-        nombre: nombre.value,
-        documento: documento.value,
-        email: email.value,
-        direccion: direccion.value,
-        telefono: telefono.value,
-        fechaNacimiento: fechaNacimiento.value,
-        idPlan: idPlan.value,
-        foto: foto.value,
-        objetivo: objetivo.value,
-        observaciones: observaciones.value,
-        fechaVencimiento: fechaVencimiento.value,
-      });
-    } else {
-      const cliente = await useClientes.postCustomer({
-        nombre: nombre.value,
-        documento: documento.value,
-        email: email.value,
-        direccion: direccion.value,
-        telefono: telefono.value,
-        fechaNacimiento: fechaNacimiento.value,
-        idPlan: idPlan.value,
-        foto: foto.value,
-        objetivo: objetivo.value,
-        observaciones: observaciones.value,
-        fechaVencimiento: fechaVencimiento.value,
-      });
-    }
-
-    listarClientes();
-    cerrarFormulario();
-    limpiar();
-    clienteSeleccionado.value = null;
-  } catch (error) {
-    console.error("Error al procesar el formulario:", error);
-  }
-};
-
-async function editar(cliente) {
-  clienteSeleccionado.value = cliente;
-  tituloFormulario.value = "Editar Cliente";
-
-  nombre.value = cliente.nombre;
-  documento.value = cliente.documento;
-  email.value = cliente.email;
-  direccion.value = cliente.direccion;
-  telefono.value = cliente.telefono;
-  fechaNacimiento.value = cliente.fechaNacimiento;
-  idPlan.value = cliente.idPlan;
-  foto.value = cliente.foto;
-  objetivo.value = cliente.objetivo;
-  observaciones.value = cliente.observaciones;
-  fechaVencimiento.value = cliente.fechaVencimiento;
-
-  verFormulario.value = true;
-}
-
-async function agregar() {
-  clienteSeleccionado.value = null;
-  verFormulario.value = true;
-  tituloFormulario.value = "Agregar Cliente";
-}
-
-async function activar(id){
-
-  const route=await useClientes.putCustomerActivar(id)
-  listarClientes()
-
-}
-
-async function desactivar(id){
-  const route = await useClientes.putCustomerDesactivar(id)
-  listarClientes()
-}
-
-
-function cerrarFormulario() {
-  verFormulario.value = false;
-  clienteSeleccionado.value = null;
-  limpiar();
-}
-function limpiar() {
-    nombre.value = "";
-  documento.value = "";
-  email.value = "";
-  direccion.value = "";
-  telefono.value = "";
-  fechaNacimiento.value = "";
-  idPlan.value = "";
-  foto.value = "";
-  objetivo.value = "";
-  observaciones.value = "";
-  fechaVencimiento.value = "";
-}
-</script>
-
-<style scoped>
-.form-container {
-  min-width: 60%;
-  position: absolute;
-  z-index: 1000;
-  margin-left: 20%;
-}
-
-.form-content {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  background-color: #ffffff;
-  margin-bottom: 10%;
-}
-
-.form-title {
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  text-align: center;
-  font-weight: bold;
-}
-
-.shadow-2 {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.rounded-borders {
-  border-radius: 8px;
-}
-
-.table-title {
-  text-align: center;
-  position: relative;
-  z-index: 999;
-}
-</style> -->
 
 <template>
   <div>
     <div class="q-pa-md">
-      <div class="flex justify-end">
-        <q-btn color="green" icon="add" @click="agregar">Agregar</q-btn>
+     
+       <div class="flex justify-end">
+        <q-btn color="green" icon="add" @click="agregar()">agregar</q-btn>
+        <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
+          <q-list>
+            <q-item clickable v-ripple @click="listar('todos')">
+              <q-item-section>Listar Todos</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="listar('activos')">
+              <q-item-section>Listar Activos</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="listar('inactivos')">
+              <q-item-section>Listar Inactivos</q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </div>
 
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
@@ -451,7 +121,7 @@ function limpiar() {
               <q-btn label="Guardar" color="green" type="submit" />
               <q-btn label="editar" color="green" type="submit" />
               <q-btn label="❌" color="red" outline @click="cerrarFormulario" />
-              <!-- <q-btn label="editar" color="green" type="submit" /> -->
+              
             </div>
           </q-form>
         </q-page>
@@ -532,20 +202,33 @@ function limpiar() {
         </q-page>
       </div>
 
-      <q-table title="Clientes" :rows="rows" :columns="columns" row-key="name">
+    
+        <q-table title="Clientes" title-class="table-title" :rows="rows" :columns="columns" row-key="_id">
+        <template v-slot:header="props">
+          <q-tr :props="props" style="background-color: #F2630D; color: white; font-size: 24px; ">
+            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+          </q-tr>
+        </template>
         <template v-slot:body-cell-estado="props">
           <q-td :props="props">
-            <p style="color: green" v-if="props.row.estado == 1">Activo</p>
-            <p style="color: red" v-else>Inactivo</p>
+            <p :style="{ color: props.row.estado === 1 ? 'green' : 'red' }">{{ props.row.estado === 1 ? 'Activo' : 'Inactivo' }}</p>
           </q-td>
         </template>
+
+
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
-            <q-btn @click="editar(props.row)"> 🖋️✍ </q-btn>
+            <q-btn @click="editar(props.row)"> ✍ </q-btn>
             <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)">❌</q-btn>
             <q-btn v-else @click="activar(props.row._id)">✅</q-btn>
-            <q-btn @click="agregarSeguimiento(props.row)">➕ Seguimiento</q-btn>
             
+            
+          </q-td>
+        </template>
+        <template v-slot:body-cell-seguimiento="props">
+          <q-td :props="props">
+                        <q-btn @click="agregarSeguimiento(props.row)">➕ </q-btn>
+                        <q-btn @click="verSeguimiento()">💫 </q-btn>
           </q-td>
         </template>
       </q-table>
@@ -557,6 +240,7 @@ function limpiar() {
 import { ref, onMounted } from 'vue';
 import { useClientesStore } from '../store/clientes.js';
 import axios from 'axios';
+import { useQuasar,Notify } from 'quasar';
 
 const useClientes = useClientesStore();
 
@@ -603,12 +287,38 @@ const columns = ref([
   { name: "objetivo", label: "Objetivo", field: "objetivo", align: "center" },
   { name: "observaciones", label: "Observaciones", field: "observaciones", align: "center" },
   { name: "fechaVencimiento", label: "Fecha Vencimiento", field: "fechaVencimiento", align: "center" },
+  { name: "seguimiento", label: "Seguimiento", field: "seguimiento", align: "center" },
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
 ]);
 
 async function listarClientes() {
   const r = await useClientes.getCliente();
   rows.value = r.data.Cliente;
+  console.log(r.data.Cliente);
+}
+
+
+
+async function listarClientesActivos() {
+  const r = await useClientes.getClientesActivos();
+  console.log(r.data.clientesActivos);
+  rows.value = r.data.clientesActivos;
+}
+
+async function listarClientesInactivos() {
+  const r = await useClientes.getClientesInactivos();
+  console.log(r.data.clientesInactivos);
+  rows.value = r.data.clientesInactivos;
+}
+
+function listar(tipo) {
+  if (tipo === 'activos') {
+    listarClientesActivos();
+  } else if (tipo === 'inactivos') {
+    listarClientesInactivos();
+  } else {
+    listarClientes();
+  }
 }
 
 onMounted(() => {
@@ -618,7 +328,7 @@ onMounted(() => {
 const procesarFormulario = async () => {
   try {
     if (clienteSeleccionado.value !== null) {
-      await useClientes.putCustomer(clienteSeleccionado.value._id, {
+      await useClientes.putClientes(clienteSeleccionado.value._id, {
         nombre: nombre.value,
         documento: documento.value,
         email: email.value,
@@ -632,7 +342,7 @@ const procesarFormulario = async () => {
         fechaVencimiento: fechaVencimiento.value,
       });
     } else {
-      await useClientes.postCustomer({
+      await useClientes.postClientes({
         nombre: nombre.value,
         documento: documento.value,
         email: email.value,
@@ -686,24 +396,15 @@ async function agregarSeguimiento(cliente) {
   verFormularioSeguimiento.value = true;
 }
 
-// const procesarFormularioSeguimiento = async () => {
-//   try {
-//     await axios.post(`/api/clientes/${clienteSeleccionado.value._id}/seguimiento`, seguimiento.value);
-//     listarClientes();
-//     cerrarFormularioSeguimiento();
-//     limpiarSeguimiento();
-//   } catch (error) {
-//     console.error("Error al procesar el formulario de seguimiento:", error);
-//   }
-// };
+
 
 const activar = async (id) => {
-  await useClientes.putCustomerActivar(id);
+  await useClientes.putClientesActivar(id);
   listarClientes();
 };
 
 const desactivar = async (id) => {
-  await useClientes.putCustomerDesactivar(id);
+  await useClientes.putClientesDesactivar(id);
   listarClientes();
 };
 
@@ -768,6 +469,9 @@ const editarSeguimiento = () => {
   verFormularioSeguimiento.value = true;
 };
 
+ function verSeguimiento(){
+
+}
 const procesarFormularioSeguimiento = async () => {
   try {
    

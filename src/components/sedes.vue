@@ -2,10 +2,23 @@
   <div>
     <div class="q-pa-md">
 
+     
       <div class="flex justify-end">
         <q-btn color="green" icon="add" @click="agregar()">Agregar</q-btn>
+        <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
+          <q-list>
+            <q-item clickable v-ripple @click="listar('todos')">
+              <q-item-section>Listar Todos</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="listar('activos')">
+              <q-item-section>Listar Activos</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="listar('inactivos')">
+              <q-item-section>Listar Inactivos</q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
       </div>
-
 
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
@@ -44,11 +57,15 @@
 
 
 
-      <q-table title="Sedes" :rows="rows" :columns="columns" row-key="name">
+      <q-table title="Sedes" title-class="table-title" :rows="rows" :columns="columns" row-key="_id">
+        <template v-slot:header="props">
+          <q-tr :props="props" style="background-color: #F2630D; color: white; font-size: 24px; ">
+            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+          </q-tr>
+        </template>
         <template v-slot:body-cell-estado="props">
           <q-td :props="props">
-            <p style="color: green;" v-if="props.row.estado == 1">Activo</p>
-            <p style="color: red;" v-else>Inactivo</p>
+            <p :style="{ color: props.row.estado === 1 ? 'green' : 'red' }">{{ props.row.estado === 1 ? 'Activo' : 'Inactivo' }}</p>
           </q-td>
         </template>
         <template v-slot:body-cell-opciones="props">
@@ -71,6 +88,7 @@
 import { ref, onMounted } from "vue";
 import { useSedesStore } from "../store/sedes.js";
 import axios from 'axios';
+import { useQuasar,Notify } from 'quasar';
 
 const useSedes = useSedesStore();
 
@@ -95,7 +113,7 @@ const columns = ref([
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
 ]);
 
-async function listar() {
+async function listarSedes() {
   try {
     const r = await useSedes.getSede();
     console.log(r.sede)
@@ -103,38 +121,78 @@ async function listar() {
   } catch (error) {
     console.error('Error al obtener las sedes:', error);
   }
+}async function listarSedesActivas() {
+  const r = await useSedes.getSedesActivas();
+  console.log(r.data.sedeActiva);
+  rows.value = r.data.sedeActiva;
+}
+
+async function listarSedesInactivas() {
+  const r = await useSedes.getSedesInactivas();
+  console.log(r.data.sedeInactiva);
+  rows.value = r.data.sedeInactiva;
 }
 
 
+
 onMounted(() => {
-  listar();
+  listarSedes();
 });
+
+function listar(tipo) {
+  if (tipo === 'activos') {
+    listarSedesActivas();
+  } else if (tipo === 'inactivos') {
+    listarSedesInactivas();
+  } else {
+    listarSedes();
+  }
+}
 
 const procesarFormulario = async () => {
   try {
-    if (sedeSeleccionada !== null && sedeSeleccionada.value !== null) {
-      const sede = await useSedes.putSede(sedeSeleccionada.value._id, {
+    if (  sedeSeleccionada !== null && sedeSeleccionada.value !== null) {
+     const sede= await useSedes.putSede(sedeSeleccionada.value._id, {
         nombre: nombre.value,
         direccion: direccion.value,
         horario: horario.value,
         telefono: telefono.value,
         ciudad: ciudad.value
       });
+      Notify.create({
+        type: 'positive',
+        message: 'Sede editada exitosamente',
+        classes: 'customNotify',
+        icon: 'check',
+        position: 'top',
+        timeout: 3000,
+        actions: [{ label: '❌', color: 'black' }]
+      });
     } else {
-      const sede = await useSedes.postSede({
+     const sede= await useSedes.postSede({
         nombre: nombre.value,
         direccion: direccion.value,
         horario: horario.value,
         telefono: telefono.value,
         ciudad: ciudad.value
 
-      })
-    }
+      });
+      Notify.create({
+        type: 'positive',
+        message: 'Sede agregada exitosamente',
+        classes: 'customNotify',
+        icon: 'check',
+        position: 'top',
+        timeout: 3000,
+        actions: [{ label: '❌', color: 'black' }]
+      });
+         }
 
-    listar()
+    listarSedes()
     cerrarFormulario()
     limpiar()
     sedeSeleccionada.value = null
+
 
   } catch (error) {
     console.error('Error al procesar el formulario:', error);
@@ -142,6 +200,22 @@ const procesarFormulario = async () => {
 }
 
 async function editar(sede) {
+
+
+
+  if (sede.estado !== 1) {
+    Notify.create({
+      type: 'negative',
+      message: 'Para editar una sede debe estar activa',
+      classes: 'customNotify',
+      icon: 'warning',
+      position: 'top',
+      timeout: 3000,
+      actions: [{ label: '❌', color: 'black'  }]
+      
+    });
+    return;
+  }
   tituloFormulario.value = 'Editar Sede'
   sedeSeleccionada.value = sede
 
@@ -157,20 +231,21 @@ async function editar(sede) {
 
 async function agregar() {
   sedeSeleccionada.value = null
-  verFormulario.value = (true)
+  verFormulario.value = true
   tituloFormulario.value = 'Agregar Sede'
+
 }
 
 async function activar(id) {
 
   const route = await useSedes.putSedeActivar(id)
-  listar()
+  listarSedes()
 
 }
 
 async function desactivar(id) {
   const route = await useSedes.putSedeDesactivar(id)
-  listar()
+  listarSedes()
 }
 
 async function cerrarFormulario() {
@@ -227,4 +302,6 @@ function limpiar() {
   position: relative;
   z-index: 999;
 }
+
+
 </style>

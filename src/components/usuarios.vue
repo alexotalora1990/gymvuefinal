@@ -1,9 +1,24 @@
 <template>
   <div class="q-pa-md">
 
-    <div class="flex justify-end">
-      <q-btn color="green" icon="add" @click="agregarUsuario()">Agregar</q-btn>
-    </div>
+   
+     <div class="flex justify-end">
+        <q-btn color="green" icon="add" @click="agregarUsuario()">agregar</q-btn>
+        <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
+          <q-list>
+            <q-item clickable v-ripple @click="listar('todos')">
+              <q-item-section>Listar Todos</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="listar('activos')">
+              <q-item-section>Listar Activos</q-item-section>
+            </q-item>
+            <q-item clickable v-ripple @click="listar('inactivos')">
+              <q-item-section>Listar Inactivos</q-item-section>
+            </q-item>
+          </q-list>
+        </q-btn-dropdown>
+      </div>
+
 
     <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
       <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
@@ -18,14 +33,14 @@
 
           <q-input filled v-model="nombre" label="Nombre" :rules="[val => !!val || 'Nombre no puede estar vacio ']" />
 
-          <!-- <div> -->
+          <div>
             <q-input 
           filled
            v-model="password" 
            label="Constrasenia"
            v-show="verPassword"
            :rules="[val => !!val || 'Email no puede estar vacio ']" />
-<!-- </div> -->
+</div>
             
 
           <q-input filled v-model="telefono" label="Telefono"
@@ -56,8 +71,15 @@
 
 
     <q-table title="Usuarios" :rows="rows" :columns="columns" row-key="nombre">
+ <template v-slot:header="props">
+          <q-tr :props="props" style="background-color: #F2630D; color: white; font-size: 30px; ">
+            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+          </q-tr>
+        </template>
+
+
       <template v-slot:body-cell-estado="props">
-        <q-td :props="props">
+        <q-td :props="props" >
           <p :style="{ color: props.row.estado === 1 ? 'green' : 'red' }">
             {{ props.row.estado === 1 ? 'Activo' : 'Inactivo' }}
           </p>
@@ -82,6 +104,7 @@ import { ref, onMounted } from "vue"
 import { useUsuariosStore } from "../store/usuarios.js"
 import { useSedesStore } from "../store/sedes.js";
 import axios from 'axios';
+import { useQuasar,Notify } from 'quasar';
 const tituloFormulario = ref('Agregar Usuario')
 const useUsuarios = useUsuariosStore()
 const useSedes = useSedesStore()
@@ -116,7 +139,7 @@ async function listarUsuarios() {
 
 }
 
-//listar sedes para traer nombre de sedes
+//listar sedes para traer nombre 
 async function listarSedes() {
   try {
     const r = await useSedes.getSede();
@@ -135,6 +158,29 @@ async function listarSedes() {
 }
 
 
+
+
+async function listarUsuariosActivos() {
+  const r = await useUsuarios.getUserActivos();
+  console.log(r.data.UsuariosActivos);
+  rows.value = r.data.UsuariosActivos;
+}
+
+async function listarUsuariosInactivos() {
+  const r = await useUsuarios.getUserInactivos();
+  console.log(r.data.UsuariosInactivos);
+  rows.value = r.data.UsuariosInactivos;
+}
+
+function listar(tipo) {
+  if (tipo === 'activos') {
+    listarUsuariosActivos();
+  } else if (tipo === 'inactivos') {
+    listarUsuariosInactivos();
+  } else {
+    listarUsuarios();
+  }
+}
 
 
 
@@ -180,6 +226,21 @@ async function agregarUsuario() {
 }
 
 async function editarUsuario(user) {
+  if (user.estado !== 1) {
+    Notify.create({
+      type: 'warning',
+      message: 'Para editar un usuario debe estar activo',
+      classes: 'customNotify',
+      icon: 'warning',
+      position: 'top',
+      timeout: 3000,
+      actions: [{ label: '❌', color: 'black' }]
+      
+    });
+    return;
+  }
+
+
   verFormulario.value = (true)
   verPassword.value=(false)
   usuarioSeleccionado.value = user

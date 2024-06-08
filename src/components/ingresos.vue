@@ -42,7 +42,14 @@
 
 
 
-      <q-table title="Ingresos" :rows="rows" :columns="columns" row-key="name">
+      <q-table title="Ingresos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id">
+
+        
+        <template v-slot:header="props">
+          <q-tr :props="props" style="background-color: #F2630D; color: white; font-size: 24px; ">
+            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+          </q-tr>
+        </template>
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
             <q-btn @click="editar(props.row)">
@@ -60,6 +67,9 @@
 <script setup>
 import { ref, onMounted } from "vue"
 import { useIncomeStore } from "../store/ingresos.js"
+import { useSedesStore } from "../store/sedes.js";
+import { useClientesStore } from '../store/clientes.js';
+
 import axios from 'axios';
 
 const useIngresos = useIncomeStore()
@@ -68,6 +78,8 @@ const verFormulario=ref(false)
 const ingresoSeleccionado =ref(null)
 const idsede =ref()
 const idcliente=ref()
+const useSedes = useSedesStore();
+const useClientes = useClientesStore();
 
 
 const rows = ref([])
@@ -85,8 +97,11 @@ async function listarIngresos() {
   rows.value = r.data.Ingreso
 }
 
+
+
 onMounted(() => {
   listarIngresos()
+  
 })
 
 const procesarFormulario=async()=>{
@@ -187,3 +202,4 @@ function limpiar(){
   z-index: 999;
 }
 </style>
+
