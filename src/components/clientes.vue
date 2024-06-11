@@ -136,18 +136,18 @@
             
           </div>
 
-          <q-form class="q-gutter-md" @submit.prevent="procesarFormularioSeguimiento">
+          <q-form class="q-gutter-md" @submit.prevent="procesarSeguimiento">
             <q-input
               filled
-              v-model="seguimiento.fecha"
+              v-model="fecha"
               label="Fecha"
-              type="date"
+              type="text"
               :rules="[(val) => !!val || 'Fecha no puede estar vacía']"
             />
 
             <q-input
               filled
-              v-model="seguimiento.peso"
+              v-model="peso"
               label="Peso"
               type="number"
               :rules="[(val) => val > 0 || 'Peso debe ser un número positivo']"
@@ -155,7 +155,7 @@
 
             <q-input
               filled
-              v-model="seguimiento.IMC"
+              v-model="IMC"
               label="IMC"
               type="number"
               :rules="[(val) => val > 0 || 'IMC debe ser un número positivo']"
@@ -163,7 +163,7 @@
 
             <q-input
               filled
-              v-model="seguimiento.tBrazo"
+              v-model="tBrazo"
               label="Talla de Brazo"
               type="number"
               :rules="[(val) => val > 0 || 'Talla de Brazo debe ser un número positivo']"
@@ -171,7 +171,7 @@
 
             <q-input
               filled
-              v-model="seguimiento.tPierna"
+              v-model="tPierna"
               label="Talla de Pierna"
               type="number"
               :rules="[(val) => val > 0 || 'Talla de Pierna debe ser un número positivo']"
@@ -179,7 +179,7 @@
 
             <q-input
               filled
-              v-model="seguimiento.tCintura"
+              v-model="tCintura"
               label="Talla de Cintura"
               type="number"
               :rules="[(val) => val > 0 || 'Talla de Cintura debe ser un número positivo']"
@@ -187,14 +187,14 @@
 
             <q-input
               filled
-              v-model="seguimiento.estatura"
+              v-model="estatura"
               label="Estatura"
               type="number"
               :rules="[(val) => val > 0 || 'Estatura debe ser un número positivo']"
             />
 
             <div class="q-mt-md">
-              <q-btn label="Guardar" color="green" type="submit" />
+              <q-btn label="Guardar" color="green" @click="guardarSeguimiento()"/>
               <q-btn icon="edit" @click="editarSeguimiento" class="q-ml-md" />
               <q-btn label="❌" color="red" outline @click="cerrarFormularioSeguimiento" />
             </div>
@@ -228,10 +228,18 @@
         <template v-slot:body-cell-seguimiento="props">
           <q-td :props="props">
                         <q-btn @click="agregarSeguimiento(props.row)">➕ </q-btn>
-                        <q-btn @click="verSeguimiento()">💫 </q-btn>
+                        <q-btn @click="verSeguimiento(props.row)">💫 </q-btn>
           </q-td>
         </template>
       </q-table>
+      <div v-if="clienteSeleccionado">
+      <h3 class="seguimiento-title">Seguimiento de {{ clienteSeleccionado.nombre }}</h3>
+      <q-table
+        :rows="selectedClienteSeguimiento"
+        :columns="columnsSeguimiento"
+        row-key="_id"
+      ></q-table>
+    </div>
     </div>
   </div>
 </template>
@@ -261,19 +269,20 @@ const objetivo = ref('');
 const observaciones = ref('');
 const fechaVencimiento = ref('');
 
-const seguimiento = ref({
-  id: null,
-  fecha: '',
-  peso: 0,
-  IMC: 0,
-  tBrazo: 0,
-  tPierna: 0,
-  tCintura: 0,
-  estatura: 0,
-  createAt: new Date(),
-});
+const fecha = ref('');
+const peso = ref('');
+const IMC = ref('');
+const tBrazo = ref('');
+const tPierna = ref('');
+const tCintura = ref('');
+const estatura = ref('');
 
+const rowsSeguimiento=ref([])
 const rows = ref([]);
+const selectedClienteSeguimiento = ref([]);
+const clienteSeleccionado1 = ref(null);
+
+
 const columns = ref([
   { name: "nombre", label: "Nombre Usuario", field: "nombre", align: "center" },
   { name: "documento", label: "Número Documento", field: "documento", align: "center" },
@@ -291,12 +300,49 @@ const columns = ref([
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
 ]);
 
-async function listarClientes() {
-  const r = await useClientes.getCliente();
-  rows.value = r.data.Cliente;
-  console.log(r.data.Cliente);
+
+const columnsSeguimiento = ref([
+      { name: "fecha", label: "Fecha", field: "fecha", align: "center" },
+      { name: "IMC", label: "IMC", field: "IMC", align: "center" },
+      { name: "estatura", label: "Estatura", field: "estatura", align: "center" },
+      { name: "peso", label: "Peso", field: "peso", align: "center" },
+      { name: "tBrazo", label: "Tamaño Brazo", field: "tBrazo", align: "center" },
+      { name: "tCintura", label: "Tamaño Cintura", field: "tCintura", align: "center" },
+      { name: "tPierna", label: "Tamaño Pierna", field: "tPierna", align: "center" },
+    ]);
+
+
+function formatDate(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
+async function listarClientes() {
+  const r = await useClientes.getCliente();
+  const clientes = r.data.Cliente;
+
+  rows.value = clientes.map(cliente => ({
+    ...cliente,
+    fechaNacimiento: formatDate(cliente.fechaNacimiento),
+    fechaVencimiento: formatDate(cliente.fechaVencimiento),
+  }));
+
+  console.log(rows.value);
+}
+
+function verSeguimiento(cliente) {
+  clienteSeleccionado.value = cliente;
+  selectedClienteSeguimiento.value = cliente.seguimiento.map(seg => ({
+    ...seg,
+    fecha: formatDate(seg.fecha),
+    createAt: formatDate(seg.createAt),
+  }));
+}
+
+      
 
 
 async function listarClientesActivos() {
@@ -321,8 +367,11 @@ function listar(tipo) {
   }
 }
 
+
+
 onMounted(() => {
   listarClientes();
+ 
 });
 
 const procesarFormulario = async () => {
@@ -390,11 +439,8 @@ async function agregar() {
   tituloFormulario.value = "Agregar Cliente";
 }
 
-async function agregarSeguimiento(cliente) {
-  clienteSeleccionado.value = cliente;
-  tituloFormularioSeguimiento.value = `Agregar Seguimiento para ${cliente.nombre}`;
-  verFormularioSeguimiento.value = true;
-}
+  
+
 
 
 
@@ -432,64 +478,48 @@ function cerrarFormularioSeguimiento() {
   verFormularioSeguimiento.value = false;
 }
 
-function limpiarSeguimiento() {
-  seguimiento.value = {
-    fecha: '',
-    peso: 0,
-    IMC: 0,
-    tBrazo: 0,
-    tPierna: 0,
-    tCintura: 0,
-    estatura: 0,
-    createAt: new Date(),
+function editarSeguimiento() {}
+
+
+async function agregarSeguimiento(cliente) {
+      clienteSeleccionado.value = cliente;
+  tituloFormularioSeguimiento.value = `Agregar Seguimiento para ${cliente.nombre}`;
+  verFormularioSeguimiento.value = true;  
+  
+  const idCliente = cliente._id;
+  await procesarSeguimiento(idCliente);   
+      
+    }
+  
+
+
+
+
+
+async function procesarSeguimiento(idCliente) {
+  const seguimiento = {
+    fecha: fecha.value,
+    peso: peso.value,
+    IMC: IMC.value,
+    tBrazo: tBrazo.value,
+    tPierna: tPierna.value,
+    tCintura: tCintura.value,
+    estatura: estatura.value,
   };
 
-}
-const editarSeguimiento = () => {
-  
-  if (!clienteSeleccionado.value || !clienteSeleccionado.value.seguimientoSeleccionado) {
-    console.error("No se ha seleccionado ningún seguimiento para editar.");
-    return;
-  }
-
-  
-  const seguimientoSeleccionado = clienteSeleccionado.value.seguimientoSeleccionado;
-
-
-  seguimiento.value.id = seguimientoSeleccionado.id;
-  seguimiento.value.fecha = seguimientoSeleccionado.fecha;
-  seguimiento.value.peso = seguimientoSeleccionado.peso;
-  seguimiento.value.IMC = seguimientoSeleccionado.IMC;
-  seguimiento.value.tBrazo = seguimientoSeleccionado.tBrazo;
-  seguimiento.value.tPierna = seguimientoSeleccionado.tPierna;
-  seguimiento.value.tCintura = seguimientoSeleccionado.tCintura;
-  seguimiento.value.estatura = seguimientoSeleccionado.estatura;
-
- 
-  verFormularioSeguimiento.value = true;
-};
-
- function verSeguimiento(){
-
-}
-const procesarFormularioSeguimiento = async () => {
   try {
-   
-    if (!seguimiento.value.id) {
-      console.error("No se ha seleccionado ningún seguimiento para editar.");
-      return;
-    }
-
-    
-    await axios.put(`/api/clientes/${clienteSeleccionado.value._id}/seguimiento/${seguimiento.value.id}`, seguimiento.value);
-
-    
-    listarClientes();
-
-    
-    cerrarFormularioSeguimiento();
+    const r = await useClientes.postSeguimiento(idCliente, seguimiento);
+    Notify.create({
+      type: 'positive',
+      message: 'Seguimiento agregado exitosamente',
+      icon: 'check_circle',
+    });
   } catch (error) {
-    console.error("Error al procesar el formulario de seguimiento:", error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al agregar seguimiento',
+      icon: 'error',
+    });
   }
 };
 
@@ -532,5 +562,13 @@ const procesarFormularioSeguimiento = async () => {
   text-align: center;
   position: relative;
   z-index: 999;
+}
+
+.seguimiento-title {
+  background-color: green;
+  padding: 10px;
+  border-radius: 5px;
+  color: white;
+  text-align: center
 }
 </style>

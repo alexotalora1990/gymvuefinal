@@ -32,8 +32,8 @@ import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUsuariosStore } from "../store/usuarios.js";
 
-const email = ref('');
-const password = ref('');
+const email = ref('alex@gmail.com');
+const password = ref('Alex12345$');
 const showPassword = ref(false);
 
 const usuariosStore = useUsuariosStore();
@@ -64,23 +64,35 @@ function onReset() {
 
 
 <style scoped>
-html, body, .container {
-  
-  font-weight: bold;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-}
-
-.container {
+/* html, body {
+  font-family: 'Arial', sans-serif;
   display: flex;
   justify-content: center;
   align-items: center;
   background-image: url("./imagenes/fondo2.jpg");
   background-size: cover;
   background-position: center;
+  background-repeat: no-repeat;
+} */
+
+body {
+      margin: 0;
+      padding: 0;
+      background-image: url("ruta/a/la/imagen.jpg");
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      height: 100vh; 
+    }
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
   height: 100%;
+  
+  background-color: rgba(255, 255, 255, 0); /* Transparente */
+
 }
 
 .logo {

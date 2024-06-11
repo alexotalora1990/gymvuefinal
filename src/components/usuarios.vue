@@ -90,7 +90,7 @@
           <q-btn @click="editarUsuario(props.row)">
             🖋️
           </q-btn>
-          <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)">❌</q-btn>
+          <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row)">❌</q-btn>
 
           <q-btn v-else @click="activar(props.row._id)">✅</q-btn>
         </q-td>
@@ -260,11 +260,24 @@ async function activar(id) {
 
 }
 
-async function desactivar(id) {
-  const r = await useUsuarios.putUserDesactivar(id)
+async function desactivar(user) {
+  // Verificar si el usuario que se intenta desactivar es el mismo que el usuario administrador activo
+  if (user.email === useUsuarios.user.email && user.roll === 'Administrador' && user.estado === 1) {
+    Notify.create({
+      type: 'negative',
+      message: 'No puedes desactivar tu propio registro si eres un administrador activo.',
+      classes: 'customNotify',
+      icon: 'error',
+      position: 'top',
+      timeout: 3000,
+      actions: [{ label: '❌', color: 'black' }]
+    });
+    return;
+  }
+
+  const r = await useUsuarios.putUserDesactivar(user._id)
   listarUsuarios()
 }
-
 
 
 async function cerrarFormulario() {
