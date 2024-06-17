@@ -9,14 +9,13 @@ export const useUsuariosStore = defineStore('usuarios', () => {
     const user = ref({});
     
 
-    //   const urlAPI="https://localhost:4000/api"
-      const urlAPI="https://gymapp-lgjb.onrender.com/api"
+
       
       
 
     const getUser = async () => {
         try {
-            const response = await axios.get(`https://gymapp-lgjb.onrender.com/api/usuarios`);
+            const response = await axios.get("http://localhost:4000/api/usuarios");
             return response;
         } catch (error) {
             return error;
@@ -25,7 +24,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const getUserActivos = async () => {
         try {
-            const r = await axios.get("https://gymapp-lgjb.onrender.com/api/usuarios/activos");
+            const r = await axios.get("http://localhost:4000/api/usuarios/activos");
             return r;
         } catch (error) {
             return error;
@@ -34,7 +33,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const getUserInactivos = async () => {
         try {
-            const r = await axios.get("https://gymapp-lgjb.onrender.com/api/usuarios/inactivos");
+            const r = await axios.get("http://localhost:4000/api/usuarios/inactivos");
             return r;
         } catch (error) {
             return error;
@@ -43,7 +42,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const postUser = async (user) => {
         try {
-            const response = await axios.post("https://gymapp-lgjb.onrender.com/api/usuarios",user)
+            const response = await axios.post("http://localhost:4000/api/usuarios",user)
             return response.data;
             console.log(user);
         } catch (error) {
@@ -53,7 +52,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post("https://gymapp-lgjb.onrender.com/api/usuarios/login", { email, password });
+            const response = await axios.post("http://localhost:4000/api/usuarios/login", { email, password });
             token.value = response.data.token;
             user.value = response.data.usuario;
             return response;
@@ -69,7 +68,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const putUser = async (id, user) => {
         try {
-            const response = await axios.put(`https://gymapp-lgjb.onrender.com/api/usuarios/${id}`, user, {
+            const response = await axios.put(`http://localhost:4000/api/usuarios/${id}`, user, {
                 headers: { Authorization: `Bearer ${token.value}` }
             });
             return response;
@@ -80,7 +79,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const putUserActivar = async (id) => {
         try {
-            const response = await axios.put(`https://gymapp-lgjb.onrender.com/api/usuarios/activar/${id}`, {}, {
+            const response = await axios.put(`http://localhost:4000/api/usuarios/activar/${id}`, {}, {
                 headers: { Authorization: `Bearer ${token.value}` }
             });
             return response;
@@ -91,7 +90,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const putUserDesactivar = async (id) => {
         try {
-            const response = await axios.put(`https://gymapp-lgjb.onrender.com/api/usuarios/desactivar/${id}`, {}, {
+            const response = await axios.put(`http://localhost:4000/api/usuarios/desactivar/${id}`, {}, {
                 headers: { Authorization: `Bearer ${token.value}` }
             });
             return response;
