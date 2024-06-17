@@ -1,64 +1,62 @@
-
 <template>
   <div class="container">
     <img src="./imagenes/fondo-removebg-preview.png" class="background-image">
     
-  <q-layout view="hHh lpR fFf">
+    <q-layout view="hHh lpR fFf">
+      <q-header class="bg-primary text-white">
+        <q-toolbar>
+          <q-toolbar-title>
+            <q-avatar>
+              <img src="./imagenes/logo-removebg-preview.png">
+            </q-avatar>
+            <b> BODY CHAMPION</b>
+          </q-toolbar-title>
 
-    <q-header class="bg-primary text-white">
-      <q-toolbar>
-        <q-toolbar-title>
-          <q-avatar>
-            <img src="./imagenes/logo-removebg-preview.png">
-          </q-avatar>
-          BODY CHAMPION
-        </q-toolbar-title>
+          <q-btn dense flat round icon="menu" @click="toggleRightDrawer" />
+          <q-btn dense flat round icon="logout" @click="logout" />
+        </q-toolbar>
+      </q-header>
 
-        <q-btn dense flat round icon="menu" @click="toggleRightDrawer" />
-        <q-btn dense flat round icon="logout" @click="logout" />
-      </q-toolbar>
-    </q-header>
+      <q-drawer v-model="rightDrawerOpen" side="right" overlay behavior="desktop">
+        <q-tabs vertical class="bg-secondary">
+          <q-route-tab v-for="route in filteredRoutes" :key="route.path" :to="route.path" :label="route.name" />
+        </q-tabs>
+      </q-drawer>
 
-    <q-drawer v-model="rightDrawerOpen" side="right" overlay behavior="desktop">
-      <q-tabs vertical class="bg-secondary">
-        <q-route-tab to="/" label="inicio" />
-        <q-route-tab to="/productos" label="productos" />
-        <q-route-tab to="/usuarios" label="usuarios" />
-        <q-route-tab to="/clientes" label="clientes" />
-        <q-route-tab to="/ingresos" label="ingresos" />
-        <q-route-tab to="/sedes" label="sedes" />
-        <q-route-tab to="/mantenimientos" label="mantenimientos" />
-        <q-route-tab to="/maquinas" label="maquinas" />
-        <q-route-tab to="/pagos" label="pagos" />
-        <q-route-tab to="/planes" label="planes" />
-        <q-route-tab to="/ventas" label="ventas" />
-      </q-tabs>
-    </q-drawer>
+      <q-page-container>
+        <div class="usuario">
+          <h5> {{ user.roll }} </h5>
+        </div>
+        <div>
+          <router-view />
+        </div>
+        
+        
+      </q-page-container>
 
-    <q-page-container>
-      <router-view />
-    </q-page-container>
-
-    <q-footer class="bg-secondary text-black">
-      <q-toolbar>
-        <q-toolbar-title>
-          <div>Todos los derechos reservados</div>
-        </q-toolbar-title>
-      </q-toolbar>
-    </q-footer>
-
-  </q-layout>
+      <q-footer class="bg-secondary text-black">
+        <q-toolbar>
+          <q-toolbar-title>
+            <div><strong>Todos los derechos reservados</strong></div>
+          </q-toolbar-title>
+        </q-toolbar>
+      </q-footer>
+    </q-layout>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUsuariosStore } from '../store/usuarios.js';
+import { routes } from "../routes/routes.js"
+
 
 const rightDrawerOpen = ref(false);
 const router = useRouter();
 const usuariosStore = useUsuariosStore();
+ 
+const user = usuariosStore.user;
 
 const toggleRightDrawer = () => {
   rightDrawerOpen.value = !rightDrawerOpen.value;
@@ -68,6 +66,14 @@ const logout = () => {
   usuariosStore.logout();
   router.push('/');
 };
+
+// Filtrar rutas según el rol del usuario
+const filteredRoutes = computed(() => {
+  const userRole = user.roll;
+  return routes.find(route => route.path === '/home').children.filter(childRoute => {
+    return childRoute.meta.rol.includes(userRole);
+  });
+});
 </script>
 
 <style scoped>
@@ -81,12 +87,21 @@ const logout = () => {
   z-index: 1;
 }
 
+.usuario h5{
+background-color: #f2650d;
+width: 15%;
+text-align: center;
+margin-left: 2%;
+color: white;
+border-radius: 5px;
+}
+
 .background-image {
   position: absolute;
   top: 0;
   left: 0;
   width: 50%;
-  height: 100%; 
+  height: 100%;
   object-fit: cover;
 }
 
@@ -95,7 +110,7 @@ const logout = () => {
 }
 
 .q-tab {
-  background-color: #f2630d;
+  background-color: #f2650d;
   color: #ffff;
   width: 50%;
   border-radius: 8px;
@@ -106,6 +121,7 @@ const logout = () => {
 .q-footer {
   height: 40px;
   text-align: center;
+  font-family: Edwardian Script ITC, Curlz MT, Brush Script MT, Baskerville Old Face, Algerian, Chiller;
 }
-</style>
 
+</style>

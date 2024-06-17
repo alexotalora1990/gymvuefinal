@@ -31,6 +31,7 @@
 import { ref, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUsuariosStore } from "../store/usuarios.js";
+import { useQuasar,Notify } from 'quasar';
 
 const email = ref('alex@gmail.com');
 const password = ref('Alex12345$');
@@ -51,8 +52,22 @@ async function onSubmit() {
     let r = await usuariosStore.login(email.value, password.value);
     console.log(r);
     router.push('/home');
+    Notify.create({
+      type: 'positive',
+      message: 'Ingreso exitoso',
+      icon: 'check_circle',
+      position: 'top',
+      timeout: 3000,
+    });
   } catch (error) {
     console.error("Error en el inicio de sesión:", error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al iniciar sesión',
+      icon: 'error',
+      position: 'top',
+      timeout: 3000,
+    });
   }
 }
 
@@ -64,16 +79,6 @@ function onReset() {
 
 
 <style scoped>
-/* html, body {
-  font-family: 'Arial', sans-serif;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-image: url("./imagenes/fondo2.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-} */
 
 body {
       margin: 0;

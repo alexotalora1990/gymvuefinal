@@ -12,23 +12,26 @@
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
   
           <div class="q-flex q-justify-between q-items-center">
+            <div class="q-mt-md">
+               
+                <q-btn label="❌" color="red" outline class="q-ml-sm" @click="cerrarFormulario()" />
+              </div>
             <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">{{ tituloFormulario }}</h5>
 
           </div>
   
-            <q-form class="row q-col-gutter-md" @submit.prevent="procesarFormulario">
+            <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
   
               <div>
-                <q-input v-model="idcliente" label="ID cliente"
-                  :rules="[val => !!val || 'El id del cliente no puede estar vacio ']" />
+                <q-select filled v-model="idcliente" label="Seleccione un cliente" :options="clienteOptions"
+                :rules="[val => !!val || 'Debe seleccionar un cliente']" />
               </div>
               <div>
-                <q-input v-model="idproducto" label="ID producto"
-                  :rules="[val => !!val || 'El id del producto no puede estar vacio ']" />
+                <q-select filled v-model="idproducto" label="Seleccione un producto" :options="productoOptions"
+                :rules="[val => !!val || 'Debe seleccionar un Producto']" />
               </div>
               <div>
-                <q-input v-model="idsede" label="ID sede"
-                  :rules="[val => !!val || 'El id de la sede no puede estar vacio ']" />
+                <q-select filled v-model="idsede" label="Seleccione una sede" :options="sedeOptions" :rules="[val => !!val || 'Debe seleccionar una sede']" />
               </div>
               <div>
                 <q-input v-model="cantidad" label="Cantidad"
@@ -36,9 +39,9 @@
               </div>
               
              
-              <div class="col-12">
+              <div class="q-mt-md">
                 <q-btn label="Guardar" color="green" type="submit" />
-                <q-btn label="❌" color="red" outline class="q-ml-sm" @click="cerrarFormulario()" />
+                
               </div>
   
             </q-form>
@@ -46,18 +49,18 @@
           </q-page>
         </div>
   
-        <q-table title="Ingresos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id">
+        <q-table title="Ventas" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
 
         
 <template v-slot:header="props">
-  <q-tr :props="props" style="background-color: #F2630D; color: white; font-size: 24px; ">
+  <q-tr :props="props" style="font-size: 24px; " class="table1">
     <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
   </q-tr>
 </template>
           <template v-slot:body-cell-opciones="props">
             <q-td :props="props">
               <q-btn @click="editar(props.row)">
-                🖋️
+                <q-tooltip class="bg-accent">Editar</q-tooltip>🖋️
               </q-btn>
             </q-td>
           </template>
@@ -71,6 +74,9 @@
   <script setup>
   import { ref, onMounted } from "vue"
   import { useVentasStore } from "../store/ventas.js"
+  import { useSedesStore } from '../store/sedes.js';
+  import { useClientesStore } from '../store/clientes.js';
+  import { useProductsStore } from "../store/productos.js";
   import axios from 'axios';
   import { useQuasar,Notify } from 'quasar';
   
@@ -80,17 +86,40 @@
   const tituloFormulario = ref('Agregar Venta')
   
   const useVentas = useVentasStore()
+  const useSedes = useSedesStore();
+  const useClientes = useClientesStore();
+  const useProductos = useProductsStore();
   const idcliente = ref()
   const idproducto = ref ()
   const idsede = ref()
   const cantidad = ref()
   
+  const sedeOptions = ref([]);
+  const clienteOptions = ref([])
+  const productoOptions = ref([])
   
   const rows = ref([])
   const columns = ref([
-    { name: "idcliente", label: "ID cliente", field: "idcliente", align: "center" },
-    { name: "idproducto", label: "ID producto", field: "idproducto", align: "center" },
-    { name: "idsede", label: "ID sede", field: "idsede", align: "center" },
+    { name: "idcliente", label: "ID cliente",
+     field:  (row) => {
+      const cliente = clienteOptions.value.find(Option => Option.value === row.idcliente);
+      return cliente ? cliente.label : '';
+    },
+    align: "center"
+  },
+   
+    { name: "idproducto", label: "ID producto", field: (row) => {
+      const producto = productoOptions.value.find(Option => Option.value === row.idproducto);
+      return producto ? producto.label : '';
+    }, align: "center" },
+    { name: "issede", label: "Sede",
+    field: (row) => {
+      const sede = sedeOptions.value.find(Option => Option.value === row.idsede);
+      return sede ? sede.label : '';
+    },
+    align: "center"
+  },
+     
     { name: "cantidad", label: "Cantidad", field: "cantidad", align: "center" },
     { name: "valorUnidad", label: "Precio", field: "valorUnidad", align: "center" },
     { name: "total", label: "Total", field: "total", align: "center" },
@@ -104,10 +133,70 @@
     console.log(r.data.Venta);
     rows.value = r.data.Venta
   }
+
+  async function listarSedes() {
+  try {
+    const r = await useSedes.getSede();
+    if (r && r.sede) {
+      sedeOptions.value = r.sede.map((sede) => ({
+        label: sede.nombre,
+        value: sede._id,
+      }));
+    } else {
+      console.error('Estructura de respuesta inesperada:', r);
+    }
+  } catch (error) {
+    console.error('Error al obtener las sedes:', error);
+  }
+}
+
+async function listarClientes() {
+  try {
+    const r = await useClientes.getCliente();
+    console.log(r.data.Cliente);
+    if (r && r.data.Cliente) {
+
+      clienteOptions.value = r.data.Cliente.map(idcliente => ({
+        label: idcliente.nombre,
+        value: idcliente._id
+      }));
+      console.log(clienteOptions.value); // Mostrar contenido real del array
+    } else {
+      console.error("Estructura de respuesta inesperada:", r.data.cliente);
+    }
+  } catch (error) {
+    console.error("Error al obtener las clientes:", error);
+  }
+
+}
+
+async function listarProductos() {
+  try {
+    const r = await useProductos.getProducts();
+    console.log(r.data.producto);
+    if (r && r.data.producto) {
+
+      productoOptions.value = r.data.producto.map(idproducto => ({
+        label: idproducto.nombre,
+        value: idproducto._id
+      }));
+      console.log(productoOptions.value); 
+    } else {
+      console.error("Estructura de respuesta inesperada:", r.data.producto);
+    }
+  } catch (error) {
+    console.error("Error al obtener los productos:", error);
+  }
+
+}
+
   
   
   onMounted(() => {
     listarVentas()
+    listarSedes()
+    listarClientes()
+    listarProductos()
   })
   
   const procesarFormulario = async () => {
@@ -168,12 +257,14 @@
     
     ventaSeleccionada.value = venta
     tituloFormulario.value = 'Editar Venta'
+   
   
     idcliente.value = venta.idcliente;
     idproducto.value = venta.idproducto;
     idsede.value = venta.idsede;
     cantidad.value = venta.cantidad;
     verFormulario.value = (true)
+   
   
   }
   
@@ -243,4 +334,17 @@
     position: relative;
     z-index: 999;
   }
+
+  .table1{
+    background-color: #f2650da9;
+     color: white;
+    }
+    
+    .table{
+      background-color: rgba(255, 255, 255, 0.527);
+       
+      }
+      .q-mt-md{
+      text-align: right
+    }
   </style>

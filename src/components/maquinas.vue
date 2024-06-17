@@ -22,6 +22,10 @@
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
           <div class="q-flex q-justify-between q-items-center">
+            <div class="q-mt-md">
+              
+              <q-btn label="❌" color="red" outline @click="cerrarFormulario()" />
+            </div>
             <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">
               {{ tituloFormulario }}
             </h5>
@@ -39,15 +43,15 @@
 
             <div class="q-mt-md">
               <q-btn label="Guardar" color="green" type="submit" />
-              <q-btn label="❌" color="red" outline @click="cerrarFormulario()" />
+              
             </div>
           </q-form>
         </q-page>
       </div>
 
-      <q-table title="Productos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id">
+      <q-table title="Productos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
         <template v-slot:header="props">
-          <q-tr :props="props" style="background-color: #F2630D; color: white; font-size: 24px; ">
+          <q-tr :props="props" style="font-size: 24px;" class="table1">
             <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
           </q-tr>
         </template>
@@ -60,10 +64,10 @@
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
             <q-btn @click="editar(props.row)">
-              🖋️
+              <q-tooltip class="bg-accent">Editar</q-tooltip>🖋️
             </q-btn>
-            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)">❌</q-btn>
-            <q-btn v-else @click="activar(props.row._id)">✅</q-btn>
+            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)"><q-tooltip class="bg-accent">Desactivar</q-tooltip>❌</q-btn>
+            <q-btn v-else @click="activar(props.row._id)"><q-tooltip class="bg-accent">Activar</q-tooltip>✅</q-btn>
           </q-td>
         </template>
       </q-table>
@@ -270,4 +274,17 @@ function listar(tipo) {
   position: relative;
   z-index: 999;
 }
+
+.table1{
+  background-color: #f2650da9;
+   color: white;
+  }
+  
+  .table{
+    background-color: rgba(255, 255, 255, 0.527);
+     
+    }
+    .q-mt-md{
+      text-align: right
+    }
 </style>

@@ -1,4 +1,4 @@
-<template>
+  <template>
   <div>
     <div class="q-pa-md">
       <div class="flex justify-end">
@@ -10,30 +10,29 @@
 
 
           <div class="q-flex q-justify-between q-items-center">
-            <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">{{ tituloFormulario }}</h5>
+            <div class="q-mt-md">
+             
+              <q-btn label="❌" color="red" outline @click="cerrarFormulario()" />
+            </div>
+            <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders"><b>{{ tituloFormulario }}</b></h5>
 
           </div>
 
           <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
 
-            <q-input
-             filled 
-            v-model="idsede"
-             label="Id Sede"
-              :rules="[val => !!val || 'Id Sede no puede estar vacía']" />
+            <q-select filled v-model="idsede" label="Seleccione una sede" :options="sedeOptions"
+            :rules="[val => !!val || 'Debe seleccionar una sede']" />
+
+            <q-select filled v-model="idcliente" label="Seleccione un cliente" :options="clienteOptions"
+              :rules="[val => !!val || 'Debe seleccionar un cliente']" />
 
 
-            <q-input
-             filled 
-             v-model="idcliente"
-              label="Id Cliente"
-               type="text"
-              :rules="[val => !!val || 'Id Cliente no puede estar vacía']" />
+            
 
             
             <div class="q-mt-md">
               <q-btn label="Agregar" color="green" type="submit" />
-              <q-btn label="❌" color="red" outline @click="cerrarFormulario()" />
+              
             </div>
           </q-form>
         </q-page>
@@ -42,18 +41,18 @@
 
 
 
-      <q-table title="Ingresos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id">
+      <q-table title="Ingresos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
 
         
         <template v-slot:header="props">
-          <q-tr :props="props" style="background-color: #F2630D; color: white; font-size: 24px; ">
-            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
+          <q-tr :props="props" style="font-size: 24px; " class="table1">
+            <q-th v-for="col in props.cols" :key="col.name" :props="props" >{{ col.label }}</q-th>
           </q-tr>
         </template>
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
             <q-btn @click="editar(props.row)">
-              🖋️
+              🖋️<q-tooltip class="bg-accent">Editar</q-tooltip>
             </q-btn>
           </q-td>
         </template>
@@ -81,11 +80,22 @@ const idcliente=ref()
 const useSedes = useSedesStore();
 const useClientes = useClientesStore();
 
+const sedeOptions = ref([])
+const clienteOptions = ref([])
+
 
 const rows = ref([])
 const columns = ref([
-  { name: "idsede", label: "ID Sede", field: "idsede", align: "center" },
-  { name: "idcliente", label: "ID Cliente", field: "idcliente", align: "center" },
+  { name: "idsede", label: "Sede", field:  (row) => {
+      const sede = sedeOptions.value.find(option => option.value === row.idsede);
+      return sede ? sede.label : '';
+    },
+     align: "center" },
+  { name: "idcliente", label: "ID Cliente", field:  (row) => {
+      const cliente = clienteOptions.value.find(option => option.value === row.idcliente);
+      return cliente ? cliente.label : '';
+    },
+     align: "center" },
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
 
 ])
@@ -97,11 +107,53 @@ async function listarIngresos() {
   rows.value = r.data.Ingreso
 }
 
+async function listarSedes() {
+  try {
+    const r = await useSedes.getSede();
+    console.log(r.sede)
+    if (r && r.sede) {
+      
+      sedeOptions.value = r.sede.map(idsede => ({
+        label: idsede.nombre,
+        value: idsede._id
+      }));
+      console.log(sedeOptions.value); // Mostrar contenido real del array
+    } else {
+      console.error("Estructura de respuesta inesperada:", r.sede);
+    }
+  } catch (error) {
+    console.error("Error al obtener las sedes:", error);
+  }
+}
+
+async function listarclientes() {
+  try {
+    const r = await useClientes.getCliente();
+    console.log(r.data.Cliente);
+    if (r && r.data.Cliente) {
+      clienteOptions.value = r.data.Cliente.map(idcliente => ({
+        label: idcliente.nombre,
+        value: idcliente._id
+      }));
+      console.log(clienteOptions.value); // Mostrar contenido real del array
+    } else {
+      console.error("Estructura de respuesta inesperada:", r.data.cliente);
+    }
+  } catch (error) {
+    console.error("Error al obtener los clientes:", error);
+  }
+}
+
+
+
+
+
 
 
 onMounted(() => {
   listarIngresos()
-  
+  listarSedes()
+  listarclientes()
 })
 
 const procesarFormulario=async()=>{
@@ -170,8 +222,6 @@ function limpiar(){
   z-index: 1000;
   margin-left: 20%;
 
-
-
 }
 
 .form-content {
@@ -201,5 +251,18 @@ function limpiar(){
   position: relative;
   z-index: 999;
 }
-</style>
 
+.table1{
+  background-color: #f2650da9;
+   color: white;
+  }
+  
+  .table{
+    background-color: rgba(255, 255, 255, 0.527);
+     
+    }
+    .q-mt-md{
+      text-align: right
+    }
+</style>
+ 

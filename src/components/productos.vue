@@ -38,9 +38,9 @@
         </q-page>
       </div>
 
-      <q-table title="Productos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id">
+      <q-table title="Productos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
         <template v-slot:header="props">
-          <q-tr :props="props" style="background-color: #F2630D; color: white; font-size: 24px; ">
+          <q-tr :props="props" style="font-size: 24px; " class="table1">
             <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
           </q-tr>
         </template>
@@ -51,9 +51,9 @@
         </template>
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
-            <q-btn @click="editarProducto(props.row)">🖋️</q-btn>
-            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)">❌</q-btn>
-            <q-btn v-else @click="activar(props.row._id)">✅</q-btn>
+            <q-btn @click="editarProducto(props.row)"><q-tooltip class="bg-accent">Editar</q-tooltip>🖋️</q-btn>
+            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)"><q-tooltip class="bg-accent">Desactivar</q-tooltip>❌</q-btn>
+            <q-btn v-else @click="activar(props.row._id)"><q-tooltip class="bg-accent">Activar</q-tooltip>✅</q-btn>
           </q-td>
         </template>
       </q-table>
@@ -239,5 +239,15 @@ function listar(tipo) {
   padding: 10px;
   border-radius: 8px;
 }
+
+.table1{
+  background-color: #f2650da9;
+   color: white;
+  }
+  
+  .table{
+    background-color: rgba(255, 255, 255, 0.527);
+     
+    }
 </style>
 

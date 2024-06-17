@@ -1,112 +1,5 @@
 
 
-// import { defineStore } from 'pinia';
-// import axios from 'axios';
-// import { ref } from 'vue';
-// import piniaPluginPersistedstate from 'pinia-plugin-persistedstate';
-
-// export const useUsuariosStore = defineStore('usuarios', () => {
-//     const token = ref('');
-//     const user = ref({});
-
-//     const getUser = async () => {
-//         try {
-//             const response = await axios.get("http://localhost:4000/api/usuarios", {
-               
-//             });
-//             return response;
-//         } catch (error) {
-//             return error;
-//         }
-//     };
-
-//     const getUserActivos = async()=>{
-//         try {
-//             const r = await axios.get("http://localhost:4000/api/usuarios/activos",{
-              
-//         });
-//             return r
-//         } catch (error) {
-//             return error
-//         }
-//     };
-//     const getUserInactivos = async()=>{
-//         try {
-//             const r = await axios.get("http://localhost:4000/api/usuarios/inactivos",{
-               
-//         });
-//             return r
-//         } catch (error) {
-//             return error
-//         }
-//     };
-
-    
-
-//     const postUser = async (newUser) => {
-//         try {
-//             const response = await axios.post("http://localhost:4000/api/usuarios", newUser, {
-//                 headers: { Authorization: `Bearer ${token.value}` }
-//             });
-//             return response;
-//         } catch (error) {
-//             return error;
-//         }
-//     };
-
-//     const login = async (email, password) => {
-//         try {
-//             const response = await axios.post("http://localhost:4000/api/usuarios/login", { email, password });
-//             token.value = response.data.token;
-//             user.value = response.data.usuario;
-//             return response;
-//         } catch (error) {
-//             return error;
-//         }
-//     };
-
-//     const putUser = async (id, updatedUser) => {
-//         try {
-//             const response = await axios.put(`http://localhost:4000/api/usuarios/${id}`, updatedUser, {
-//                 headers: { Authorization: `Bearer ${token.value}` }
-//             });
-//             return response;
-//         } catch (error) {
-//             return error;
-//         }
-//     };
-
-//     const putUserActivar = async (id) => {
-//         try {
-//             const response = await axios.put(`http://localhost:4000/api/usuarios/activar/${id}`, {}, {
-//                 headers: { Authorization: `Bearer ${token.value}` }
-//             });
-//             return response;
-//         } catch (error) {
-//             return error;
-//         }
-//     };
-
-//     const putUserDesactivar = async (id) => {
-//         try {
-//             const response = await axios.put(`http://localhost:4000/api/usuarios/desactivar/${id}`, {}, {
-//                 headers: { Authorization: `Bearer ${token.value}` }
-//             });
-//             return response;
-//         } catch (error) {
-//             return error;
-//         }
-//     };
-
-   
-
-//     return { token, user, getUser,getUserActivos,getUserInactivos, postUser, login, putUser, putUserActivar, putUserDesactivar};
-// }, {
-//     persist: true 
-// });
-
-
-
 import { defineStore } from 'pinia';
 import axios from 'axios';
 import { ref } from 'vue';
@@ -114,10 +7,16 @@ import { ref } from 'vue';
 export const useUsuariosStore = defineStore('usuarios', () => {
     const token = ref('');
     const user = ref({});
+    
+
+    //   const urlAPI="https://localhost:4000/api"
+      const urlAPI="https://gymapp-lgjb.onrender.com/api"
+      
+      
 
     const getUser = async () => {
         try {
-            const response = await axios.get("http://localhost:4000/api/usuarios");
+            const response = await axios.get(`https://gymapp-lgjb.onrender.com/api/usuarios`);
             return response;
         } catch (error) {
             return error;
@@ -126,7 +25,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const getUserActivos = async () => {
         try {
-            const r = await axios.get("http://localhost:4000/api/usuarios/activos");
+            const r = await axios.get("https://gymapp-lgjb.onrender.com/api/usuarios/activos");
             return r;
         } catch (error) {
             return error;
@@ -135,19 +34,18 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const getUserInactivos = async () => {
         try {
-            const r = await axios.get("http://localhost:4000/api/usuarios/inactivos");
+            const r = await axios.get("https://gymapp-lgjb.onrender.com/api/usuarios/inactivos");
             return r;
         } catch (error) {
             return error;
         }
     };
 
-    const postUser = async (newUser) => {
+    const postUser = async (user) => {
         try {
-            const response = await axios.post("http://localhost:4000/api/usuarios", newUser, {
-                headers: { Authorization: `Bearer ${token.value}` }
-            });
-            return response;
+            const response = await axios.post("https://gymapp-lgjb.onrender.com/api/usuarios",user)
+            return response.data;
+            console.log(user);
         } catch (error) {
             return error;
         }
@@ -155,7 +53,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post("http://localhost:4000/api/usuarios/login", { email, password });
+            const response = await axios.post("https://gymapp-lgjb.onrender.com/api/usuarios/login", { email, password });
             token.value = response.data.token;
             user.value = response.data.usuario;
             return response;
@@ -169,9 +67,9 @@ export const useUsuariosStore = defineStore('usuarios', () => {
         user.value = {};
     };
 
-    const putUser = async (id, updatedUser) => {
+    const putUser = async (id, user) => {
         try {
-            const response = await axios.put(`http://localhost:4000/api/usuarios/${id}`, updatedUser, {
+            const response = await axios.put(`https://gymapp-lgjb.onrender.com/api/usuarios/${id}`, user, {
                 headers: { Authorization: `Bearer ${token.value}` }
             });
             return response;
@@ -182,7 +80,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const putUserActivar = async (id) => {
         try {
-            const response = await axios.put(`http://localhost:4000/api/usuarios/activar/${id}`, {}, {
+            const response = await axios.put(`https://gymapp-lgjb.onrender.com/api/usuarios/activar/${id}`, {}, {
                 headers: { Authorization: `Bearer ${token.value}` }
             });
             return response;
@@ -193,7 +91,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const putUserDesactivar = async (id) => {
         try {
-            const response = await axios.put(`http://localhost:4000/api/usuarios/desactivar/${id}`, {}, {
+            const response = await axios.put(`https://gymapp-lgjb.onrender.com/api/usuarios/desactivar/${id}`, {}, {
                 headers: { Authorization: `Bearer ${token.value}` }
             });
             return response;
