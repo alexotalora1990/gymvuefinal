@@ -7,7 +7,7 @@ export const useIncomeStore = defineStore("ingresos", ()=>{
     
     const getIncome= async()=>{
         try {
-            const res = await axios.get("http://localhost:4000/api/ingresos")
+            const res = await axios.get("ingresos")
             return res
         } catch (error) {
             return error 
@@ -15,7 +15,7 @@ export const useIncomeStore = defineStore("ingresos", ()=>{
     };
     const postIncome= async(income)=>{
         try {
-            const newIncome=await axios.post("http://localhost:4000/api/ingresos", income)
+            const newIncome=await axios.post("ingresos", income)
             return newIncome
         } catch (error) {
             return error            
@@ -23,7 +23,7 @@ export const useIncomeStore = defineStore("ingresos", ()=>{
     };
     const putIncome=async(id,income)=>{
         try {
-            const upadteIncome= await axios.put(`http://localhost:4000/api/ingresos/${id}`, income)
+            const upadteIncome= await axios.put(`ingresos/${id}`, income)
         } catch (error) {
             
         }

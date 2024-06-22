@@ -81,6 +81,7 @@
   import { useMaintenanceStore } from "../store/mantenimientos.js"
   import { useMaquinaStore } from '../store/maquinas.js';
   import axios from 'axios';
+  import { useQuasar,Notify } from 'quasar';
 
  
   const useMaquina = useMaquinaStore();
@@ -164,12 +165,30 @@
         descripcion: descripcion.value,
         valor: valor.value
       });
+      Notify.create({
+        type: 'positive',
+        message: 'Mantenimiento editado exitosamente',
+        classes: 'customNotify',
+        icon: 'check',
+        position: 'top',
+        timeout: 3000,
+        actions: [{ label: '❌', color: 'black' }]
+      });
     } else {
       const mantenimiento = await useMantenimiento.postMaintenance({
         idmaquina: idMaquinaSeleccionada, 
         responsable: responsable.value,
         descripcion: descripcion.value,
         valor: valor.value
+      });
+      Notify.create({
+        type: 'positive',
+        message: 'Mantenimineto agregado exitosamente',
+        classes: 'customNotify',
+        icon: 'check',
+        position: 'top',
+        timeout: 3000,
+        actions: [{ label: '❌', color: 'black' }]
       });
     }
     listarMantenimiento();
@@ -268,7 +287,7 @@ function agregarMantenimiento() {
   }
   
   .table{
-    background-color: rgba(255, 255, 255, 0.527);
+    background-color: rgba(255, 255, 255, 0.9);
      
     }
     .q-mt-md{

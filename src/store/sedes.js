@@ -6,7 +6,7 @@ export const useSedesStore=defineStore("sedes", ()=>{
 
     const getSede= async()=>{
         try {
-            const r= await axios.get("http://localhost:4000/api/sedes")
+            const r= await axios.get("sedes")
             return r.data
         } catch (error) {
             return error
@@ -14,7 +14,7 @@ export const useSedesStore=defineStore("sedes", ()=>{
     };
     const getSedesActivas = async()=>{
         try {
-            const r = await axios.get("http://localhost:4000/api/sedes/activos",{
+            const r = await axios.get("sedes/activos",{
             //     headers:{
             //         "x-token":useUsuarios.token
             // },
@@ -26,7 +26,7 @@ export const useSedesStore=defineStore("sedes", ()=>{
     };
     const getSedesInactivas = async()=>{
         try {
-            const r = await axios.get("http://localhost:4000/api/sedes/inactivos",{
+            const r = await axios.get("sedes/inactivos",{
             //     headers:{
             //         "x-token":useUsuarios.token
             // },
@@ -42,7 +42,7 @@ export const useSedesStore=defineStore("sedes", ()=>{
 
     const postSede = async(sede)=>{
         try {
-            const r = await axios.post("http://localhost:4000/api/sedes", sede)
+            const r = await axios.post("sedes", sede)
             return r
         } catch (error) {
             return error
@@ -50,7 +50,7 @@ export const useSedesStore=defineStore("sedes", ()=>{
     };
     const putSede=async(id, sede)=>{
         try {
-            const r =await axios.put(`http://localhost:4000/api/sedes/${id}`, sede)
+            const r =await axios.put(`sedes/${id}`, sede)
             return r
         } catch (error) {
             return error
@@ -59,7 +59,7 @@ export const useSedesStore=defineStore("sedes", ()=>{
 
     const putSedeActivar =async (id)=>{
         try {
-            const r = await axios.put(`http://localhost:4000/api/sedes/activar/${id}`)
+            const r = await axios.put(`sedes/activar/${id}`)
             return r
         } catch (error) {
             return error
@@ -70,7 +70,7 @@ export const useSedesStore=defineStore("sedes", ()=>{
     
     const putSedeDesactivar =async (id)=>{
         try {
-            const r = await axios.put(`http://localhost:4000/api/sedes/desactivar/${id}`)
+            const r = await axios.put(`sedes/desactivar/${id}`)
             return r
         } catch (error) {
             return error

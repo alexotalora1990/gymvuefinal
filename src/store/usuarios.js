@@ -5,6 +5,9 @@ import axios from 'axios';
 import { ref } from 'vue';
 
 export const useUsuariosStore = defineStore('usuarios', () => {
+
+ 
+    
     const token = ref('');
     const user = ref({});
     
@@ -15,7 +18,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const getUser = async () => {
         try {
-            const response = await axios.get("http://localhost:4000/api/usuarios");
+            const response = await axios.get("usuarios");
             return response;
         } catch (error) {
             return error;
@@ -24,7 +27,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const getUserActivos = async () => {
         try {
-            const r = await axios.get("http://localhost:4000/api/usuarios/activos");
+            const r = await axios.get("usuarios/activos");
             return r;
         } catch (error) {
             return error;
@@ -33,7 +36,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const getUserInactivos = async () => {
         try {
-            const r = await axios.get("http://localhost:4000/api/usuarios/inactivos");
+            const r = await axios.get("usuarios/inactivos");
             return r;
         } catch (error) {
             return error;
@@ -42,7 +45,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const postUser = async (user) => {
         try {
-            const response = await axios.post("http://localhost:4000/api/usuarios",user)
+            const response = await axios.post("usuarios",user)
             return response.data;
             console.log(user);
         } catch (error) {
@@ -52,7 +55,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post("http://localhost:4000/api/usuarios/login", { email, password });
+            const response = await axios.post("usuarios/login",{ email, password });
             token.value = response.data.token;
             user.value = response.data.usuario;
             return response;
@@ -68,7 +71,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const putUser = async (id, user) => {
         try {
-            const response = await axios.put(`http://localhost:4000/api/usuarios/${id}`, user, {
+            const response = await axios.put(`usuarios/${id}`, user, {
                 headers: { Authorization: `Bearer ${token.value}` }
             });
             return response;
@@ -79,7 +82,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const putUserActivar = async (id) => {
         try {
-            const response = await axios.put(`http://localhost:4000/api/usuarios/activar/${id}`, {}, {
+            const response = await axios.put(`usuarios/activar/${id}`, {}, {
                 headers: { Authorization: `Bearer ${token.value}` }
             });
             return response;
@@ -90,7 +93,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
 
     const putUserDesactivar = async (id) => {
         try {
-            const response = await axios.put(`http://localhost:4000/api/usuarios/desactivar/${id}`, {}, {
+            const response = await axios.put(`usuarios/desactivar/${id}`, {}, {
                 headers: { Authorization: `Bearer ${token.value}` }
             });
             return response;

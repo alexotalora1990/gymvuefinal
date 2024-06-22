@@ -8,7 +8,7 @@ export const useMaquinaStore = defineStore("maquina", ()=>{
     
     const getMaquina = async()=>{
         try {
-            const r = await axios.get("http://localhost:4000/api/maquinas")
+            const r = await axios.get("maquinas")
             return r
         } catch (error) {
             return error
@@ -18,7 +18,7 @@ export const useMaquinaStore = defineStore("maquina", ()=>{
     
     const getMaquinasActivas = async()=>{
         try {
-            const r = await axios.get("http://localhost:4000/api/maquinas/activos",{
+            const r = await axios.get("maquinas/activos",{
                 headers:{
                     "x-token":useUsuarios.token
             },
@@ -30,7 +30,7 @@ export const useMaquinaStore = defineStore("maquina", ()=>{
     };
     const getMaquinasInactivas = async()=>{
         try {
-            const r = await axios.get("http://localhost:4000/api/maquinas/inactivos",{
+            const r = await axios.get("maquinas/inactivos",{
                 headers:{
                     "x-token":useUsuarios.token
             },
@@ -44,7 +44,7 @@ export const useMaquinaStore = defineStore("maquina", ()=>{
 
     const postMaquina = async(maquina)=>{
         try {
-            const r = await axios.post("http://localhost:4000/api/maquinas",maquina)
+            const r = await axios.post("maquinas",maquina)
             return r
         } catch (error) {
             return error
@@ -52,7 +52,7 @@ export const useMaquinaStore = defineStore("maquina", ()=>{
     };
     const putMaquina = async(id, maquina)=>{
         try {
-            const r = await axios.put(`http://localhost:4000/api/maquinas/${id}`,maquina)
+            const r = await axios.put(`maquinas/${id}`,maquina)
             return r
         } catch (error) {
             return error
@@ -60,7 +60,7 @@ export const useMaquinaStore = defineStore("maquina", ()=>{
     };
     const putMaquinaActivar = async(id)=>{
         try {
-            const r = await axios.put(`http://localhost:4000/api/maquinas/activar/${id}`)
+            const r = await axios.put(`maquinas/activar/${id}`)
             return r
         } catch (error) {
             return error
@@ -68,7 +68,7 @@ export const useMaquinaStore = defineStore("maquina", ()=>{
     };
     const putMaquinaDesactivar = async(id)=>{
         try {
-            const r = await axios.put(`http://localhost:4000/api/maquinas/desactivar/${id}`)
+            const r = await axios.put(`maquinas/desactivar/${id}`)
             return r
         } catch (error) {
             return error

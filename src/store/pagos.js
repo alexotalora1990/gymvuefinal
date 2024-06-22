@@ -7,7 +7,7 @@ export const usePagosStore = defineStore("pago", ()=>{
     
     const getPagos = async()=>{
         try {
-            const r = await axios.get("http://localhost:4000/api/pagos")
+            const r = await axios.get("pagos")
             return r
         } catch (error) {
             return error
@@ -16,7 +16,7 @@ export const usePagosStore = defineStore("pago", ()=>{
 
     const getPagosActivos = async()=>{
         try {
-            const r= await axios.get("http://localhost:4000/api/pagos/activos")
+            const r= await axios.get("pagos/activos")
             return r
         } catch (error) {
             return error
@@ -24,7 +24,7 @@ export const usePagosStore = defineStore("pago", ()=>{
     };
     const getPagosInactios = async()=>{
         try {
-            const r = await axios.get("http://localhost:4000/api/pagos/inactivos")
+            const r = await axios.get("pagos/inactivos")
             return r
         } catch (error) {
             return error
@@ -33,7 +33,7 @@ export const usePagosStore = defineStore("pago", ()=>{
 
     const postPagos = async(pago)=>{
         try {
-            const r = await axios.post("http://localhost:4000/api/pagos",pago)
+            const r = await axios.post("pagos",pago)
             return r
         } catch (error) {
             return error
@@ -42,7 +42,7 @@ export const usePagosStore = defineStore("pago", ()=>{
 
     const putPagos = async(id, pago)=>{
         try {
-            const r = await axios.put(`http://localhost:4000/api/pagos/${id}`,pago)
+            const r = await axios.put(`pagos/${id}`,pago)
             return r
         } catch (error) {
             return error
@@ -50,7 +50,7 @@ export const usePagosStore = defineStore("pago", ()=>{
     };
     const putPagosActivar = async(id)=>{
         try {
-            const r = await axios.put(`http://localhost:4000/api/pagos/activar/${id}`,null,)
+            const r = await axios.put(`pagos/activar/${id}`,null,)
             return r
         } catch (error) {
             return error
@@ -58,7 +58,7 @@ export const usePagosStore = defineStore("pago", ()=>{
     };
     const putPagosInactivar = async(id)=>{
         try {
-            const r = await axios.put(`http://localhost:4000/api/pagos/inactivar/${id}`,null,)
+            const r = await axios.put(`pagos/inactivar/${id}`,null,)
             return r
         } catch (error) {
             return error

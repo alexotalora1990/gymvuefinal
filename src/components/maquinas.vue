@@ -281,7 +281,7 @@ function listar(tipo) {
   }
   
   .table{
-    background-color: rgba(255, 255, 255, 0.527);
+    background-color: rgba(255, 255, 255, 0.9);
      
     }
     .q-mt-md{

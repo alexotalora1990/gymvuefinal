@@ -8,7 +8,7 @@ export const useMaintenanceStore = defineStore("mantenimiento", ()=>{
     
     const getMaintenance = async()=>{
         try {
-            const r = await axios.get("http://localhost:4000/api/mantenimientos")
+            const r = await axios.get("mantenimientos")
             return r
         } catch (error) {
             return error
@@ -16,7 +16,7 @@ export const useMaintenanceStore = defineStore("mantenimiento", ()=>{
     };
     const postMaintenance=async(mantenimiento)=>{
         try {
-            const r= await axios.post("http://localhost:4000/api/mantenimientos", mantenimiento)
+            const r= await axios.post("mantenimientos", mantenimiento)
             return r
         } catch (error) {
             return error
@@ -25,7 +25,7 @@ export const useMaintenanceStore = defineStore("mantenimiento", ()=>{
 
     const putMaintenance=async(id, mantenimiento)=>{
         try {
-            const r= await axios.put(`http://localhost:4000/api/mantenimientos/${id}`, mantenimiento)
+            const r= await axios.put(`mantenimientos/${id}`, mantenimiento)
             return r
         } catch (error) {
             return error

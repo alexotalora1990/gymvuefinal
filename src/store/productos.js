@@ -11,7 +11,7 @@ export const useProductsStore = defineStore("productos", ()=>{
     
     const getProducts = async()=>{
         try {
-            const r = await axios.get("http://localhost:4000/api/productos",{
+            const r = await axios.get("productos",{
                 headers:{
                     "x-token":useUsuarios.token
             },
@@ -24,7 +24,7 @@ export const useProductsStore = defineStore("productos", ()=>{
 
     const getProductsActivos = async()=>{
         try {
-            const r = await axios.get("http://localhost:4000/api/productos/activos",{
+            const r = await axios.get("productos/activos",{
                 headers:{
                     "x-token":useUsuarios.token
             },
@@ -36,7 +36,7 @@ export const useProductsStore = defineStore("productos", ()=>{
     };
     const getProductsInactivos = async()=>{
         try {
-            const r = await axios.get("http://localhost:4000/api/productos/inactivos",{
+            const r = await axios.get("productos/inactivos",{
                 headers:{
                     "x-token":useUsuarios.token
             },
@@ -52,7 +52,7 @@ export const useProductsStore = defineStore("productos", ()=>{
 
     const postProducts = async(product)=>{
         try {
-            const r= await axios.post("http://localhost:4000/api/productos", product,{
+            const r= await axios.post("productos", product,{
                 headers:{
                     "x-token":useUsuarios.token
                     
@@ -68,7 +68,7 @@ export const useProductsStore = defineStore("productos", ()=>{
     };
     const putProducts =async(id, product)=>{
         try {
-            const r= await axios.put(`http://localhost:4000/api/productos/${id}`, product,{
+            const r= await axios.put(`productos/${id}`, product,{
                 headers:{
                     "x-token":useUsuarios.token
                     
@@ -82,7 +82,7 @@ export const useProductsStore = defineStore("productos", ()=>{
     };
     const putProductsActivar = async (id) => {
         try {
-            const r = await axios.put(`http://localhost:4000/api/productos/activar/${id}`, null,{
+            const r = await axios.put(`productos/activar/${id}`, null,{
                 headers:{
                     "x-token":useUsuarios.token
             },
@@ -95,7 +95,7 @@ export const useProductsStore = defineStore("productos", ()=>{
 
     const putProductsDesactivar = async (id) => {
         try {
-            const r = await axios.put(`http://localhost:4000/api/productos/desactivar/${id}/`,null,{
+            const r = await axios.put(`productos/desactivar/${id}/`,null,{
                 headers:{
                     "x-token":useUsuarios.token
                     

@@ -63,7 +63,7 @@ async function onSubmit() {
     console.error("Error en el inicio de sesión:", error);
     Notify.create({
       type: 'negative',
-      message: 'Error al iniciar sesión',
+      message: 'Usuario o Contraseña invalidos',
       icon: 'error',
       position: 'top',
       timeout: 3000,

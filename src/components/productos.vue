@@ -21,22 +21,21 @@
       </div>
 
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
-        <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
-          <div class="q-flex q-justify-between q-items-center">
-            <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">{{ tituloFormulario }}</h5>
-          </div>
-
-          <q-form class="row q-col-gutter-md" @submit.prevent="procesarFormulario">
-            <q-input v-model="nombre" label="Nombre" :rules="[val => !!val || 'Descripción no puede estar vacía']" />
-            <q-input filled v-model="cantidad" label="Cantidad" type="number" :rules="[val => val && val > 0 || 'Cantidad debe ser un número positivo']" />
-            <q-input filled v-model="valor" label="Valor" type="number" :rules="[val => val && val > 0 || 'Valor debe ser un número positivo']" />
-            <div class="q-mt-md">
-              <q-btn label="Agregar" color="green" type="submit" />
-              <q-btn label="❌" color="red" outline @click="cerrarFormulario" />
-            </div>
-          </q-form>
-        </q-page>
+    <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
+      <div class="q-flex q-justify-between q-items-center form-header">
+        <h5 class="form-title">{{ tituloFormulario }}</h5>
+        <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
       </div>
+      <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
+        <q-input v-model="nombre" label="Nombre" :rules="[val => !!val || 'Descripción no puede estar vacía']" />
+        <q-input filled v-model="cantidad" label="Cantidad" type="number" :rules="[val => val && val > 0 || 'Cantidad debe ser un número positivo']" />
+        <q-input filled v-model="valor" label="Valor" type="number" :rules="[val => val && val > 0 || 'Valor debe ser un número positivo']" />
+        <div class="q-mt-md">
+          <q-btn label="Agregar" color="green" type="submit" />
+        </div>
+      </q-form>
+    </q-page>
+  </div>
 
       <q-table title="Productos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
         <template v-slot:header="props">
@@ -198,26 +197,9 @@ function listar(tipo) {
 </script>
 
 <style scoped>
-.form-container {
-  min-width: 60%;
-  position: absolute;
-  z-index: 1000;
-  margin-left: 20%;
-}
 
-.form-content {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  background-color: #ffffff;
-  margin-bottom: 10%;
-}
 
-.form-title {
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  text-align: center;
-  font-weight: bold;
-}
+
 
 .shadow-2 {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
@@ -246,8 +228,48 @@ function listar(tipo) {
   }
   
   .table{
-    background-color: rgba(255, 255, 255, 0.527);
+    background-color: rgba(255, 255, 255, 0.9);
      
     }
+    .q-mt-md{
+      text-align: right
+    }
+
+
+    .form-container {
+  min-width: 60%;
+  position: absolute;
+  z-index: 1000;
+  margin-left: 20%;
+}
+
+.form-content {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: #ffffff;
+  margin-bottom: 10%;
+}
+
+.form-header {
+  background-color: #F2630D;
+  padding: 0.5rem;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-title {
+  color: white;
+  margin: 0;
+  text-align: center;
+  font-weight: bold;
+  margin-left: 35%;
+}
+
+.close-btn {
+  color: white;
+}
 </style>
 

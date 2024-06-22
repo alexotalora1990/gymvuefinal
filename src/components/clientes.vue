@@ -3,7 +3,11 @@
     <div class="q-pa-md">
 
       <div class="flex justify-end">
-        <q-btn color="green" icon="add" @click="agregar()">agregar</q-btn>
+        <q-btn color="green" icon="add" @click="agregar()">agregar</q-btn>  
+
+
+
+
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
           <q-list>
             <q-item clickable v-ripple @click="listar('todos')">
@@ -21,12 +25,14 @@
 
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
-          <div class="q-flex q-justify-between q-items-center">
-            <div class="cerrar"><q-btn label="❌" color="red" outline @click="cerrarFormulario" /></div>
 
-            <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">
+          <div class=" title-1">
+
+            <div class="cerrar"><q-btn label="X" color="white" backGround="red" outline @click="cerrarFormulario" /></div>
+<div><h5 class="form-title  text-white q-pa-sm rounded-borders">
               {{ tituloFormulario }}
-            </h5>
+            </h5></div>
+            
           </div>
 
           <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
@@ -78,12 +84,17 @@
         ]" />
 
             <div class="cerrar">
-              <q-btn label="Guardar" color="green" type="submit" />
-              <q-tooltip class="bg-accent">Guardar</q-tooltip>
 
-              <q-btn label="Cerrar" color="red" outline @click="cerrarFormulario" />
-              <q-tooltip class="bg-accent">Cerrar</q-tooltip>
+              <q-btn
+              :loading="useClientes.loading"
+              label="Guardar" color="green" type="submit">
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
+            </q-btn>
+                         
 
+              <q-btn label="Cerrar" color="red" outline @click="cerrarFormulario" />              
             </div>
           </q-form>
         </q-page>
@@ -92,7 +103,7 @@
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormularioSeguimiento">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
           <div class="q-flex q-justify-between q-items-center">
-            <div class="cerrar"><q-btn label="❌" color="red" outline @click="cerrarFormularioSeguimiento" /></div>
+         <q-btn label="❌" color="red" outline @click="cerrarFormularioSeguimiento" />
             <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">
               {{ tituloFormularioSeguimiento }}
             </h5>
@@ -101,7 +112,7 @@
 
           <q-form class="q-gutter-md" @submit.prevent="procesarSeguimiento">
 
-            <q-input filled v-model="fecha" label="Fecha" type="text"
+            <q-input filled v-model="fecha" label="Fecha" type="date"
               :rules="[(val) => !!val || 'Fecha no puede estar vacía']" />
 
             <q-input filled v-model="peso" label="Peso" type="number"
@@ -118,15 +129,11 @@
             <q-input filled v-model="tCintura" label="Talla de Cintura" type="number"
               :rules="[(val) => val > 0 || 'Talla de Cintura debe ser un número positivo']" />
 
-            <q-input filled v-model="estatura" label="Estatura" type="number"
+            <q-input filled v-model="estatura" label="Estatura en centimetros ej.(180)" type="number"
               :rules="[(val) => val > 0 || 'Estatura debe ser un número positivo']" />
 
-            <div class="cerrar">
-
-              <q-btn icon="edit" @click="editarSeguimiento" class="q-ml-md" />
-              <q-tooltip class="bg-accent">Editar</q-tooltip>
-              <q-btn label="Cerrar" color="red" outline @click="cerrarFormularioSeguimiento" />
-              <q-tooltip class="bg-accent">Cerrar</q-tooltip>
+            <div class="cerrar">             
+              
               <q-btn label="Guardar" color="green" @click="agregarSeguimiento(clienteSeleccionado.value)" />
               <q-tooltip class="bg-accent">Guardar</q-tooltip>
             </div>
@@ -154,11 +161,22 @@
             <q-btn @click="editar(props.row)"> ✍
               <q-tooltip class="bg-accent">Editar</q-tooltip> </q-btn>
 
-            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)">❌
-              <q-tooltip class="bg-accent">Desactivar</q-tooltip></q-btn>
+            <q-btn 
+            :loading="useClientes.loading"
+            v-if="props.row.estado == 1" @click="desactivar(props.row._id)"
+                 >❌
+              <q-tooltip class="bg-accent">Desactivar</q-tooltip>
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
+            </q-btn>
 
-            <q-btn v-else @click="activar(props.row._id)">✅
+            <q-btn v-else @click="activar(props.row._id)"
+            :loading="useClientes.loading">✅
               <q-tooltip class="bg-accent">Activar</q-tooltip>
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
             </q-btn>
 
 
@@ -365,6 +383,7 @@ async function listarClientesActivos() {
   const r = await useClientes.getClientesActivos();
   console.log(r.data.clientesActivos);
   rows.value = r.data.clientesActivos;
+  
 }
 
 async function listarClientesInactivos() {
@@ -410,6 +429,15 @@ const procesarFormulario = async (option) => {
         observaciones: observaciones.value,
         fechaVencimiento: fechaVencimiento.value,
       });
+      Notify.create({
+        type: 'positive',
+        message: 'cliente editado exitosamente',
+        classes: 'customNotify',
+        icon: 'check',
+        position: 'top',
+        timeout: 3000,
+        actions: [{ label: '❌', color: 'black' }]
+      });
     } else {
       await useClientes.postClientes({
         nombre: nombre.value,
@@ -423,6 +451,15 @@ const procesarFormulario = async (option) => {
         objetivo: objetivo.value,
         observaciones: observaciones.value,
         fechaVencimiento: fechaVencimiento.value,
+      });
+      Notify.create({
+        type: 'positive',
+        message: 'cliente agregado exitosamente',
+        classes: 'customNotify',
+        icon: 'check',
+        position: 'top',
+        timeout: 3000,
+        actions: [{ label: '❌', color: 'black' }]
       });
     }
 
@@ -572,6 +609,18 @@ async function procesarSeguimiento(idCliente) {
 </script>
 
 <style scoped>
+.title-1{
+  display: flex;
+  justify-content: center;
+  background: #F2630D;
+    height: auto;
+  position: relative;
+  margin-bottom: 5%;
+}
+h5{
+  margin-right: 110px;
+}
+
 .form-container {
   min-width: 60%;
   position: absolute;
@@ -612,8 +661,8 @@ async function procesarSeguimiento(idCliente) {
 }
 
 .seguimiento-title {
-  background-color: #f2650dab;
-  padding: 10px;
+
+  /* padding: 10px; */
   border-radius: 5px;
   color: white;
   text-align: center;
@@ -622,7 +671,7 @@ async function procesarSeguimiento(idCliente) {
 
 .seguimiento {
   padding: 1%;
-  background-color: rgb(223, 233, 233, 0.600);
+  background-color: rgb(223, 233, 233, 0.9);
   margin-top: 1%;
   border-radius: 10px;
 }
@@ -633,11 +682,13 @@ async function procesarSeguimiento(idCliente) {
 }
 
 .table {
-  background-color: rgba(255, 255, 255, 0.596);
+  background-color: rgba(255, 255, 255, 0.9);
 
 }
 
 .cerrar {
-  text-align: right;
+position: relative;
+left: 500px;
+margin: 45px;
 }
 </style>
