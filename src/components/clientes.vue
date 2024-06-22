@@ -3,7 +3,7 @@
     <div class="q-pa-md">
 
       <div class="flex justify-end">
-        <q-btn color="green" icon="add" @click="agregar()">agregar</q-btn>  
+        <q-btn color="green" icon="add" @click="agregar()">agregar</q-btn>
 
 
 
@@ -26,26 +26,23 @@
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
 
-          <div class=" title-1">
-
-            <div class="cerrar"><q-btn label="X" color="white" backGround="red" outline @click="cerrarFormulario" /></div>
-<div><h5 class="form-title  text-white q-pa-sm rounded-borders">
-              {{ tituloFormulario }}
-            </h5></div>
-            
+          <div class="q-flex q-justify-between q-items-center form-header">
+            <h5 class="form-title">{{ tituloFormulario }}</h5>
+            <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
           </div>
+
 
           <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
             <q-input filled v-model="nombre" label="Nombre" :rules="[
-          val => !!val || 'Nombre no puede estar vacío',
-          val => /^[a-zA-Z ]+$/.test(val) || 'El nombre solo puede contener letras y espacios',
-          val => val.trim().length >= 3 || 'El nombre debe tener al menos 3 caracteres'
-        ]" />
+              val => !!val || 'Nombre no puede estar vacío',
+              val => /^[a-zA-Z ]+$/.test(val) || 'El nombre solo puede contener letras y espacios',
+              val => val.trim().length >= 3 || 'El nombre debe tener al menos 3 caracteres'
+            ]" />
 
             <q-input filled v-model="documento" label="Documento" type="number" :rules="[
-          val => !!val || 'Documento no puede estar vacío',
-          val => /^[0-9]{8,12}$/.test(val) || 'Teléfono debe tener entre 8 y 12 dígitos'
-        ]" />
+              val => !!val || 'Documento no puede estar vacío',
+              val => /^[0-9]{8,12}$/.test(val) || 'Teléfono debe tener entre 8 y 12 dígitos'
+            ]" />
 
             <q-input filled v-model="email" label="Email" type="email"
               :rules="[(val) => !!val || 'Email no debe estar vacío']" />
@@ -54,16 +51,16 @@
               :rules="[(val) => !!val || 'Dirección no debe estar vacía']" />
 
             <q-input filled v-model="telefono" label="Teléfono" type="number" :rules="[
-          val => !!val || 'Teléfono no puede estar vacío',
-          val => /^[0-9]{8,12}$/.test(val) || 'Teléfono debe tener entre 8 y 12 dígitos',
-          val => !/\s/.test(val) || 'Telefono no puede contener espacios vacíos'
-        ]" />
+              val => !!val || 'Teléfono no puede estar vacío',
+              val => /^[0-9]{8,12}$/.test(val) || 'Teléfono debe tener entre 8 y 12 dígitos',
+              val => !/\s/.test(val) || 'Telefono no puede contener espacios vacíos'
+            ]" />
 
             <q-input filled v-model="fechaNacimiento" label="Fecha de Nacimiento" type="date"
               input="validateDateOfBirth" :rules="[
-          val => !!val || 'Fecha de nacimiento no debe estar vacía',
-          val => isOverFourteen(val) || 'Debe ser mayor de 14 años'
-        ]" />
+                val => !!val || 'Fecha de nacimiento no debe estar vacía',
+                val => isOverFourteen(val) || 'Debe ser mayor de 14 años'
+              ]" />
 
             <q-select filled v-model="idPlan" label="Seleccione un plan" :options="planOptions"
               :rules="[val => !!val || 'Debe seleccionar un plan']" />
@@ -79,22 +76,20 @@
 
             <q-input filled v-model="fechaVencimiento" label="Fecha de Vencimiento" type="date" @input="validateDate"
               :rules="[
-          val => !!val || 'Fecha de vencimiento no debe estar vacía',
-          val => new Date(val) > new Date() || 'La fecha de vencimiento debe ser mayor a la fecha actual'
-        ]" />
+                val => !!val || 'Fecha de vencimiento no debe estar vacía',
+                val => new Date(val) > new Date() || 'La fecha de vencimiento debe ser mayor a la fecha actual'
+              ]" />
 
-            <div class="cerrar">
+            <div class="q-mt-md">
 
-              <q-btn
-              :loading="useClientes.loading"
-              label="Guardar" color="green" type="submit">
-              <template v-slot:loading>
-                <q-spinner color="primary" size="1em" />
-              </template>
-            </q-btn>
-                         
+              <q-btn :loading="useClientes.loading" label="Guardar" color="green" type="submit">
+                <template v-slot:loading>
+                  <q-spinner color="primary" size="1em" />
+                </template>
+              </q-btn>
 
-              <q-btn label="Cerrar" color="red" outline @click="cerrarFormulario" />              
+
+              <q-btn label="Cerrar" color="red" outline @click="cerrarFormulario" />
             </div>
           </q-form>
         </q-page>
@@ -102,12 +97,12 @@
 
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormularioSeguimiento">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
-          <div class="q-flex q-justify-between q-items-center">
-         <q-btn label="❌" color="red" outline @click="cerrarFormularioSeguimiento" />
-            <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">
-              {{ tituloFormularioSeguimiento }}
-            </h5>
 
+          
+          <div class="q-flex q-justify-between q-items-center form-header">
+            <h5 class="form-title2 bg-primary text-white q-pa-sm rounded-borders
+            ">{{ tituloFormularioSeguimiento }}</h5>
+            <q-btn flat icon="close" color="white" @click="cerrarFormularioSeguimiento" class="close-btn" />
           </div>
 
           <q-form class="q-gutter-md" @submit.prevent="procesarSeguimiento">
@@ -132,8 +127,8 @@
             <q-input filled v-model="estatura" label="Estatura en centimetros ej.(180)" type="number"
               :rules="[(val) => val > 0 || 'Estatura debe ser un número positivo']" />
 
-            <div class="cerrar">             
-              
+            <div class="q-mt-md">
+
               <q-btn label="Guardar" color="green" @click="agregarSeguimiento(clienteSeleccionado.value)" />
               <q-tooltip class="bg-accent">Guardar</q-tooltip>
             </div>
@@ -151,7 +146,7 @@
         <template v-slot:body-cell-estado="props">
           <q-td :props="props">
             <p :style="{ color: props.row.estado === 1 ? 'green' : 'red' }">{{ props.row.estado === 1 ? 'Activo' :
-          'Inactivo' }}</p>
+              'Inactivo' }}</p>
           </q-td>
         </template>
 
@@ -161,18 +156,14 @@
             <q-btn @click="editar(props.row)"> ✍
               <q-tooltip class="bg-accent">Editar</q-tooltip> </q-btn>
 
-            <q-btn 
-            :loading="useClientes.loading"
-            v-if="props.row.estado == 1" @click="desactivar(props.row._id)"
-                 >❌
+            <q-btn :loading="useClientes.loading" v-if="props.row.estado == 1" @click="desactivar(props.row._id)">❌
               <q-tooltip class="bg-accent">Desactivar</q-tooltip>
               <template v-slot:loading>
                 <q-spinner color="primary" size="1em" />
               </template>
             </q-btn>
 
-            <q-btn v-else @click="activar(props.row._id)"
-            :loading="useClientes.loading">✅
+            <q-btn v-else @click="activar(props.row._id)" :loading="useClientes.loading">✅
               <q-tooltip class="bg-accent">Activar</q-tooltip>
               <template v-slot:loading>
                 <q-spinner color="primary" size="1em" />
@@ -195,8 +186,11 @@
         </template>
       </q-table>
       <div v-if="clienteSeleccionado" class="seguimiento">
-        <div class="cerrar"><q-btn label="❌" color="red" outline @click="cerrarSeguimiento" /></div>
-        <h3 class="seguimiento-title">Seguimiento de {{ clienteSeleccionado.nombre }}</h3>
+
+        <div class="q-flex q-justify-between q-items-center form-header" >
+        <h3 class="seg-title">Seguimiento de {{ clienteSeleccionado.nombre }}</h3>
+        <q-btn flat icon="close" color="white" @click="cerrarSeguimiento" class="close-btn" />
+        </div>
 
         <q-table :rows="selectedClienteSeguimiento" :columns="columnsSeguimiento" row-key="fecha" class="table">
           <template #body-cell-IMC="props">
@@ -383,7 +377,7 @@ async function listarClientesActivos() {
   const r = await useClientes.getClientesActivos();
   console.log(r.data.clientesActivos);
   rows.value = r.data.clientesActivos;
-  
+
 }
 
 async function listarClientesInactivos() {
@@ -413,7 +407,7 @@ onMounted(() => {
 const procesarFormulario = async (option) => {
   try {
     console.log(idPlan.value);
-    const idplanseleccionado=idPlan.value
+    const idplanseleccionado = idPlan.value
 
     if (clienteSeleccionado.value !== null) {
       await useClientes.putClientes(clienteSeleccionado.value._id, {
@@ -573,10 +567,10 @@ async function procesarSeguimiento(idCliente) {
   };
 
   try {
-    // Llamada al backend para guardar el seguimiento
+   
     const response = await useClientes.postSeguimiento(idCliente, seguimiento);
 
-    // Verificar la respuesta del backend y mostrar notificación de éxito
+  
     if (response && response.data && response.data.seguimiento) {
       Notify.create({
         type: 'positive',
@@ -584,7 +578,7 @@ async function procesarSeguimiento(idCliente) {
         icon: 'check_circle',
       });
 
-     
+
     } else {
       Notify.create({
         type: 'negative',
@@ -609,17 +603,45 @@ async function procesarSeguimiento(idCliente) {
 </script>
 
 <style scoped>
-.title-1{
-  display: flex;
-  justify-content: center;
-  background: #F2630D;
-    height: auto;
+.shadow-2 {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.rounded-borders {
+  border-radius: 8px;
+}
+
+.table-title {
+  text-align: center;
   position: relative;
-  margin-bottom: 5%;
+  z-index: 999;
 }
-h5{
-  margin-right: 110px;
+
+.customNotify {
+  font-size: 18px;
+  background-color: red;
+
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
 }
+
+.table1 {
+  background-color: #f2650da9;
+  color: white;
+}
+
+.table {
+  background-color: rgba(255, 255, 255, 0.9);
+
+}
+
+.q-mt-md {
+  text-align: right;
+ margin: 0;
+
+}
+
 
 .form-container {
   min-width: 60%;
@@ -631,64 +653,43 @@ h5{
 .form-content {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  background-color: #ffffff;
+  background-color: #e6e5e5;
   margin-bottom: 10%;
 }
 
-.form-title {
+.form-header {
+  background-color: #F2630D;
+  padding: 0.5rem;
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-title {
+  color: white;
+  margin: 0;
   text-align: center;
   font-weight: bold;
+  margin-left: 35%;
 }
-
-.shadow-2 {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.rounded-borders {
-  border-radius: 8px;
-}
-
-.q-ml-md {
-  color: aqua
-}
-
-.table-title {
-  text-align: center;
-  position: relative;
-  z-index: 999;
-}
-
-.seguimiento-title {
-
-  /* padding: 10px; */
-  border-radius: 5px;
+.form-title2{
   color: white;
+  margin: 0;
   text-align: center;
-
+  font-weight: bold;
+  margin-left: 5%;
 }
 
-.seguimiento {
-  padding: 1%;
-  background-color: rgb(223, 233, 233, 0.9);
-  margin-top: 1%;
-  border-radius: 10px;
-}
-
-.table1 {
-  background-color: #f2650d8f;
+.close-btn {
   color: white;
 }
+.seg-title{color: white;
+  margin: 0;
+  text-align: center;
+  font-weight: bold;
+  margin-left: 15%;}
 
-.table {
-  background-color: rgba(255, 255, 255, 0.9);
 
-}
-
-.cerrar {
-position: relative;
-left: 500px;
-margin: 45px;
-}
 </style>

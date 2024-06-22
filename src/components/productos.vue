@@ -1,5 +1,3 @@
-
-
 <template>
   <div>
     <div class="q-pa-md">
@@ -21,21 +19,25 @@
       </div>
 
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
-    <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
-      <div class="q-flex q-justify-between q-items-center form-header">
-        <h5 class="form-title">{{ tituloFormulario }}</h5>
-        <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
+        <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
+
+          <div class="q-flex q-justify-between q-items-center form-header">
+            <h5 class="form-title">{{ tituloFormulario }}</h5>
+            <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
+          </div>
+
+          <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
+            <q-input v-model="nombre" label="Nombre" :rules="[val => !!val || 'Descripción no puede estar vacía']" />
+            <q-input filled v-model="cantidad" label="Cantidad" type="number"
+              :rules="[val => val && val > 0 || 'Cantidad debe ser un número positivo']" />
+            <q-input filled v-model="valor" label="Valor" type="number"
+              :rules="[val => val && val > 0 || 'Valor debe ser un número positivo']" />
+            <div class="q-mt-md">
+              <q-btn label="Agregar" color="green" type="submit" />
+            </div>
+          </q-form>
+        </q-page>
       </div>
-      <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
-        <q-input v-model="nombre" label="Nombre" :rules="[val => !!val || 'Descripción no puede estar vacía']" />
-        <q-input filled v-model="cantidad" label="Cantidad" type="number" :rules="[val => val && val > 0 || 'Cantidad debe ser un número positivo']" />
-        <q-input filled v-model="valor" label="Valor" type="number" :rules="[val => val && val > 0 || 'Valor debe ser un número positivo']" />
-        <div class="q-mt-md">
-          <q-btn label="Agregar" color="green" type="submit" />
-        </div>
-      </q-form>
-    </q-page>
-  </div>
 
       <q-table title="Productos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
         <template v-slot:header="props">
@@ -45,13 +47,15 @@
         </template>
         <template v-slot:body-cell-estado="props">
           <q-td :props="props">
-            <p :style="{ color: props.row.estado === 1 ? 'green' : 'red' }">{{ props.row.estado === 1 ? 'Activo' : 'Inactivo' }}</p>
+            <p :style="{ color: props.row.estado === 1 ? 'green' : 'red' }">{{ props.row.estado === 1 ? 'Activo' :
+              'Inactivo' }}</p>
           </q-td>
         </template>
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
             <q-btn @click="editarProducto(props.row)"><q-tooltip class="bg-accent">Editar</q-tooltip>🖋️</q-btn>
-            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)"><q-tooltip class="bg-accent">Desactivar</q-tooltip>❌</q-btn>
+            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)"><q-tooltip
+                class="bg-accent">Desactivar</q-tooltip>❌</q-btn>
             <q-btn v-else @click="activar(props.row._id)"><q-tooltip class="bg-accent">Activar</q-tooltip>✅</q-btn>
           </q-td>
         </template>
@@ -64,7 +68,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { useProductsStore } from "../store/productos.js";
-import { useQuasar,Notify } from 'quasar';
+import { useQuasar, Notify } from 'quasar';
 
 const $q = useQuasar();
 const verFormulario = ref(false);
@@ -143,7 +147,7 @@ async function editarProducto(producto) {
       position: 'top',
       timeout: 3000,
       actions: [{ label: '❌', color: 'black' }]
-      
+
     });
     return;
   }
@@ -197,10 +201,6 @@ function listar(tipo) {
 </script>
 
 <style scoped>
-
-
-
-
 .shadow-2 {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
@@ -214,29 +214,34 @@ function listar(tipo) {
   position: relative;
   z-index: 999;
 }
+
 .customNotify {
   font-size: 18px;
-  background-color: red; /* Cambia el color de fondo a rojo */
+  background-color: red;
+
   color: white;
   padding: 10px;
   border-radius: 8px;
 }
 
-.table1{
+.table1 {
   background-color: #f2650da9;
-   color: white;
-  }
-  
-  .table{
-    background-color: rgba(255, 255, 255, 0.9);
-     
-    }
-    .q-mt-md{
-      text-align: right
-    }
+  color: white;
+}
+
+.table {
+  background-color: rgba(255, 255, 255, 0.9);
+
+}
+
+.q-mt-md {
+  text-align: right;
+ margin: 0;
+
+}
 
 
-    .form-container {
+.form-container {
   min-width: 60%;
   position: absolute;
   z-index: 1000;
@@ -246,7 +251,7 @@ function listar(tipo) {
 .form-content {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  background-color: #ffffff;
+  background-color: #e6e5e5;
   margin-bottom: 10%;
 }
 
@@ -272,4 +277,3 @@ function listar(tipo) {
   color: white;
 }
 </style>
-

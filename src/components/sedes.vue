@@ -24,13 +24,9 @@
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
 
 
-          <div class="q-flex q-justify-between q-items-center">
-            <div class="q-mt-md">
-              
-              <q-btn label="❌" color="red" outline @click="cerrarFormulario()" />
-            </div>
-            <h5 class="form-title bg-primary text-white q-pa-sm rounded-borders">{{ tituloFormulario }}</h5>
-
+          <div class="q-flex q-justify-between q-items-center form-header">
+            <h5 class="form-title">{{ tituloFormulario }}</h5>
+            <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
           </div>
 
           <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
@@ -269,30 +265,6 @@ function limpiar() {
 
 
 <style scoped>
-.form-container {
-  min-width: 60%;
-  position: absolute;
-  z-index: 1000;
-  margin-left: 20%;
-
-
-
-}
-
-.form-content {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
-  background-color: #ffffff;
-  margin-bottom: 10%;
-}
-
-.form-title {
-  border-top-left-radius: 8px;
-  border-top-right-radius: 8px;
-  text-align: center;
-  font-weight: bold;
-}
-
 .shadow-2 {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
@@ -307,16 +279,65 @@ function limpiar() {
   z-index: 999;
 }
 
-.table1{
+.customNotify {
+  font-size: 18px;
+  background-color: red;
+
+  color: white;
+  padding: 10px;
+  border-radius: 8px;
+}
+
+.table1 {
   background-color: #f2650da9;
-   color: white;
-  }
-  
-  .table{
-    background-color: rgba(255, 255, 255, 0.9);
-     
-    }
-    .q-mt-md{
-      text-align: right
-    }
+  color: white;
+}
+
+.table {
+  background-color: rgba(255, 255, 255, 0.9);
+
+}
+
+.q-mt-md {
+  text-align: right;
+ margin: 0;
+
+}
+
+
+.form-container {
+  min-width: 60%;
+  position: absolute;
+  z-index: 1000;
+  margin-left: 20%;
+}
+
+.form-content {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background-color: #e6e5e5;
+  margin-bottom: 10%;
+}
+
+.form-header {
+  background-color: #F2630D;
+  padding: 0.5rem;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.form-title {
+  color: white;
+  margin: 0;
+  text-align: center;
+  font-weight: bold;
+  margin-left: 35%;
+}
+
+.close-btn {
+  color: white;
+}
 </style>
