@@ -252,7 +252,7 @@ function listar(tipo) {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   background-color: #e6e5e5;
-  margin-bottom: 10%;
+  margin-bottom: 5%;
 }
 
 .form-header {

@@ -1,7 +1,12 @@
+
+
 import { createRouter, createWebHashHistory } from 'vue-router';
-import { useUsuariosStore } from '../store/usuarios.js'; 
+import { useUsuariosStore } from '../store/usuarios.js';
+
+
 
 import Login from '../components/Login.vue';
+import RecuperarPassword from '../components/RecuperarPassword.vue';
 import Productos from '../components/productos.vue';
 import Usuarios from '../components/usuarios.vue';
 import Clientes from '../components/clientes.vue';
@@ -12,30 +17,33 @@ import Maquinas from '../components/maquinas.vue';
 import Pagos from '../components/pagos.vue';
 import Planes from '../components/planes.vue';
 import Ventas from '../components/ventas.vue';
-import Home from '../components/home.vue'; // Asegúrate de que esta ruta es correcta
+import Home from '../components/home.vue'; 
+import ResetPassword from "../components/ResetPassword.vue";
 
 const auth = (to, from, next) => {
   if (checkAuth()) {
-      const userUsuario = useUsuariosStore()
-      const rol = userUsuario.user.roll
-      if (!to.meta.rol.includes(rol)) {
-          return next({ name: 'login' })
-      }
-      next()
+    const userUsuario = useUsuariosStore();
+    const rol = userUsuario.user.roll;
+    if (!to.meta.rol.includes(rol)) {
+      return next({ name: 'login' });
+    }
+    next();
   } else {
-      return next({ name: 'login' })
+    return next({ name: 'login' });
   }
-}
+};
 
 const checkAuth = () => {
-  const useUsuario = useUsuariosStore()
-  const token = useUsuario.token
-  if (!token) return false
-  return true
+  const useUsuario = useUsuariosStore();
+  const token = useUsuario.token;
+  if (!token) return false;
+  return true;
 };
 
 const routes = [
   { path: '/', name: 'login', component: Login },
+  { path: '/recuperar-password', name: 'recuperarPassword', component: RecuperarPassword },
+  {  path: '/reset-password', name:'resetPassword',  component: ResetPassword    },
   {
     path: '/home',
     component: Home,
@@ -57,7 +65,11 @@ const routes = [
 const router = createRouter({
   history: createWebHashHistory(),
   routes
+
+
 });
+
+
 
 export { routes, router };
 

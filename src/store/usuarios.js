@@ -2,7 +2,7 @@
 
 import { defineStore } from 'pinia';
 import axios from 'axios';
-import { ref } from 'vue';
+import { TrackOpTypes, ref } from 'vue';
 
 export const useUsuariosStore = defineStore('usuarios', () => {
 
@@ -102,7 +102,27 @@ export const useUsuariosStore = defineStore('usuarios', () => {
         }
     };
 
-    return { token, user, getUser, getUserActivos, getUserInactivos, postUser, login, logout, putUser, putUserActivar, putUserDesactivar };
+    const postRecuperarPassword=async(email)=>{
+        try {
+            const response= await axios.post('usuarios/recuperarPassword', {email});
+            return response;
+        } catch (error) {
+            
+            return error;
+        }
+    };
+
+    const postResetPassword=async(token, newPassword)=>{
+        try {
+            const response= await axios.post('usuarios/resetPassword', {token,newPassword});
+            return response;
+        } catch (error) {
+            
+            return error;
+        }
+    };
+
+    return { token, user, getUser, getUserActivos, getUserInactivos, postUser, login, logout, putUser, putUserActivar, putUserDesactivar, postRecuperarPassword,postResetPassword };
 }, {
     persist: true 
 });

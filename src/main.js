@@ -13,7 +13,7 @@ import '@quasar/extras/material-icons/material-icons.css';
 // Importa Quasar css
 import 'quasar/src/css/index.sass';
 
-
+  // axios.defaults.baseURL="http://localhost:4000/api/"
   axios.defaults.baseURL="https://gymapp-lgjb.onrender.com/api/"
 
 const pinia = createPinia();
