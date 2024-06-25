@@ -43,7 +43,7 @@ const checkAuth = () => {
 const routes = [
   { path: '/', name: 'login', component: Login },
   { path: '/recuperar-password', name: 'recuperarPassword', component: RecuperarPassword },
-  {  path: '/reset-password', name:'resetPassword',  component: ResetPassword    },
+  {  path: '/resetpassword', name:'resetPassword',  component: ResetPassword    },
   {
     path: '/home',
     component: Home,
@@ -54,7 +54,7 @@ const routes = [
       { path: '/ingresos', name: 'ingresos', component: Ingresos, beforeEnter: auth, meta: { rol: ['Administrador', 'Recepcion'] } },
       { path: '/sedes', name: 'sedes', component: Sedes, beforeEnter: auth, meta: { rol: ['Administrador'] } },
       { path: '/mantenimientos', name: 'mantenimientos', component: Mantenimientos, beforeEnter: auth, meta: { rol: ['Administrador'] } },
-      { path: '/maquinas', name: 'maquinas', component: Maquinas, beforeEnter: auth, meta: { rol: ['Administrador'] } },
+      { path: '/maquinas', name: 'maquinas', component: Maquinas, beforeEnter: auth, meta: { rol: ['Administrador','Instructor'] } },
       { path: '/pagos', name: 'pagos', component: Pagos, beforeEnter: auth, meta: { rol: ['Administrador'] } },
       { path: '/planes', name: 'planes', component: Planes, beforeEnter: auth, meta: { rol: ['Administrador', 'Recepcion'] } },
       { path: '/ventas', name: 'ventas', component: Ventas, beforeEnter: auth, meta: { rol: ['Administrador', 'Recepcion'] } }

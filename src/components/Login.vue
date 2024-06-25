@@ -192,8 +192,8 @@ import { useRouter } from 'vue-router';
 import { useUsuariosStore } from "../store/usuarios.js";
 import { useQuasar, Notify } from 'quasar';
 
-const email = ref('');
-const password = ref('');
+const email = ref('alex@gmail.com');
+const password = ref('Alex12345$');
 const showPassword = ref(false);
 
 const usuariosStore = useUsuariosStore();
