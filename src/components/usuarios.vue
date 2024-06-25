@@ -58,8 +58,22 @@
           <q-btn @click="editarUsuario(props.row)">
             <q-tooltip class="bg-accent">Editar</q-tooltip>🖋️
           </q-btn>
-          <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row)"><q-tooltip class="bg-accent">Desactivar</q-tooltip>❌</q-btn>
-          <q-btn v-else @click="activar(props.row._id)"><q-tooltip class="bg-accent">Activar</q-tooltip>✅</q-btn>
+          
+          <q-btn :loading="useUsuarios.loading" v-if="props.row.estado == 1" @click="desactivar(props.row)">❌
+              <q-tooltip class="bg-accent">Desactivar</q-tooltip>
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
+            </q-btn>
+       
+          <q-btn v-else @click="activar(props.row._id)" :loading="useUsuarios.loading">✅
+              <q-tooltip class="bg-accent">Activar</q-tooltip>
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
+            </q-btn>
+        
+        
         </q-td>
       </template>
     </q-table>
@@ -291,6 +305,7 @@ function limpiar() {
  margin: 0;
 
 }
+
 
 
 .form-container {

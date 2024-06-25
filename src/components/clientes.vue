@@ -192,13 +192,14 @@
         <q-btn flat icon="close" color="white" @click="cerrarSeguimiento" class="close-btn" />
         </div>
 
+        
         <q-table :rows="selectedClienteSeguimiento" :columns="columnsSeguimiento" row-key="fecha" class="table">
-          <template #body-cell-IMC="props">
-            <q-td :props="props">
-              {{ props.row.IMC.toFixed(2) }}
-            </q-td>
-          </template>
-        </q-table>
+      <template #body-cell-IMC="props">
+        <q-td :props="props" :style="{ backgroundColor: getIMCColor(props.row.IMC) }">
+          {{ props.row.IMC.toFixed(2) }}
+        </q-td>
+      </template>
+    </q-table>
       </div>
     </div>
   </div>
@@ -315,6 +316,21 @@ const columnsSeguimiento = ref([
   { name: "tPierna", label: "Tamaño Pierna", field: "tPierna", align: "center" },
 ]);
 
+function getIMCColor(IMC) {
+  if (IMC < 18.5) {
+    return 'blue';
+  } else if (IMC >= 18.5 && IMC <= 24.9) {
+    return 'green';
+  } else if (IMC >= 25 && IMC <= 29.9) {
+    return 'orange';
+  } else if (IMC >= 30 && IMC <= 34.9) {
+    return 'darkorange';
+  } else if (IMC >= 35 && IMC <= 39.9) {
+    return 'lightcoral';
+  } else {
+    return 'red';
+  }
+}
 
 function formatDate(date) {
   const d = new Date(date);

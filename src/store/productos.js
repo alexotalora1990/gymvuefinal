@@ -6,11 +6,13 @@ import { useUsuariosStore } from "../store/usuarios.js"
 
 
 export const useProductsStore = defineStore("productos", ()=>{
+    let loading = ref(false) 
 
     const useUsuarios = useUsuariosStore()
     
     const getProducts = async()=>{
         try {
+            loading.value=true
             const r = await axios.get("productos",{
                 headers:{
                     "x-token":useUsuarios.token
@@ -19,11 +21,14 @@ export const useProductsStore = defineStore("productos", ()=>{
             return r
         } catch (error) {
             return error
+        }finally{
+            loading.value=false
         }
     };
 
     const getProductsActivos = async()=>{
         try {
+            loading.value=true
             const r = await axios.get("productos/activos",{
                 headers:{
                     "x-token":useUsuarios.token
@@ -32,10 +37,13 @@ export const useProductsStore = defineStore("productos", ()=>{
             return r
         } catch (error) {
             return error
+        }finally{
+            loading.value=false
         }
     };
     const getProductsInactivos = async()=>{
         try {
+            loading.value=true
             const r = await axios.get("productos/inactivos",{
                 headers:{
                     "x-token":useUsuarios.token
@@ -44,6 +52,8 @@ export const useProductsStore = defineStore("productos", ()=>{
             return r
         } catch (error) {
             return error
+        }finally{
+            loading.value=false
         }
     };
 
@@ -52,6 +62,7 @@ export const useProductsStore = defineStore("productos", ()=>{
 
     const postProducts = async(product)=>{
         try {
+            loading.value=true
             const r= await axios.post("productos", product,{
                 headers:{
                     "x-token":useUsuarios.token
@@ -63,11 +74,14 @@ export const useProductsStore = defineStore("productos", ()=>{
             return r
         } catch (error) {
             return error
+        }finally{
+            loading.value=false
         }
 
     };
     const putProducts =async(id, product)=>{
         try {
+            loading.value=true
             const r= await axios.put(`productos/${id}`, product,{
                 headers:{
                     "x-token":useUsuarios.token
@@ -78,10 +92,13 @@ export const useProductsStore = defineStore("productos", ()=>{
             return r
         } catch (error) {
             return error
+        }finally{
+            loading.value=false
         }
     };
     const putProductsActivar = async (id) => {
         try {
+            loading.value=true
             const r = await axios.put(`productos/activar/${id}`, null,{
                 headers:{
                     "x-token":useUsuarios.token
@@ -90,11 +107,14 @@ export const useProductsStore = defineStore("productos", ()=>{
             return r;
         } catch (error) {
             return error;
+        }finally{
+            loading.value=false
         }
     };
 
     const putProductsDesactivar = async (id) => {
         try {
+            loading.value=true
             const r = await axios.put(`productos/desactivar/${id}/`,null,{
                 headers:{
                     "x-token":useUsuarios.token
@@ -103,6 +123,8 @@ export const useProductsStore = defineStore("productos", ()=>{
             return r;
         } catch (error) {
             return error;
+        }finally{
+            loading.value=false
         }
     };
 
@@ -110,7 +132,7 @@ export const useProductsStore = defineStore("productos", ()=>{
 
 
    
-    return{ getProducts, postProducts, putProducts,putProductsActivar,putProductsDesactivar, getProductsActivos, getProductsInactivos}
+    return{loading, getProducts, postProducts, putProducts,putProductsActivar,putProductsDesactivar, getProductsActivos, getProductsInactivos}
 })
 
 

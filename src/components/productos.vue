@@ -54,9 +54,19 @@
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
             <q-btn @click="editarProducto(props.row)"><q-tooltip class="bg-accent">Editar</q-tooltip>🖋️</q-btn>
-            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)"><q-tooltip
-                class="bg-accent">Desactivar</q-tooltip>❌</q-btn>
-            <q-btn v-else @click="activar(props.row._id)"><q-tooltip class="bg-accent">Activar</q-tooltip>✅</q-btn>
+
+
+            <q-btn :loading="useProductos.loading" v-if="props.row.estado == 1" @click="desactivar(props.row._id)"><q-tooltip
+                class="bg-accent">Desactivar</q-tooltip>❌
+                <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
+            </q-btn>
+            <q-btn v-else @click="activar(props.row._id)" :loading="useProductos.loading">
+              <q-tooltip class="bg-accent">Activar</q-tooltip>✅</q-btn>
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
           </q-td>
         </template>
       </q-table>
