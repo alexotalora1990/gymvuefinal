@@ -2,19 +2,28 @@
   <div>
     <div class="q-pa-md">
 
-     
       <div class="flex justify-end">
-        <q-btn color="green" icon="add" @click="agregar()">Agregar</q-btn>
+        <q-btn color="green" icon="add" @click="agregar()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
+
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
           <q-list>
-            <q-item clickable v-ripple @click="listar('todos')">
+            <q-item clickable v-ripple @click="listar('todos')" :class="{ 'loading-item': loading && loadingList === 'todos' }">
               <q-item-section>Listar Todos</q-item-section>
+              <template v-if="loading && loadingList === 'todos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('activos')">
+            <q-item clickable v-ripple @click="listar('activos')" ::class="{ 'loading-item': loading && loadingList === 'activos' }">
               <q-item-section>Listar Activos</q-item-section>
+              <template v-if="loading && loadingList === 'activos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('inactivos')">
+            <q-item clickable v-ripple @click="listar('inactivos')" :class="{ 'loading-item': loading && loadingList === 'inactivos' }">
               <q-item-section>Listar Inactivos</q-item-section>
+              <template v-if="loading && loadingList === 'inactivos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
           </q-list>
         </q-btn-dropdown>
@@ -22,7 +31,6 @@
 
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
-
 
           <div class="q-flex q-justify-between q-items-center form-header">
             <h5 class="form-title">{{ tituloFormulario }}</h5>
@@ -47,10 +55,10 @@
             <q-input filled v-model="ciudad" label="Ciudad" type="text"
               :rules="[val => !!val || 'Ciudad no debe estar vacio']" />
 
-            <div class="q-mt-md">
-              <q-btn label="Agregar" color="green" type="submit" />
-              
-            </div>
+              <div class="q-mt-md q-flex q-justify-end">
+                <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
+                <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
+              </div>
           </q-form>
         </q-page>
       </div>
@@ -70,13 +78,31 @@
         </template>
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
-            <q-btn @click="editar(props.row)">
-              <q-tooltip class="bg-accent">Editar</q-tooltip> 🖋️
+            <q-btn @click="editar(props.row)">✍
+              <q-tooltip class="bg-accent">Editar</q-tooltip>
             </q-btn>
-            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)"><q-tooltip class="bg-accent">Desativar</q-tooltip>❌</q-btn>
-
-            <q-btn v-else @click="activar(props.row._id)"><q-tooltip class="bg-accent">Activar</q-tooltip>✅</q-btn>
-
+        
+            <q-btn 
+              :loading="loadingState[props.row._id]" 
+              v-if="props.row.estado === 1" 
+              @click="desactivar(props.row._id)">
+              ❌
+              <q-tooltip class="bg-accent">Desactivar</q-tooltip>
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
+            </q-btn>
+        
+            <q-btn 
+              :loading="loadingState[props.row._id]" 
+              v-else 
+              @click="activar(props.row._id)">
+              ✅
+              <q-tooltip class="bg-accent">Activar</q-tooltip>
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
+            </q-btn>
           </q-td>
         </template>
       </q-table>
@@ -103,6 +129,9 @@ const telefono = ref()
 const ciudad = ref()
 
 const rows = ref([]);
+const loading = ref(false); 
+const loadingList = ref(null); 
+
 const columns = ref([
   { name: "nombre", label: "Nombre Sede", field: "nombre", align: "center" },
   { name: "direccion", label: "Direccion", field: "direccion", align: "center" },
@@ -113,24 +142,50 @@ const columns = ref([
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
 ]);
 
+const loadingState = ref({});
+
 async function listarSedes() {
+  loading.value = true;
+  loadingList.value = 'todos';
   try {
     const r = await useSedes.getSede();
     console.log(r.sede)
     rows.value = r.sede;
   } catch (error) {
     console.error('Error al obtener las sedes:', error);
+  }finally {
+    loading.value = false;
+    loadingList.value = null;
   }
-}async function listarSedesActivas() {
-  const r = await useSedes.getSedesActivas();
+}
+async function listarSedesActivas() {
+  loading.value = true;
+  loadingList.value = 'activos';
+  try {
+   const r = await useSedes.getSedesActivas();
   console.log(r.data.sedeActiva);
   rows.value = r.data.sedeActiva;
+  } catch (error) {
+    console.error('Error al listar sedes activos:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
 async function listarSedesInactivas() {
+  loading.value = true;
+  loadingList.value = 'inactivos';
+  try {
   const r = await useSedes.getSedesInactivas();
   console.log(r.data.sedeInactiva);
   rows.value = r.data.sedeInactiva;
+  } catch (error) {
+    console.error('Error al listar sedes inactivos:', error); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null; 
+  }
 }
 
 
@@ -140,6 +195,9 @@ onMounted(() => {
 });
 
 function listar(tipo) {
+
+  loading.value = true;
+  loadingList.value = tipo;
   if (tipo === 'activos') {
     listarSedesActivas();
   } else if (tipo === 'inactivos') {
@@ -150,6 +208,8 @@ function listar(tipo) {
 }
 
 const procesarFormulario = async () => {
+  loading.value = true;
+  loadingList.value = 'guardar';
   try {
     if (  sedeSeleccionada !== null && sedeSeleccionada.value !== null) {
      const sede= await useSedes.putSede(sedeSeleccionada.value._id, {
@@ -196,12 +256,13 @@ const procesarFormulario = async () => {
 
   } catch (error) {
     console.error('Error al procesar el formulario:', error);
+  }finally {
+    loading.value = false;
+    loadingList.value = null;
   }
 }
 
 async function editar(sede) {
-
-
 
   if (sede.estado !== 1) {
     Notify.create({
@@ -230,22 +291,69 @@ async function editar(sede) {
 
 
 async function agregar() {
-  sedeSeleccionada.value = null
+  loading.value = true;
+  loadingList.value = 'agregar';
+  try {
+   sedeSeleccionada.value = null
   verFormulario.value = true
   tituloFormulario.value = 'Agregar Sede'
-
+    
+  } 
+  catch (error) {
+    console.error('Error al agregar sede:', error); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
+
 async function activar(id) {
-
-  const route = await useSedes.putSedeActivar(id)
-  listarSedes()
-
+  loadingState.value[id] = true;
+  try {
+    console.log(`Intentando activar sede con ID: ${id}`);
+    const response = await useSedes.putSedeActivar(id);
+    console.log('Respuesta de activación:', response);
+    await listarSedes();
+    Notify.create({
+      type: 'positive',
+      message: 'sede activado exitosamente',
+      icon: 'check',
+    });
+  } catch (error) {
+    console.error('Error al activar sede:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al activar sede',
+      icon: 'error',
+    });
+  } finally {
+    loadingState.value[id] = false;
+  }
 }
 
 async function desactivar(id) {
-  const route = await useSedes.putSedeDesactivar(id)
-  listarSedes()
+  loadingState.value[id] = true;
+  try {
+    console.log(`Intentando desactivar sede con ID: ${id}`);
+    const response = await useSedes.putSedeDesactivar(id);
+    console.log('Respuesta de desactivación:', response);
+    await listarSedes();
+    Notify.create({
+      type: 'positive',
+      message: 'Sede desactivada exitosamente',
+      icon: 'check',
+    });
+  } catch (error) {
+    console.error('Error al desactivar sede:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al desactivar sede',
+      icon: 'error',
+    });
+  } finally {
+    loadingState.value[id] = false;
+  }
 }
 
 async function cerrarFormulario() {

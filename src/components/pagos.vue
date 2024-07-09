@@ -5,17 +5,26 @@
     <div class="q-pa-md">
 
       <div class="flex justify-end">
-        <q-btn color="green" icon="add" @click="agregarPago()">Agregar</q-btn>
+        <q-btn color="green" icon="add" @click="agregarPago()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
           <q-list>
-            <q-item clickable v-ripple @click="listar('todos')">
+            <q-item clickable v-ripple @click="listar('todos')" :class="{ 'loading-item': loading && loadingList === 'todos' }">
               <q-item-section>Listar Todos</q-item-section>
+              <template v-if="loading && loadingList === 'todos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('activos')">
+            <q-item clickable v-ripple @click="listar('activos')" ::class="{ 'loading-item': loading && loadingList === 'activos' }">
               <q-item-section>Listar Activos</q-item-section>
+              <template v-if="loading && loadingList === 'activos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('inactivos')">
+            <q-item clickable v-ripple @click="listar('inactivos')" :class="{ 'loading-item': loading && loadingList === 'inactivos' }">
               <q-item-section>Listar Inactivos</q-item-section>
+              <template v-if="loading && loadingList === 'inactivos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
           </q-list>
         </q-btn-dropdown>
@@ -40,14 +49,10 @@
             <q-select filled v-model="idcliente" label="Seleccione un cliente" :options="clienteOptions"
               :rules="[val => !!val || 'Debe seleccionar un cliente']" />
 
-
-            
-
-            
-            <div class="q-mt-md">
-              <q-btn label="Agregar" color="green" type="submit" />
-              
-            </div>
+              <div class="q-mt-md q-flex q-justify-end">
+                <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
+                <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
+              </div>
           </q-form>
         </q-page>
       </div>
@@ -59,20 +64,33 @@
             <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
           </q-tr>
         </template>
-        <template v-slot:body-cell-estado="props">
-          <q-td :props="props">
-            <p :style="{ color: props.row.estado === 1 ? 'green' : 'red' }">{{ props.row.estado === 1 ? 'Activo' :
-          'Inactivo' }}</p>
-          </q-td>
-        </template>
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
-            <q-btn @click="editar(props.row)">
-              <q-tooltip class="bg-accent">Editar</q-tooltip>🖋️
+            <q-btn @click="editar(props.row)">✍
+              <q-tooltip class="bg-accent">Editar</q-tooltip>
             </q-btn>
-            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)"><q-tooltip
-                class="bg-accent">Desactivar</q-tooltip>❌</q-btn>
-            <q-btn v-else @click="activar(props.row._id)"><q-tooltip class="bg-accent">Activar</q-tooltip>✅</q-btn>
+        
+            <q-btn 
+              :loading="loadingState[props.row._id]" 
+              v-if="props.row.estado === 1" 
+              @click="desactivar(props.row._id)">
+              ❌
+              <q-tooltip class="bg-accent">Desactivar</q-tooltip>
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
+            </q-btn>
+        
+            <q-btn 
+              :loading="loadingState[props.row._id]" 
+              v-else 
+              @click="activar(props.row._id)">
+              ✅
+              <q-tooltip class="bg-accent">Activar</q-tooltip>
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
+            </q-btn>
           </q-td>
         </template>
       </q-table>
@@ -103,6 +121,9 @@ const idplan = ref()
 const clienteOptions = ref([])
 const planOptions = ref([])
 const rows = ref([])
+const loading = ref(false); 
+const loadingList = ref(null); 
+
 const columns = ref([
   {
     name: "idcliente", label: "Cliente",
@@ -126,15 +147,23 @@ const columns = ref([
 
 ])
 
-async function listarpagos() {
+const loadingState = ref({});
 
-  const r = await usePagos.getPagos()
+async function listarpagos()  {
+  loading.value = true;
+  loadingList.value = 'todos';
+  try {
+    const r = await usePagos.getPagos()
   console.log(r.data.pago);
   rows.value = r.data.pago
-
+  } catch (error) {
+    console.error('Error al listar todos los pagos:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
-//listar clientes 
 async function listarClientes() {
   try {
     const r = await useClientes.getCliente();
@@ -145,7 +174,7 @@ async function listarClientes() {
         label: idcliente.nombre,
         value: idcliente._id
       }));
-      console.log(clienteOptions.value); // Mostrar contenido real del array
+      console.log(clienteOptions.value);
     } else {
       console.error("Estructura de respuesta inesperada:", r.data.cliente);
     }
@@ -155,8 +184,6 @@ async function listarClientes() {
 
 }
 
-
-//listar PLan
 async function listarPlanes() {
   try {
     const r = await usePlanes.getPlanes();
@@ -167,7 +194,7 @@ async function listarPlanes() {
         label: idplan.descripcion,
         value: idplan._id
       }));
-      console.log(planOptions.value); // Mostrar contenido real del array
+      console.log(planOptions.value); 
     } else {
       console.error("Estructura de respuesta inesperada:", r.data.plan);
     }
@@ -178,19 +205,34 @@ async function listarPlanes() {
 }
 
 
-
-
-
 async function listarPagosActivos() {
-  const r = await usePagos.getPagosActivos();
+  loading.value = true;
+  loadingList.value = 'activos';
+  try {
+   const r = await usePagos.getPagosActivos();
   console.log(r.data.pagoActivo);
   rows.value = r.data.pagoActivo;
+  } catch (error) {
+    console.error('Error al listar pagos activos:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
 async function listarPagosInactivos() {
+  loading.value = true;
+  loadingList.value = 'inactivos';
+  try {
   const r = await usePagos.getPagosInactios();
   console.log(r.data.pagoInactivo);
   rows.value = r.data.pagoInactivo;
+  } catch (error) {
+    console.error('Error al listar pagos inactivos:', error); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null; 
+  }
 }
 
 
@@ -201,7 +243,8 @@ onMounted(() => {
 })
 
 const procesarFormulario = async () => {
-
+  loading.value = true;
+  loadingList.value = 'guardar';
   try {
 
     console.log(idcliente.value.value);
@@ -250,6 +293,9 @@ const procesarFormulario = async () => {
     pagoSeleccionado.value = null;
   } catch (error) {
     console.error('Error al procesar el formulario:', error);
+  }finally {
+    loading.value = false;
+    loadingList.value = null;
   }
 };
 
@@ -280,23 +326,70 @@ function editar(pago) {
 
 }
 
-function agregarPago() {
+async function agregarPago()  {
+  loading.value = true;
+  loadingList.value = 'agregar';
+  try {
   pagoSeleccionado.value = null
   verFormulario.value = (true)
   tituloFormulario.value = 'Agregar PAgo'
-
+    
+  } 
+  catch (error) {
+    console.error('Error al agregar pago:', error); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
 async function activar(id) {
-  await usePagos.putPagosActivar(id);
-  listarpagos();
+  loadingState.value[id] = true;
+  try {
+    console.log(`Intentando activar pago con ID: ${id}`);
+    const response = await usePagos.putPagosActivar(id);
+    console.log('Respuesta de activación:', response);
+    await listarpagos();
+    Notify.create({
+      type: 'positive',
+      message: 'Pago activado exitosamente',
+      icon: 'check',
+    });
+  } catch (error) {
+    console.error('Error al activar Pago:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al activar Pago',
+      icon: 'error',
+    });
+  } finally {
+    loadingState.value[id] = false;
+  }
 }
 
 async function desactivar(id) {
-  await usePagos.putPagosInactivar(id);
-  listarpagos();
+  loadingState.value[id] = true;
+  try {
+    console.log(`Intentando desactivar Pago con ID: ${id}`);
+    const response = await usePagos.putPagosInactivar(id);
+    console.log('Respuesta de desactivación:', response);
+    await listarpagos();
+    Notify.create({
+      type: 'positive',
+      message: 'Pago desactivado exitosamente',
+      icon: 'check',
+    });
+  } catch (error) {
+    console.error('Error al desactivar Pago:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al desactivar Pago',
+      icon: 'error',
+    });
+  } finally {
+    loadingState.value[id] = false;
+  }
 }
-
 function cerrarFormulario() {
   verFormulario.value = (false)
   pagoSeleccionado.value = null;
@@ -304,6 +397,8 @@ function cerrarFormulario() {
 }
 
 function listar(tipo) {
+  loading.value = true;
+  loadingList.value = tipo;
   if (tipo === 'activos') {
     listarPagosActivos();
   } else if (tipo === 'inactivos') {
@@ -318,7 +413,6 @@ function limpiar() {
   idplan.value = ("")
 
 }
-
 </script>
 
 

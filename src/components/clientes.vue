@@ -3,21 +3,27 @@
     <div class="q-pa-md">
 
       <div class="flex justify-end">
-        <q-btn color="green" icon="add" @click="agregar()">agregar</q-btn>
-
-
-
+        <q-btn color="green" icon="add" @click="agregar()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
 
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
           <q-list>
-            <q-item clickable v-ripple @click="listar('todos')">
+            <q-item clickable v-ripple @click="listar('todos')" :class="{ 'loading-item': loading && loadingList === 'todos' }">
               <q-item-section>Listar Todos</q-item-section>
+              <template v-if="loading && loadingList === 'todos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('activos')">
+            <q-item clickable v-ripple @click="listar('activos')" ::class="{ 'loading-item': loading && loadingList === 'activos' }">
               <q-item-section>Listar Activos</q-item-section>
+              <template v-if="loading && loadingList === 'activos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('inactivos')">
+            <q-item clickable v-ripple @click="listar('inactivos')" :class="{ 'loading-item': loading && loadingList === 'inactivos' }">
               <q-item-section>Listar Inactivos</q-item-section>
+              <template v-if="loading && loadingList === 'inactivos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
           </q-list>
         </q-btn-dropdown>
@@ -29,6 +35,7 @@
           <div class="q-flex q-justify-between q-items-center form-header">
             <h5 class="form-title">{{ tituloFormulario }}</h5>
             <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
+          
           </div>
 
 
@@ -80,17 +87,10 @@
                 val => new Date(val) > new Date() || 'La fecha de vencimiento debe ser mayor a la fecha actual'
               ]" />
 
-            <div class="q-mt-md">
-
-              <q-btn :loading="useClientes.loading" label="Guardar" color="green" type="submit">
-                <template v-slot:loading>
-                  <q-spinner color="primary" size="1em" />
-                </template>
-              </q-btn>
-
-
-              <q-btn label="Cerrar" color="red" outline @click="cerrarFormulario" />
-            </div>
+              <div class="q-mt-md q-flex q-justify-end">
+                <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
+                <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
+              </div>
           </q-form>
         </q-page>
       </div>
@@ -103,6 +103,7 @@
             <h5 class="form-title2 bg-primary text-white q-pa-sm rounded-borders
             ">{{ tituloFormularioSeguimiento }}</h5>
             <q-btn flat icon="close" color="white" @click="cerrarFormularioSeguimiento" class="close-btn" />
+          
           </div>
 
           <q-form class="q-gutter-md" @submit.prevent="procesarSeguimiento">
@@ -143,6 +144,7 @@
             <q-th v-for="col in props.cols" :key="col.name" :props="props" class="table2">{{ col.label }}</q-th>
           </q-tr>
         </template>
+
         <template v-slot:body-cell-estado="props">
           <q-td :props="props">
             <p :style="{ color: props.row.estado === 1 ? 'green' : 'red' }">{{ props.row.estado === 1 ? 'Activo' :
@@ -150,30 +152,36 @@
           </q-td>
         </template>
 
-
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
-            <q-btn @click="editar(props.row)"> ✍
-              <q-tooltip class="bg-accent">Editar</q-tooltip> </q-btn>
-
-            <q-btn :loading="useClientes.loading" v-if="props.row.estado == 1" @click="desactivar(props.row._id)">❌
+            <q-btn @click="editar(props.row)">✍
+              <q-tooltip class="bg-accent">Editar</q-tooltip>
+            </q-btn>
+        
+            <q-btn 
+              :loading="loadingState[props.row._id]" 
+              v-if="props.row.estado === 1" 
+              @click="desactivar(props.row._id)">
+              ❌
               <q-tooltip class="bg-accent">Desactivar</q-tooltip>
               <template v-slot:loading>
                 <q-spinner color="primary" size="1em" />
               </template>
             </q-btn>
-
-            <q-btn v-else @click="activar(props.row._id)" :loading="useClientes.loading">✅
+        
+            <q-btn 
+              :loading="loadingState[props.row._id]" 
+              v-else 
+              @click="activar(props.row._id)">
+              ✅
               <q-tooltip class="bg-accent">Activar</q-tooltip>
               <template v-slot:loading>
                 <q-spinner color="primary" size="1em" />
               </template>
             </q-btn>
-
-
-
           </q-td>
         </template>
+        
         <template v-slot:body-cell-seguimiento="props">
           <q-td :props="props">
             <q-btn @click="agregarSeguimiento(props.row)">➕
@@ -206,10 +214,6 @@
 </template>
 
 <script setup>
-
-
-
-
 import { ref, onMounted } from 'vue';
 import { useClientesStore } from '../store/clientes.js';
 import { usePlanesStore } from "../store/planes.js"
@@ -218,7 +222,6 @@ import { useQuasar, Notify } from 'quasar';
 
 const useClientes = useClientesStore();
 const usePlanes = usePlanesStore()
-
 
 const verFormulario = ref(false);
 const verFormularioSeguimiento = ref(false);
@@ -252,6 +255,8 @@ const rows = ref([]);
 const selectedClienteSeguimiento = ref([]);
 const clienteSeleccionado1 = ref(null);
 
+const loading = ref(false); 
+const loadingList = ref(null); 
 
 const validateDateOfBirth = () => {
   if (!fechaNacimiento.value) return;
@@ -315,6 +320,7 @@ const columnsSeguimiento = ref([
   { name: "tCintura", label: "Tamaño Cintura", field: "tCintura", align: "center" },
   { name: "tPierna", label: "Tamaño Pierna", field: "tPierna", align: "center" },
 ]);
+const loadingState = ref({});
 
 function getIMCColor(IMC) {
   if (IMC < 18.5) {
@@ -340,17 +346,24 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-async function listarClientes() {
-  const r = await useClientes.getCliente();
-  const clientes = r.data.Cliente;
-
-  rows.value = clientes.map(cliente => ({
+async function listarClientes()  {
+  loading.value = true;
+  loadingList.value = 'todos';
+  try {
+    const r = await useClientes.getCliente();
+    const clientes = r.data.Cliente;
+     rows.value = clientes.map(cliente => ({
     ...cliente,
     fechaNacimiento: formatDate(cliente.fechaNacimiento),
     fechaVencimiento: formatDate(cliente.fechaVencimiento),
   }));
-
-  console.log(rows.value);
+    console.log(r.data.Cliente);
+  } catch (error) {
+    console.error('Error al listar todos los clientes:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
 async function listarPlanes() {
@@ -371,8 +384,6 @@ async function listarPlanes() {
 }
 
 
-
-
 function verSeguimiento(cliente) {
   clienteSeleccionado.value = cliente;
   selectedClienteSeguimiento.value = cliente.seguimiento.map(seg => ({
@@ -390,19 +401,38 @@ function cerrarSeguimiento() {
 
 
 async function listarClientesActivos() {
-  const r = await useClientes.getClientesActivos();
+  loading.value = true;
+  loadingList.value = 'activos';
+  try {
+   const r = await useClientes.getClientesActivos();
   console.log(r.data.clientesActivos);
   rows.value = r.data.clientesActivos;
-
+  } catch (error) {
+    console.error('Error al listar clientes activos:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
 async function listarClientesInactivos() {
-  const r = await useClientes.getClientesInactivos();
+  loading.value = true;
+  loadingList.value = 'inactivos';
+  try {
+    const r = await useClientes.getClientesInactivos();
   console.log(r.data.clientesInactivos);
   rows.value = r.data.clientesInactivos;
+  } catch (error) {
+    console.error('Error al listar clientes inactivos:', error); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null; 
+  }
 }
 
 function listar(tipo) {
+  loading.value = true;
+  loadingList.value = tipo;
   if (tipo === 'activos') {
     listarClientesActivos();
   } else if (tipo === 'inactivos') {
@@ -421,6 +451,8 @@ onMounted(() => {
 });
 
 const procesarFormulario = async (option) => {
+  loading.value = true;
+  loadingList.value = 'guardar';
   try {
     console.log(idPlan.value);
     const idplanseleccionado = idPlan.value
@@ -478,6 +510,9 @@ const procesarFormulario = async (option) => {
     limpiar();
   } catch (error) {
     console.error("Error al procesar el formulario:", error);
+  }finally {
+    loading.value = false;
+    loadingList.value = null;
   }
 };
 
@@ -501,25 +536,71 @@ async function editar(cliente) {
 }
 
 async function agregar() {
-  clienteSeleccionado.value = null;
+  loading.value = true;
+  loadingList.value = 'agregar';
+  try {
+    clienteSeleccionado.value = null;
   verFormulario.value = true;
   tituloFormulario.value = "Agregar Cliente";
+    
+  } 
+  catch (error) {
+    console.error('Error al agregar cliente:', error); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
 
+async function activar(id) {
+  loadingState.value[id] = true;
+  try {
+    console.log(`Intentando activar cliente con ID: ${id}`);
+    const response = await useClientes.putClientesActivar(id);
+    console.log('Respuesta de activación:', response);
+    await listarClientes();
+    Notify.create({
+      type: 'positive',
+      message: 'Cliente activado exitosamente',
+      icon: 'check',
+    });
+  } catch (error) {
+    console.error('Error al activar Cliente:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al activar cliente',
+      icon: 'error',
+    });
+  } finally {
+    loadingState.value[id] = false;
+  }
+}
 
+async function desactivar(id) {
+  loadingState.value[id] = true;
+  try {
+    console.log(`Intentando desactivar cliente con ID: ${id}`);
+    const response = await useClientes.putClientesDesactivar(id);
+    console.log('Respuesta de desactivación:', response);
+    await listarClientes();
+    Notify.create({
+      type: 'positive',
+      message: 'Cliente desactivado exitosamente',
+      icon: 'check',
+    });
+  } catch (error) {
+    console.error('Error al desactivar cliente:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al desactivar cliente',
+      icon: 'error',
+    });
+  } finally {
+    loadingState.value[id] = false;
+  }
+}
 
-
-
-const activar = async (id) => {
-  await useClientes.putClientesActivar(id);
-  listarClientes();
-};
-
-const desactivar = async (id) => {
-  await useClientes.putClientesDesactivar(id);
-  listarClientes();
-};
 
 function cerrarFormulario() {
   verFormulario.value = false;
@@ -567,9 +648,6 @@ async function agregarSeguimiento(cliente) {
     });
   }
 }
-
-
-
 
 
 async function procesarSeguimiento(idCliente) {

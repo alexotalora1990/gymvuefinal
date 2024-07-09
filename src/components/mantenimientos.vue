@@ -43,10 +43,10 @@
 
 
             
-            <div class="q-mt-md">
-              <q-btn label="Agregar" color="green" type="submit" />
-              
-            </div>
+              <div class="q-mt-md q-flex q-justify-end">
+                <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
+                <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
+              </div>
           </q-form>
         </q-page>
       </div>
@@ -90,11 +90,12 @@
   const responsable = ref()
   const descripcion = ref()
   const valor = ref()
-
-
   const maquinaOptions = ref([])
-  
   const rows = ref([])
+
+  const loading = ref(false); 
+  const loadingList = ref(null); 
+
   const columns = ref([
     { name: "idmaquina", label: "Maquina",
     field: (row) => {
@@ -111,16 +112,28 @@
   
   ])
   
-  async function listarMantenimiento() {
-  
+  const loadingState = ref({});
+
+  async function listarMantenimiento(){
+  loading.value = true;
+  loadingList.value = 'todos';
+  try {
     const r = await useMantenimiento.getMaintenance()
     console.log(r.data.mantenimientos);
     rows.value = r.data.mantenimientos
+  } catch (error) {
+    console.error('Error al listar todos los mantenimientos:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
   }
+}
 
 
   //listar Maquinas para traer descripcion
   async function listarMaquinas() {
+    loading.value = true;
+  loadingList.value = 'todos';
   try {
     const r = await useMaquina.getMaquina();
     if (r && r.data.maquina) {
@@ -134,6 +147,9 @@
     }
   } catch (error) {
     console.error("Error al obtener las Maquinas:", error);
+  }finally {
+    loading.value = false;
+    loadingList.value = null;
   }
 }
 
@@ -148,6 +164,8 @@
 
 
   const procesarFormulario = async (option) => {
+    loading.value = true;
+    loadingList.value = 'guardar';
   try {
  
     console.log(idmaquina.value.value);
@@ -192,6 +210,9 @@
     mantenimientoSeleccionado.value = null;
   } catch (error) {
     console.error('Error al procesar el formulario:', error);
+  }finally {
+    loading.value = false;
+    loadingList.value = null;
   }
 };
   
@@ -211,13 +232,25 @@
   
 
 
-function agregarMantenimiento() {
-  mantenimientoSeleccionado.value = null;
+  async function agregarMantenimiento()  {
+  loading.value = true;
+  loadingList.value = 'agregar';
+  try {
+    mantenimientoSeleccionado.value = null;
   verFormulario.value = true;
   tituloFormulario.value = 'Agregar Mantenimiento';
 
   limpiar();
+    
+  } 
+  catch (error) {
+    console.error('Error al agregar usuario:', error); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
+
 
   
   

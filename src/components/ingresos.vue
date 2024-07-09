@@ -1,48 +1,48 @@
-  <template>
+<template>
   <div>
     <div class="q-pa-md">
       <div class="flex justify-end">
-        <q-btn color="green" icon="add" @click="agregar()">Agregar</q-btn>
+        <q-btn color="green" icon="add" @click="agregar()" :loading="loading && loadingList === 'agregar'">Agregar</q-btn>
       </div>
 
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
-
-
           <div class="q-flex q-justify-between q-items-center form-header">
             <h5 class="form-title">{{ tituloFormulario }}</h5>
             <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
           </div>
 
           <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
+            <q-select 
+              filled 
+              v-model="idsede"
+              label="Seleccione una sede" 
+              :options="sedeOptions"
+              :rules="[val => !!val || 'Debe seleccionar una sede']" 
+            />
 
-            <q-select filled v-model="idsede" label="Seleccione una sede" :options="sedeOptions"
-            :rules="[val => !!val || 'Debe seleccionar una sede']" />
+            <q-select 
+              filled
+              v-model="idcliente"
+              label="Seleccione un cliente"
+              :options="filteredClienteOptions"
+              :rules="[val => !!val || 'Debe seleccionar un cliente']" 
+              use-input
+              input-debounce="300"
+              @filter="filterClienteOptions"
+            />
 
-            <q-select filled v-model="idcliente" label="Seleccione un cliente" :options="clienteOptions"
-              :rules="[val => !!val || 'Debe seleccionar un cliente']" />
-
-
-            
-
-            
-            <div class="q-mt-md">
-              <q-btn label="Agregar" color="green" type="submit" />
-              
+            <div class="q-mt-md q-flex q-justify-end">
+              <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
             </div>
           </q-form>
         </q-page>
       </div>
 
-
-
-
       <q-table title="Ingresos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
-
-        
         <template v-slot:header="props">
-          <q-tr :props="props" style="font-size: 24px; " class="table1">
-            <q-th v-for="col in props.cols" :key="col.name" :props="props" >{{ col.label }}</q-th>
+          <q-tr :props="props" style="font-size: 24px;" class="table1">
+            <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
           </q-tr>
         </template>
         <template v-slot:body-cell-opciones="props">
@@ -54,165 +54,166 @@
         </template>
       </q-table>
     </div>
-
   </div>
-
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue"
-import { useIncomeStore } from "../store/ingresos.js"
-import { useSedesStore } from "../store/sedes.js";
+import { ref, onMounted } from "vue";
+import { useIncomeStore } from "../store/ingresos.js";
 import { useClientesStore } from '../store/clientes.js';
+import { useSedesStore } from "../store/sedes.js";
+import { Notify } from "quasar";
 
-import axios from 'axios';
-
-const useIngresos = useIncomeStore()
-const tituloFormulario= ref('Agregar Ingreso ')
-const verFormulario=ref(false)
-const ingresoSeleccionado =ref(null)
-const idsede =ref()
-const idcliente=ref()
-const useSedes = useSedesStore();
+const useIngresos = useIncomeStore();
 const useClientes = useClientesStore();
+const useSedes = useSedesStore();
 
-const sedeOptions = ref([])
-const clienteOptions = ref([])
+const tituloFormulario = ref('Agregar Ingreso');
+const verFormulario = ref(false);
+const ingresoSeleccionado = ref(null);
+const idsede = ref(null);
+const idcliente = ref(null);
 
+const sedeOptions = ref([]);
+const clienteOptions = ref([]);
+const filteredClienteOptions = ref([]);
 
-const rows = ref([])
+const loading = ref(false); 
+const loadingList = ref(null); 
+
+const rows = ref([]);
 const columns = ref([
-  { name: "idsede", label: "Sede", field:  (row) => {
-      const sede = sedeOptions.value.find(option => option.value === row.idsede);
-      return sede ? sede.label : '';
-    },
-     align: "center" },
-  { name: "idcliente", label: "ID Cliente", field:  (row) => {
-      const cliente = clienteOptions.value.find(option => option.value === row.idcliente);
-      return cliente ? cliente.label : '';
-    },
-     align: "center" },
-  { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
+  { name: "idsede", label: "Sede", field:  (row) => row.idsede?.nombre || 'Sin nombre', align: "center" },
+  { name: "idcliente", label: "Cliente", field:  (row) => row.idcliente?.nombre || 'Sin nombre', align: "center" },
+  { name: "opciones", label: "Opciones", field: "opciones", align: "center" }
+]);
 
-])
+const filterClienteOptions = (val, update) => {
+  if (val === '') {
+    update(() => {
+      filteredClienteOptions.value = clienteOptions.value;
+    });
+    return;
+  }
+  
+  const needle = val.toLowerCase();
+  update(() => {
+    filteredClienteOptions.value = clienteOptions.value.filter(v => v.label.toLowerCase().includes(needle));
+  });
+};
 
-async function listarIngresos() {
+const listarIngresos = async () => {
+  loading.value = true;
+  loadingList.value = 'todos';
+  try {
+    const r = await useIngresos.getIncome();
+    rows.value = r.data.Ingreso;
+  } catch (error) {
+    console.error('Error al listar todos los ingresos:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
+};
 
-  const r = await useIngresos.getIncome()
-  console.log(r.data.Ingreso);
-  rows.value = r.data.Ingreso
-}
-
-async function listarSedes() {
+const listarSedes = async () => {
   try {
     const r = await useSedes.getSede();
-    console.log(r.sede)
-    if (r && r.sede) {
-      
-      sedeOptions.value = r.sede.map(idsede => ({
-        label: idsede.nombre,
-        value: idsede._id
-      }));
-      console.log(sedeOptions.value); // Mostrar contenido real del array
-    } else {
-      console.error("Estructura de respuesta inesperada:", r.sede);
-    }
+    sedeOptions.value = r.sede.map(sede => ({ label: sede.nombre, value: sede._id }));
   } catch (error) {
-    console.error("Error al obtener las sedes:", error);
+    console.error('Error al obtener las sedes:', error);
   }
-}
+};
 
-async function listarclientes() {
+const listarClientes = async () => {
   try {
     const r = await useClientes.getCliente();
-    console.log(r.data.Cliente);
-    if (r && r.data.Cliente) {
-      clienteOptions.value = r.data.Cliente.map(idcliente => ({
-        label: idcliente.nombre,
-        value: idcliente._id
-      }));
-      console.log(clienteOptions.value); // Mostrar contenido real del array
-    } else {
-      console.error("Estructura de respuesta inesperada:", r.data.cliente);
-    }
+    clienteOptions.value = r.data.Cliente.map(cliente => ({ value: cliente._id, label: cliente.nombre }));
+    filteredClienteOptions.value = clienteOptions.value;
   } catch (error) {
-    console.error("Error al obtener los clientes:", error);
+    console.error('Error al obtener los clientes:', error);
   }
-}
-
-
-
-
-
-
+};
 
 onMounted(() => {
-  listarIngresos()
-  listarSedes()
-  listarclientes()
-})
+  listarIngresos();
+  listarSedes();
+  listarClientes();
+});
 
-const procesarFormulario=async()=>{
+const procesarFormulario = async () => {
+  loading.value = true;
+  loadingList.value = 'guardar';
   try {
-    if(ingresoSeleccionado !==null && ingresoSeleccionado.value !==null){
-      const income= await useIngresos.putIncome(ingresoSeleccionado.value._id,{
-        idsede:idsede.value,
-        idcliente: idcliente.value
-       
+    const Ingreso = {
+      idsede: idsede.value.value,
+      idcliente: idcliente.value.value
+    };
 
-    })
-    } else{
-      const income=await useIngresos.postIncome({
-        idsede:idsede.value,
-        idcliente: idcliente.value
-      })
+    if (ingresoSeleccionado.value !== null) {
+      await useIngresos.putIncome(ingresoSeleccionado.value._id, Ingreso);
+      Notify.create({ type: 'positive', message: 'Ingreso Actualizado Exitosamente', icon: 'check', position: 'top' });
+    } else {
+      await useIngresos.postIncome(Ingreso);
+      Notify.create({ type: 'positive', message: 'Ingreso Creado Exitosamente', icon: 'check', position: 'top' });
     }
-    listarIngresos()
-    cerrarFormulario()
-    limpiar()
-    ingresoSeleccionado.value=null
+
+    listarIngresos();
+    cerrarFormulario();
+    limpiar();
+    ingresoSeleccionado.value = null;
   } catch (error) {
     console.error('Error al procesar el formulario:', error);
+    Notify.create({ type: 'negative', message: 'Error al procesar el formulario', icon: 'error' });
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
   }
-}
+};
 
-async function agregar(){
-  ingresoSeleccionado.value=null
-  verFormulario.value=(true)
-  tituloFormulario.value='Agregar Ingreso'
-}
-
-
-
-
-async function editar(ingreso){
-  
-  ingresoSeleccionado.value= ingreso
-  tituloFormulario.value='Editar Ingreso'
-  idsede.value=ingreso.idsede
-  idcliente.value=ingreso.idcliente
-  verFormulario.value=(true)
+const agregar = async () => {
+  loading.value = true;
+  loadingList.value = 'agregar';
+  try {
+    verFormulario.value = true;
+    tituloFormulario.value = 'Agregar Ingreso';
+    ingresoSeleccionado.value = null;
+    idsede.value = null;
+    idcliente.value = null;
+  } catch (error) {
+    console.error('Error al agregar ingreso:', error);
+    Notify.create({ type: 'negative', message: 'Error al agregar ingreso', icon: 'error' });
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
   }
+};
 
-async function cerrarFormulario(){
-  verFormulario.value=(false)
-  ingresoSeleccionado.value=null
-  limpiar()
-}
+const editar = async (ingreso) => {
+  ingresoSeleccionado.value = ingreso;
+  tituloFormulario.value = 'Editar Ingreso';
+  idsede.value = ingreso.idsede.nombre;
+  idcliente.value = ingreso.idcliente.nombre;
+  verFormulario.value = true;
+};
 
-function limpiar(){
-  idsede.value=("")
-  idcliente.value=("")
- 
-}
+const cerrarFormulario = () => {
+  verFormulario.value = false;
+  ingresoSeleccionado.value = null;
+  limpiar();
+};
 
-
-
+const limpiar = () => {
+  idsede.value = "";
+  idcliente.value = "";
+};
 </script>
 
+
 <style scoped>
+
 .shadow-2 {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2); 
 }
 
 .rounded-borders {

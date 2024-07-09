@@ -2,17 +2,35 @@
   <div>
     <div class="q-pa-md">
       <div class="flex justify-end">
-        <q-btn color="green" icon="add" @click="agregarProducto">Agregar</q-btn>
+
+        <q-input filled label="Buscar por nombre"
+          style="background-color:#d3d0d0; color: black; width: 30%; border-radius: 5px; margin-right: 1%;"
+          v-model="nombreProducto" @keyup.enter="listarNombre">
+          <template v-slot:append>
+            <q-btn icon="search" @click="listarNombre" style="background-color:#ffff;" />
+          </template>
+        </q-input>
+
+        <q-btn color="green" icon="add" @click="agregarProducto()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
           <q-list>
-            <q-item clickable v-ripple @click="listar('todos')">
+            <q-item clickable v-ripple @click="listar('todos')" :class="{ 'loading-item': loading && loadingList === 'todos' }">
               <q-item-section>Listar Todos</q-item-section>
+              <template v-if="loading && loadingList === 'todos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('activos')">
+            <q-item clickable v-ripple @click="listar('activos')" ::class="{ 'loading-item': loading && loadingList === 'activos' }">
               <q-item-section>Listar Activos</q-item-section>
+              <template v-if="loading && loadingList === 'activos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('inactivos')">
+            <q-item clickable v-ripple @click="listar('inactivos')" :class="{ 'loading-item': loading && loadingList === 'inactivos' }">
               <q-item-section>Listar Inactivos</q-item-section>
+              <template v-if="loading && loadingList === 'inactivos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
           </q-list>
         </q-btn-dropdown>
@@ -32,9 +50,10 @@
               :rules="[val => val && val > 0 || 'Cantidad debe ser un número positivo']" />
             <q-input filled v-model="valor" label="Valor" type="number"
               :rules="[val => val && val > 0 || 'Valor debe ser un número positivo']" />
-            <div class="q-mt-md">
-              <q-btn label="Agregar" color="green" type="submit" />
-            </div>
+              <div class="q-mt-md q-flex q-justify-end">
+                <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
+                <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
+              </div>
           </q-form>
         </q-page>
       </div>
@@ -53,20 +72,31 @@
         </template>
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
-            <q-btn @click="editarProducto(props.row)"><q-tooltip class="bg-accent">Editar</q-tooltip>🖋️</q-btn>
-
-
-            <q-btn :loading="useProductos.loading" v-if="props.row.estado == 1" @click="desactivar(props.row._id)"><q-tooltip
-                class="bg-accent">Desactivar</q-tooltip>❌
-                <template v-slot:loading>
-                <q-spinner color="primary" size="1em" />
-              </template>
+            <q-btn @click="editarProducto(props.row)">✍
+              <q-tooltip class="bg-accent">Editar</q-tooltip>
             </q-btn>
-            <q-btn v-else @click="activar(props.row._id)" :loading="useProductos.loading">
-              <q-tooltip class="bg-accent">Activar</q-tooltip>✅</q-btn>
+        
+            <q-btn 
+              :loading="loadingState[props.row._id]" 
+              v-if="props.row.estado === 1" 
+              @click="desactivar(props.row._id)">
+              ❌
+              <q-tooltip class="bg-accent">Desactivar</q-tooltip>
               <template v-slot:loading>
                 <q-spinner color="primary" size="1em" />
               </template>
+            </q-btn>
+        
+            <q-btn 
+              :loading="loadingState[props.row._id]" 
+              v-else 
+              @click="activar(props.row._id)">
+              ✅
+              <q-tooltip class="bg-accent">Activar</q-tooltip>
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
+            </q-btn>
           </q-td>
         </template>
       </q-table>
@@ -84,13 +114,15 @@ const $q = useQuasar();
 const verFormulario = ref(false);
 const productoSeleccionado = ref(null);
 const tituloFormulario = ref('Agregar Producto');
-
 const useProductos = useProductsStore();
 const nombre = ref();
 const cantidad = ref();
 const valor = ref();
-
+const nombreProducto = ref()
 const rows = ref([]);
+const loading = ref(false); 
+const loadingList = ref(null); 
+
 const columns = ref([
   { name: "nombre", label: "Nombre", field: "nombre", align: "center" },
   { name: "cantidad", label: "Cantidad", field: "cantidad", align: "center" },
@@ -99,29 +131,98 @@ const columns = ref([
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
 ]);
 
+const loadingState = ref({});
+
 async function listarProductos() {
   const r = await useProductos.getProducts();
   console.log(r.data.producto);
-  rows.value = r.data.producto;
+  const producto = r.data.producto;
+  if (producto.length === 0) {
+    Notify.create({
+      type: 'negative',
+      message: "No hay productos en la base"
+    })
+  }
+  else {
+    rows.value = producto
+
+  }
+
+
 }
 
 async function listarProductosActivos() {
   const r = await useProductos.getProductsActivos();
-  console.log(r.data.productosActivos);
-  rows.value = r.data.productosActivos;
+  const productoActivo = r.data.productosActivos;
+  if (productoActivo.length === 0) {
+    Notify.create({
+      type: 'negative',
+      message: "No hay productos activos"
+    })
+  }
+  else {
+    rows.value = productoActivo
+    Notify.create({
+      type: 'positive',
+      message: 'Productos Activos Listados Correctamente',
+      position: 'top'
+    })
+  }
+
 }
 
 async function listarProductosInactivos() {
   const r = await useProductos.getProductsInactivos();
-  console.log(r.data.productosInactivos);
-  rows.value = r.data.productosInactivos;
+  const productoInactivo = r.data.productosInactivos;
+
+  if (productoInactivo.length === 0) {
+    Notify.create({
+      type: 'negative',
+      message: "No hay productos inactivos"
+    })
+  }
+  else {
+    rows.value = productoInactivo
+    Notify.create({
+      type: 'positive',
+      message: 'Productos Inactivos Listados Correctamente',
+      position: 'top'
+    })
+  }
+
+
 }
+async function listarNombre() {
+  if (nombreProducto.value === "") {
+    Notify.create({
+      type: 'negative',
+      message: 'Digite el nombre de un producto'
+    });
+  }
+  const r = await useProductos.getProducts();
+  const productoFiltrado = r.data.producto.filter(producto =>
+    producto.nombre.toLowerCase().includes(nombreProducto.value.toLowerCase())
+  );
+  if (productoFiltrado.length === 0) {
+    Notify.create({
+      type: 'negative',
+      message: 'Producto no existe'
+    });
+  }
+  else {
+    rows.value = productoFiltrado
+  }
+  nombreProducto.value = ("")
+}
+
 
 onMounted(() => {
   listarProductos();
 });
 
 const procesarFormulario = async () => {
+  loading.value = true;
+  loadingList.value = 'guardar';
   try {
     if (productoSeleccionado.value !== null) {
       // Actualiza
@@ -130,6 +231,11 @@ const procesarFormulario = async () => {
         valor: valor.value,
         cantidad: cantidad.value,
       });
+      Notify.create({
+        type: 'positive',
+        message: 'Producto editado Correctamente',
+        position: 'top'
+      })
     } else {
       // Agrega
       await useProductos.postProducts({
@@ -137,6 +243,11 @@ const procesarFormulario = async () => {
         valor: valor.value,
         cantidad: cantidad.value,
       });
+      Notify.create({
+        type: 'positive',
+        message: 'Producto Agregado Correctamente',
+        position: 'top'
+      })
     }
 
     listarProductos();
@@ -144,6 +255,9 @@ const procesarFormulario = async () => {
     limpiar();
   } catch (error) {
     console.error('Error al procesar el formulario:', error);
+  }finally {
+    loading.value = false;
+    loadingList.value = null;
   }
 };
 
@@ -172,20 +286,75 @@ async function editarProducto(producto) {
 }
 
 async function agregarProducto() {
+  loading.value = true;
+  loadingList.value = 'agregar';
+  try {
   productoSeleccionado.value = null;
   verFormulario.value = true;
   tituloFormulario.value = 'Agregar Producto';
+    
+  } 
+  catch (error) {
+    console.error('Error al agregar producto:', error); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
 async function activar(id) {
-  await useProductos.putProductsActivar(id);
-  listarProductos();
+  loadingState.value[id] = true;
+  try {
+    console.log(`Intentando activar producto con ID: ${id}`);
+    const response = await useProductos.putProductsActivar(id);
+    console.log('Respuesta de activación:', response);
+    await listarProductos();
+    Notify.create({
+      type: 'positive',
+      message: 'Producto activado exitosamente',
+      icon: 'check',
+      position: 'top',
+      timeout: 3000,
+    });
+  } catch (error) {
+    console.error('Error al activar producto:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al activar producto',
+      icon: 'error',
+    
+    });
+  } finally {
+    loadingState.value[id] = false;
+  }
 }
 
 async function desactivar(id) {
-  await useProductos.putProductsDesactivar(id);
-  listarProductos();
+  loadingState.value[id] = true;
+  try {
+    console.log(`Intentando desactivar producto con ID: ${id}`);
+    const response = await useProductos.putProductsDesactivar(id);
+    console.log('Respuesta de desactivación:', response);
+    await listarProductos();
+    Notify.create({
+      color:'orange',
+      message: 'Producto desactivado exitosamente',
+      icon: 'check',
+      position: 'top',
+      timeout: 3000,
+    });
+  } catch (error) {
+    console.error('Error al desactivar producto:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al desactivar producto',
+      icon: 'error',
+    });
+  } finally {
+    loadingState.value[id] = false;
+  }
 }
+
 
 function cerrarFormulario() {
   verFormulario.value = false;
@@ -200,6 +369,8 @@ function limpiar() {
 }
 
 function listar(tipo) {
+  loading.value = true;
+  loadingList.value = tipo;
   if (tipo === 'activos') {
     listarProductosActivos();
   } else if (tipo === 'inactivos') {

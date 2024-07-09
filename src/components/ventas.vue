@@ -1,12 +1,11 @@
 <template>
     <div>
-  
-  
-  
+
       <div class="q-pa-md">
   
         <div class="flex justify-end">
-          <q-btn color="green" icon="add" @click="agregarVenta()">Agregar</q-btn>
+          <q-btn color="green" icon="add" @click="agregarVenta()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
+
         </div>
         <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
@@ -19,27 +18,50 @@
             <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
   
               <div>
-                <q-select filled v-model="idcliente" label="Seleccione un cliente" :options="clienteOptions"
-                :rules="[val => !!val || 'Debe seleccionar un cliente']" />
+                <q-select
+                 filled
+                  v-model="idcliente"
+                   label="Seleccione un cliente"
+                    :options="clienteOptions"
+                :rules="[val => !!val || 'Debe seleccionar un cliente']" 
+                use-input
+              input-debounce="300"
+              @filter="filterClienteOptions"
+              />
+                
               </div>
               <div>
-                <q-select filled v-model="idproducto" label="Seleccione un producto" :options="productoOptions"
-                :rules="[val => !!val || 'Debe seleccionar un Producto']" />
+                <q-select 
+                filled 
+                v-model="idproducto" 
+                label="Seleccione un producto" 
+                :options="productoOptions"
+                :rules="[val => !!val || 'Debe seleccionar un Producto']"
+                use-input
+              input-debounce="300"
+              @filter="filterProductoOptions"
+               />
               </div>
               <div>
-                <q-select filled v-model="idsede" label="Seleccione una sede" :options="sedeOptions" :rules="[val => !!val || 'Debe seleccionar una sede']" />
+                <q-select
+                 filled 
+                 v-model="idsede"
+                  label="Seleccione una sede"
+                   :options="sedeOptions"
+                    :rules="[val => !!val || 'Debe seleccionar una sede']"
+                    use-input
+              input-debounce="300"
+              @filter="filterSedeOptions"
+               />
               </div>
               <div>
                 <q-input v-model="cantidad" label="Cantidad"
                   :rules="[val => /^[0-9]+$/.test(val) || 'La cantidad no puede estar vacio y solo recibe numeros']" />
               </div>
-              
-             
-              <div class="q-mt-md">
-                <q-btn label="Guardar" color="green" type="submit" />
-                
+              <div class="q-mt-md q-flex q-justify-end">
+                <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
+                <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
               </div>
-  
             </q-form>
   
           </q-page>
@@ -79,7 +101,7 @@
   const verFormulario = ref(false)
   
   const ventaSeleccionada = ref(null);
-  const tituloFormulario = ref('Agregar Venta')
+  const tituloFormulario = ref('Agregar Venta') 
   
   const useVentas = useVentasStore()
   const useSedes = useSedesStore();
@@ -93,26 +115,24 @@
   const sedeOptions = ref([]);
   const clienteOptions = ref([])
   const productoOptions = ref([])
+  const filteredClienteOptions = ref([]);
+  const filteredProductoOptions = ref([]);
+  const filteredSedeOptions = ref([]);
   
   const rows = ref([])
+  const loading = ref(false); 
+  const loadingList = ref(null); 
+
   const columns = ref([
-    { name: "idcliente", label: "ID cliente",
-     field:  (row) => {
-      const cliente = clienteOptions.value.find(Option => Option.value === row.idcliente);
-      return cliente ? cliente.label : '';
-    },
-    align: "center"
-  },
+    { name: "idcliente", label: "Cliente",
+     field:  (row) => row.idcliente?.nombre,    
+    align: "center" },
    
-    { name: "idproducto", label: "ID producto", field: (row) => {
-      const producto = productoOptions.value.find(Option => Option.value === row.idproducto);
-      return producto ? producto.label : '';
-    }, align: "center" },
+    { name: "idproducto", label: "Producto",
+     field: (row) => row.idproducto?.nombre,
+      align: "center" },
     { name: "issede", label: "Sede",
-    field: (row) => {
-      const sede = sedeOptions.value.find(Option => Option.value === row.idsede);
-      return sede ? sede.label : '';
-    },
+    field: (row) => row.idsede?.nombre,
     align: "center"
   },
      
@@ -123,68 +143,94 @@
   
   ])
   
-  async function listarVentas() {
+  const loadingState = ref({});
+
+  const filterClienteOptions = (val, update) => {
+  if (val === '') {
+    update(() => {
+      filteredClienteOptions.value = clienteOptions.value;
+    });
+    return;
+  }
   
+  const needle = val.toLowerCase();
+  update(() => {
+    filteredClienteOptions.value = clienteOptions.value.filter(v => v.label.toLowerCase().includes(needle));
+  });
+};
+const filterProductoOptions = (val, update) => {
+  if (val === '') {
+    update(() => {
+      filteredProductoOptions.value = productoOptions.value;
+    });
+    return;
+  }
+  
+  const needle = val.toLowerCase();
+  update(() => {
+    filteredProductoOptions.value = productoOptions.value.filter(v => v.label.toLowerCase().includes(needle));
+  });
+};
+
+const filterSedeOptions = (val, update) => {
+  if (val === '') {
+    update(() => {
+      filteredSedeOptions.value = sedeOptions.value;
+    });
+    return;
+  }
+  
+  const needle = val.toLowerCase();
+  update(() => {
+    filteredSedeOptions.value = sedeOptions.value.filter(v => v.label.toLowerCase().includes(needle));
+  });
+};
+
+  async function listarVentas()  {
+  loading.value = true;
+  loadingList.value = 'todos';
+  try {
     const r = await useVentas.getVentas()
     console.log(r.data.Venta);
     rows.value = r.data.Venta
+  } catch (error) {
+    console.error('Error al listar todos las ventas :', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
   }
+}
 
-  async function listarSedes() {
+const listarSedes = async () => {
   try {
     const r = await useSedes.getSede();
-    if (r && r.sede) {
-      sedeOptions.value = r.sede.map((sede) => ({
-        label: sede.nombre,
-        value: sede._id,
-      }));
-    } else {
-      console.error('Estructura de respuesta inesperada:', r);
-    }
+    sedeOptions.value = r.sede.map(sede => ({ label: sede.nombre, value: sede._id }));
   } catch (error) {
     console.error('Error al obtener las sedes:', error);
   }
-}
+};
 
-async function listarClientes() {
+const listarClientes = async () => {
   try {
     const r = await useClientes.getCliente();
-    console.log(r.data.Cliente);
-    if (r && r.data.Cliente) {
-
-      clienteOptions.value = r.data.Cliente.map(idcliente => ({
-        label: idcliente.nombre,
-        value: idcliente._id
-      }));
-      console.log(clienteOptions.value); // Mostrar contenido real del array
-    } else {
-      console.error("Estructura de respuesta inesperada:", r.data.cliente);
-    }
+    clienteOptions.value = r.data.Cliente.map(cliente => ({ value: cliente._id, label: cliente.nombre }));
+    filteredClienteOptions.value = clienteOptions.value;
   } catch (error) {
-    console.error("Error al obtener las clientes:", error);
+    console.error('Error al obtener los clientes:', error);
   }
+};
 
-}
 
-async function listarProductos() {
+const listarProductos = async () => {
   try {
     const r = await useProductos.getProducts();
-    console.log(r.data.producto);
-    if (r && r.data.producto) {
-
-      productoOptions.value = r.data.producto.map(idproducto => ({
-        label: idproducto.nombre,
-        value: idproducto._id
-      }));
-      console.log(productoOptions.value); 
-    } else {
-      console.error("Estructura de respuesta inesperada:", r.data.producto);
-    }
+    console.log(r.data);
+    productoOptions.value = r.data.producto.map(producto => ({ value: producto._id, label: producto.nombre }));
+    filteredProductoOptions.value = productoOptions.value;
   } catch (error) {
-    console.error("Error al obtener los productos:", error);
+    console.error('Error al obtener los clientes:', error);
   }
-
-}
+};
 
   
   
@@ -196,16 +242,18 @@ async function listarProductos() {
   })
   
   const procesarFormulario = async () => {
+    loading.value = true;
+  loadingList.value = 'guardar';
     try {
+      const Venta={
+        idcliente: idcliente.value.value,
+          idproducto: idproducto.value.value,
+          idsede: idsede.value.value,         
+          cantidad: cantidad.value, 
+      }
       if (ventaSeleccionada.value !== null) {
         
-       const venta= await useVentas.putVentas(ventaSeleccionada.value._id, {
-          idcliente: idcliente.value,
-          idproducto: idproducto.value,
-          idsede: idsede.value,         
-          cantidad: cantidad.value,      
-  
-        });
+       const venta= await useVentas.putVentas(ventaSeleccionada.value._id, Venta);
         Notify.create({
         type: 'positive',
         message: 'Venta editada exitosamente',
@@ -218,15 +266,7 @@ async function listarProductos() {
       } else {
         
   
-     const venta=   await useVentas.postVentas({
-           
-          idcliente: idcliente.value,
-          idproducto: idproducto.value,
-          idsede: idsede.value,
-          
-          cantidad: cantidad.value,
-          
-        });
+     const venta=   await useVentas.postVentas(Venta);
         Notify.create({
         type: 'positive',
         message: 'Venta editada exitosamente',
@@ -244,7 +284,10 @@ async function listarProductos() {
       ventaSeleccionada.value = null;
     } catch (error) {
       console.error('Error al procesar el formulario:', error);
-    }
+    }finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
   };
   
   
@@ -255,22 +298,34 @@ async function listarProductos() {
     tituloFormulario.value = 'Editar Venta'
    
   
-    idcliente.value = venta.idcliente;
-    idproducto.value = venta.idproducto;
-    idsede.value = venta.idsede;
+    idcliente.value = venta.idcliente.nombre;
+    idproducto.value = venta.idproducto.nombre;
+    idsede.value = venta.idsede.nombre;
     cantidad.value = venta.cantidad;
     verFormulario.value = (true)
    
   
   }
   
-  function agregarVenta() {
+  async function agregarVenta() {
+  loading.value = true;
+  loadingList.value = 'agregar';
+  try {
     ventaSeleccionada.value = null
     verFormulario.value = (true)
     tituloFormulario.value = 'Agregar Venta'
-    limpiar()
-  
+    idcliente.value=null;
+   idproducto.value=null;
+  idsede.value=null;         
+  cantidad.value=null    
+  } 
+  catch (error) {
+    console.error('Error al agregar venta:', error); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
   }
+}
   
   function cerrarFormulario() {
     verFormulario.value = (false)

@@ -3,17 +3,27 @@
   <div>
     <div class="q-pa-md">
       <div class="flex justify-end">
-        <q-btn color="green" icon="add" @click="agregar()">Agregar</q-btn>
+        <q-btn color="green" icon="add" @click="agregar()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
+
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
           <q-list>
-            <q-item clickable v-ripple @click="listar('todos')">
+            <q-item clickable v-ripple @click="listar('todos')" :class="{ 'loading-item': loading && loadingList === 'todos' }">
               <q-item-section>Listar Todos</q-item-section>
+              <template v-if="loading && loadingList === 'todos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('activos')">
+            <q-item clickable v-ripple @click="listar('activos')" ::class="{ 'loading-item': loading && loadingList === 'activos' }">
               <q-item-section>Listar Activos</q-item-section>
+              <template v-if="loading && loadingList === 'activos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('inactivos')">
+            <q-item clickable v-ripple @click="listar('inactivos')" :class="{ 'loading-item': loading && loadingList === 'inactivos' }">
               <q-item-section>Listar Inactivos</q-item-section>
+              <template v-if="loading && loadingList === 'inactivos'">
+                <q-spinner color="primary" size="2em" />
+              </template>
             </q-item>
           </q-list>
         </q-btn-dropdown>
@@ -31,21 +41,29 @@
             <q-input filled v-model="descripcion" label="Descripción" type="text"
               :rules="[(val) => !!val || 'Descripción no puede estar vacía']" />
 
-            <q-select filled v-model="idSede" label="Seleccione una sede" :options="sedeOptions"
-              :rules="[val => !!val || 'Debe seleccionar una sede']" />
+              <q-select
+                 filled 
+                 v-model="idSede"
+                  label="Seleccione una sede"
+                   :options="sedeOptions"
+                    :rules="[val => !!val || 'Debe seleccionar una sede']"
+                    use-input
+              input-debounce="300"
+              @filter="filterSedeOptions"
+               />
 
             <q-input filled v-model="fechaUltimoMant" label="Último Mantenimiento" type="date"
               :rules="[(val) => !!val || 'Fecha último mantenimiento no debe estar vacía']" />
 
-            <div class="q-mt-md">
-              <q-btn label="Guardar" color="green" type="submit" />
-              
-            </div>
+              <div class="q-mt-md q-flex q-justify-end">
+                <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
+                <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
+              </div>
           </q-form>
         </q-page>
       </div>
 
-      <q-table title="Productos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
+      <q-table title="Maquinas" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
         <template v-slot:header="props">
           <q-tr :props="props" style="font-size: 24px;" class="table1">
             <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
@@ -57,13 +75,34 @@
             <p style="color: red" v-else>Inactivo</p>
           </q-td>
         </template>
+
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
-            <q-btn @click="editar(props.row)">
-              <q-tooltip class="bg-accent">Editar</q-tooltip>🖋️
+            <q-btn @click="editar(props.row)">✍
+              <q-tooltip class="bg-accent">Editar</q-tooltip>
             </q-btn>
-            <q-btn v-if="props.row.estado == 1" @click="desactivar(props.row._id)"><q-tooltip class="bg-accent">Desactivar</q-tooltip>❌</q-btn>
-            <q-btn v-else @click="activar(props.row._id)"><q-tooltip class="bg-accent">Activar</q-tooltip>✅</q-btn>
+        
+            <q-btn 
+              :loading="loadingState[props.row._id]" 
+              v-if="props.row.estado === 1" 
+              @click="desactivar(props.row._id)">
+              ❌
+              <q-tooltip class="bg-accent">Desactivar</q-tooltip>
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
+            </q-btn>
+        
+            <q-btn 
+              :loading="loadingState[props.row._id]" 
+              v-else 
+              @click="activar(props.row._id)">
+              ✅
+              <q-tooltip class="bg-accent">Activar</q-tooltip>
+              <template v-slot:loading>
+                <q-spinner color="primary" size="1em" />
+              </template>
+            </q-btn>
           </q-td>
         </template>
       </q-table>
@@ -76,6 +115,7 @@ import { ref, onMounted } from 'vue';
 import { useMaquinaStore } from '../store/maquinas.js';
 import { useSedesStore } from '../store/sedes.js';
 import axios from 'axios';
+import { useQuasar,Notify } from 'quasar';
 
 const verFormulario = ref(false);
 
@@ -88,18 +128,40 @@ const idSede = ref();
 const descripcion = ref();
 const fechaUltimoMant = ref();
 const sedeOptions = ref([]);
+const filteredSedeOptions = ref([]);
 
 const rows = ref([]);
+const loading = ref(false); 
+const loadingList = ref(null); 
+
 const columns = ref([
-  { name: 'idSede', label: 'Sede', field: 'idSede', align: 'center' },
+  { name: 'idSede', label: 'Sede', field: (row)=>row.idSede?.nombre || 'Sin Nombre', align: 'center' },
   { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'center' },
   { name: 'fechaUltimoMant', label: 'Fecha Último Mantenimiento', field: 'fechaUltimoMant', align: 'center' },
   { name: 'estado', label: 'Estado', field: 'estado', align: 'center' },
   { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
 ]);
 
-async function listarMaquina() {
-  const r = await useMaquina.getMaquina();
+const loadingState = ref({});
+const filterSedeOptions = (val, update) => {
+  if (val === '') {
+    update(() => {
+      filteredSedeOptions.value = sedeOptions.value;
+    });
+    return;
+  }
+  
+  const needle = val.toLowerCase();
+  update(() => {
+    filteredSedeOptions.value = sedeOptions.value.filter(v => v.label.toLowerCase().includes(needle));
+  });
+};
+
+async function listarMaquina()  {
+  loading.value = true;
+  loadingList.value = 'todos';
+  try {
+    const r = await useMaquina.getMaquina();
   rows.value = r.data.maquina.map(maquina => {
     const sede = sedeOptions.value.find(s => s.value === maquina.idSede);
     return {
@@ -108,27 +170,29 @@ async function listarMaquina() {
       fechaUltimoMant: new Date(maquina.fechaUltimoMant).toLocaleDateString('es-ES'),
     };
   });
-}
-
-async function listarSedes() {
-  try {
-    const r = await useSedes.getSede();
-    if (r && r.sede) {
-      sedeOptions.value = r.sede.map(sede => ({
-        label: sede.nombre,
-        value: sede._id,
-      }));
-      console.log(sedeOptions.value);
-    } else {
-      console.error('Estructura de respuesta inesperada:', r);
-    }
   } catch (error) {
-    console.error('Error al obtener las sedes:', error);
+    console.error('Error al listar todos las maquinas:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
   }
 }
 
+
+const listarSedes = async () => {
+  try {
+    const r = await useSedes.getSede();
+    sedeOptions.value = r.sede.map(sede => ({ label: sede.nombre, value: sede._id }));
+  } catch (error) {
+    console.error('Error al obtener las sedes:', error);
+  }
+};
+
 async function listarMaquinasActivas() {
-  const r = await useMaquina.getMaquinasActivas();
+  loading.value = true;
+  loadingList.value = 'activos';
+  try {
+   const r = await useMaquina.getMaquinasActivas();
   rows.value = r.data.maquinasActivas.map(maquina => {
     const sede = sedeOptions.value.find(s => s.value === maquina.idSede);
     return {
@@ -137,10 +201,19 @@ async function listarMaquinasActivas() {
       fechaUltimoMant: new Date(maquina.fechaUltimoMant).toLocaleDateString('es-ES'),
     };
   });
+  } catch (error) {
+    console.error('Error al listar clientes activos:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
 async function listarMaquinasInactivas() {
-  const r = await useMaquina.getMaquinasInactivas();
+  loading.value = true;
+  loadingList.value = 'inactivos';
+  try {
+     const r = await useMaquina.getMaquinasInactivas();
   rows.value = r.data.maquinasInactivas.map(maquina => {
     const sede = sedeOptions.value.find(s => s.value === maquina.idSede);
     return {
@@ -148,7 +221,11 @@ async function listarMaquinasInactivas() {
       idSede: sede ? sede.label : maquina.idSede,
       fechaUltimoMant: new Date(maquina.fechaUltimoMant).toLocaleDateString('es-ES'),
     };
-  });
+  }); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null; 
+  }
 }
 
 onMounted(async () => {
@@ -157,18 +234,35 @@ onMounted(async () => {
 });
 
 const procesarFormulario = async () => {
+  loading.value = true;
+  loadingList.value = 'guardar';
   try {
-    if (maquinaSeleccionada !== null && maquinaSeleccionada.value !== null) {
-      await useMaquina.putMaquina(maquinaSeleccionada.value._id, {
-        idSede: idSede.value,
+
+    const Maquina={
+      idSede: idSede.value.value,
         descripcion: descripcion.value,
         fechaUltimoMant: fechaUltimoMant.value,
+    }
+    if (maquinaSeleccionada !== null && maquinaSeleccionada.value !== null) {
+      await useMaquina.putMaquina(maquinaSeleccionada.value._id, Maquina);
+      Notify.create({
+        type: 'positive',
+        message: 'Maquina editada exitosamente',
+             icon: 'check',
+        position: 'top',
+        timeout: 3000,
+        actions: [{ label: '❌', color: 'black' }]
       });
     } else {
-      await useMaquina.postMaquina({
-        idSede: idSede.value,
-        descripcion: descripcion.value,
-        fechaUltimoMant: fechaUltimoMant.value,
+      await useMaquina.postMaquina(Maquina);
+      Notify.create({
+        type: 'positive',
+        message: 'Maquina agregada exitosamente',
+       
+        icon: 'check',
+        position: 'top',
+        timeout: 3000,
+        actions: [{ label: '❌', color: 'black' }]
       });
     }
 
@@ -178,24 +272,42 @@ const procesarFormulario = async () => {
     maquinaSeleccionada.value = null;
   } catch (error) {
     console.error('Error al procesar el formulario:', error);
+  }finally {
+    loading.value = false;
+    loadingList.value = null;
   }
 };
 
 async function editar(maquina) {
   maquinaSeleccionada.value = maquina;
   tituloFormulario.value = 'Editar Maquina';
-
-  idSede.value = maquina.idSede;
+console.log(maquina.idSede.nombre);
+  idSede.value = maquina.idSede.nombre;
   descripcion.value = maquina.descripcion;
   fechaUltimoMant.value = maquina.fechaUltimoMant.split('/').reverse().join('-');
+  
 
   verFormulario.value = true;
 }
 
-function agregar() {
-  maquinaSeleccionada.value = null;
+async function agregar() {
+  loading.value = true;
+  loadingList.value = 'agregar';
+  try {
+     maquinaSeleccionada.value = null;
   verFormulario.value = true;
   tituloFormulario.value = 'Agregar Maquina';
+  idSede.value = null;
+  descripcion.value = null;
+  fechaUltimoMant.value = null;
+    
+  } 
+  catch (error) {
+    console.error('Error al agregar maquina:', error); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
 function cerrarFormulario() {
@@ -205,13 +317,51 @@ function cerrarFormulario() {
 }
 
 async function activar(id) {
-  await useMaquina.putMaquinaActivar(id);
-  listarMaquina();
+  loadingState.value[id] = true;
+  try {
+    console.log(`Intentando activar cliente con ID: ${id}`);
+    const response = await useMaquina.putMaquinaActivar(id);;
+    console.log('Respuesta de activación:', response);
+    await listarMaquina();
+    Notify.create({
+      type: 'positive',
+      message: 'Maquina activada exitosamente',
+      icon: 'check',
+    });
+  } catch (error) {
+    console.error('Error al activar maquina:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al activar maquina',
+      icon: 'error',
+    });
+  } finally {
+    loadingState.value[id] = false;
+  }
 }
 
 async function desactivar(id) {
-  await useMaquina.putMaquinaDesactivar(id);
-  listarMaquina();
+  loadingState.value[id] = true;
+  try {
+    console.log(`Intentando desactivar cliente con ID: ${id}`);
+    const response =  await useMaquina.putMaquinaDesactivar(id);
+    console.log('Respuesta de desactivación:', response);
+    await listarMaquina();
+    Notify.create({
+      type: 'positive',
+      message: 'Maquina desactivado exitosamente',
+      icon: 'check',
+    });
+  } catch (error) {
+    console.error('Error al desactivar maquina:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al desactivar maquina',
+      icon: 'error',
+    });
+  } finally {
+    loadingState.value[id] = false;
+  }
 }
 
 function limpiar() {
@@ -221,6 +371,8 @@ function limpiar() {
 }
 
 function listar(tipo) {
+  loading.value = true;
+  loadingList.value = tipo;
   if (tipo === 'activos') {
     listarMaquinasActivas();
   } else if (tipo === 'inactivos') {

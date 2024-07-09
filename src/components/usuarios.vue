@@ -1,29 +1,39 @@
-1<template>
+<template>
   <div class="q-pa-md">
+  
     <div class="flex justify-end">
-      <q-btn color="green" icon="add" @click="agregarUsuario()">agregar</q-btn>
+      <q-btn color="green" icon="add" @click="agregarUsuario()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
       <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
         <q-list>
-          <q-item clickable v-ripple @click="listar('todos')">
+          <q-item clickable v-ripple @click="listar('todos')" :class="{ 'loading-item': loading && loadingList === 'todos' }">
             <q-item-section>Listar Todos</q-item-section>
+            <template v-if="loading && loadingList === 'todos'">
+              <q-spinner color="primary" size="2em" />
+            </template>
           </q-item>
-          <q-item clickable v-ripple @click="listar('activos')">
+          <q-item clickable v-ripple @click="listar('activos')" :class="{ 'loading-item': loading && loadingList === 'activos' }">
             <q-item-section>Listar Activos</q-item-section>
+            <template v-if="loading && loadingList === 'activos'">
+              <q-spinner color="primary" size="2em" />
+            </template>
           </q-item>
-          <q-item clickable v-ripple @click="listar('inactivos')">
+          <q-item clickable v-ripple @click="listar('inactivos')" :class="{ 'loading-item': loading && loadingList === 'inactivos' }">
             <q-item-section>Listar Inactivos</q-item-section>
+            <template v-if="loading && loadingList === 'inactivos'">
+              <q-spinner color="primary" size="2em" />
+            </template>
           </q-item>
         </q-list>
+        <q-input filled label="nombre"/>
       </q-btn-dropdown>
     </div>
 
     <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
       <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
-
         <div class="q-flex q-justify-between q-items-center form-header">
-            <h5 class="form-title">{{ tituloFormulario }}</h5>
-            <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
-          </div>
+          <h5 class="form-title">{{ tituloFormulario }}</h5>
+          <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
+        </div>
         
         <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
           <q-input filled v-model="nombre" label="Nombre" :rules="[val => !!val || 'Nombre no puede estar vacío']" />
@@ -34,7 +44,7 @@
           <q-select filled v-model="roll" label="Rol*" :options="rollOptions" :rules="[val => !!val || 'Debe seleccionar un rol']" />
           <div class="q-mt-md q-flex q-justify-end">
             <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
-            <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" />
+            <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
           </div>
         </q-form>
       </q-page>
@@ -59,21 +69,19 @@
             <q-tooltip class="bg-accent">Editar</q-tooltip>🖋️
           </q-btn>
           
-          <q-btn :loading="useUsuarios.loading" v-if="props.row.estado == 1" @click="desactivar(props.row)">❌
-              <q-tooltip class="bg-accent">Desactivar</q-tooltip>
-              <template v-slot:loading>
-                <q-spinner color="primary" size="1em" />
-              </template>
-            </q-btn>
-       
-          <q-btn v-else @click="activar(props.row._id)" :loading="useUsuarios.loading">✅
-              <q-tooltip class="bg-accent">Activar</q-tooltip>
-              <template v-slot:loading>
-                <q-spinner color="primary" size="1em" />
-              </template>
-            </q-btn>
-        
-        
+          <q-btn :loading="loadingState[props.row._id]" v-if="props.row.estado === 1" @click="desactivar(props.row)">❌
+            <q-tooltip class="bg-accent">Desactivar</q-tooltip>
+            <template v-slot:loading>
+              <q-spinner color="primary" size="1em" />
+            </template>
+          </q-btn>
+
+          <q-btn v-else @click="activar(props.row._id)" :loading="loadingState[props.row._id]">✅
+            <q-tooltip class="bg-accent">Activar</q-tooltip>
+            <template v-slot:loading>
+              <q-spinner color="primary" size="1em" />
+            </template>
+          </q-btn>
         </q-td>
       </template>
     </q-table>
@@ -101,6 +109,10 @@ const rollOptions = ['Administrador', 'Instructor', 'Recepcion'];
 const usuarioSeleccionado = ref(null);
 const sedeOptions = ref([]);
 const rows = ref([]);
+
+const loading = ref(false); // Variable para controlar el estado de carga
+const loadingList = ref(null); // Lista actualmente en proceso
+
 const columns = ref([
   { name: 'nombre', label: 'Nombre Usuario', field: 'nombre', align: 'center' },
   { name: 'roll', label: 'Roll', field: 'roll', align: 'center' },
@@ -111,9 +123,21 @@ const columns = ref([
   { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
 ]);
 
-async function listarUsuarios() {
-  const r = await useUsuarios.getUser();
-  rows.value = r.data.Usuario;
+const loadingState = ref({}); // Estado de carga para cada fila
+
+async function listarUsuarios()  {
+  loading.value = true;
+  loadingList.value = 'todos';
+  try {
+    const r = await useUsuarios.getUser();
+    rows.value = r.data.Usuario;
+    console.log(r.data.Usuario);
+  } catch (error) {
+    console.error('Error al listar todos los usuarios:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
 async function listarSedes() {
@@ -133,16 +157,36 @@ async function listarSedes() {
 }
 
 async function listarUsuariosActivos() {
-  const r = await useUsuarios.getUserActivos();
-  rows.value = r.data.UsuariosActivos;
+  loading.value = true;
+  loadingList.value = 'activos';
+  try {
+    const r = await useUsuarios.getUserActivos();
+    rows.value = r.data.UsuariosActivos;
+  } catch (error) {
+    console.error('Error al listar usuarios activos:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
 async function listarUsuariosInactivos() {
-  const r = await useUsuarios.getUserInactivos();
-  rows.value = r.data.UsuariosInactivos;
+  loading.value = true;
+  loadingList.value = 'inactivos';
+  try {
+    const r = await useUsuarios.getUserInactivos();
+    rows.value = r.data.UsuariosInactivos;
+  } catch (error) {
+    console.error('Error al listar usuarios inactivos:', error); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null; 
+  }
 }
 
 function listar(tipo) {
+  loading.value = true;
+  loadingList.value = tipo;
   if (tipo === 'activos') {
     listarUsuariosActivos();
   } else if (tipo === 'inactivos') {
@@ -157,7 +201,9 @@ onMounted(() => {
   listarSedes();
 });
 
-const procesarFormulario = async (Option) => {
+const procesarFormulario = async () => {
+  loading.value = true;
+  loadingList.value = 'guardar';
   try {
     console.log(idsede.value.value);
     const sedeSeleccionada = idsede.value.value;
@@ -174,7 +220,7 @@ const procesarFormulario = async (Option) => {
     console.log('Datos enviados:', user);
 
     if (usuarioSeleccionado.value !== null) {
-      await useUsuarios.putUser(usuarioSeleccionado.value._id,usr);
+      await useUsuarios.putUser(usuarioSeleccionado.value._id, user);
     } else {
       await useUsuarios.postUser(user);
     }
@@ -186,17 +232,32 @@ const procesarFormulario = async (Option) => {
 
   } catch (error) {
     console.error('Error al procesar el formulario:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
   }
 };
 
 async function agregarUsuario() {
-  usuarioSeleccionado.value = null;
-  verFormulario.value = true;
-  verPassword.value = true;
-  tituloFormulario.value = 'Agregar Usuario';
+  loading.value = true;
+  loadingList.value = 'agregar';
+  try {
+    usuarioSeleccionado.value = null;
+    verFormulario.value = true;
+    verPassword.value = true;
+    tituloFormulario.value = 'Agregar Usuario';
+    
+  } 
+  catch (error) {
+    console.error('Error al agregar usuario:', error); 
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
 }
 
 async function editarUsuario(user) {
+  console.log(user);
   if (user.estado !== 1) {
     Notify.create({
       type: 'warning',
@@ -210,6 +271,7 @@ async function editarUsuario(user) {
     return;
   }
 
+else{
   verFormulario.value = true;
   usuarioSeleccionado.value = user;
   verPassword.value = false;
@@ -225,10 +287,18 @@ async function editarUsuario(user) {
   idsede.value = sede ? sede.label : '';
   roll.value = user.roll;
 }
+}
 
 async function activar(id) {
-  await useUsuarios.putUserActivar(id);
-  listarUsuarios();
+  loadingState.value[id] = true;
+  try {
+    await useUsuarios.putUserActivar(id);
+    listarUsuarios();
+  } catch (error) {
+    console.error('Error al activar usuario:', error);
+  } finally {
+    loadingState.value[id] = false;
+  }
 }
 
 async function desactivar(user) {
@@ -245,13 +315,19 @@ async function desactivar(user) {
     return;
   }
 
-  await useUsuarios.putUserDesactivar(user._id);
-  listarUsuarios();
+  loadingState.value[user._id] = true;
+  try {
+    await useUsuarios.putUserDesactivar(user._id);
+    listarUsuarios();
+  } catch (error) {
+    console.error('Error al desactivar usuario:', error);
+  } finally {
+    loadingState.value[user._id] = false;
+  }
 }
 
 async function cerrarFormulario() {
   verFormulario.value = false;
-
   usuarioSeleccionado.value = null;
   limpiar();
 }
@@ -267,6 +343,10 @@ function limpiar() {
 </script>
 
 <style scoped>
+.loading-item {
+  pointer-events: none; /* Evita que se hagan clics en los elementos mientras se está cargando */
+  opacity: 0.6; /* Opacidad reducida para indicar que está en proceso */
+}
 .shadow-2 {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
