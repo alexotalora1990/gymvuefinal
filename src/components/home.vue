@@ -18,9 +18,11 @@
       </q-header>
 
       <q-drawer v-model="rightDrawerOpen" side="right" overlay behavior="desktop">
-        <q-tabs vertical class="bg-secondary">
-          <q-route-tab v-for="route in filteredRoutes" :key="route.path" :to="route.path" :label="route.name" />
-        </q-tabs>
+        <div class="drawer-content">
+          <q-tabs vertical class="bg-secondary">
+            <q-route-tab v-for="route in filteredRoutes" :key="route.path" :to="route.path" :label="route.name" />
+          </q-tabs>
+        </div>
       </q-drawer>
 
       <q-page-container>
@@ -30,8 +32,6 @@
         <div>
           <router-view />
         </div>
-        
-        
       </q-page-container>
 
       <q-footer class="bg-secondary text-black">
@@ -51,7 +51,6 @@ import { useRouter } from 'vue-router';
 import { useUsuariosStore } from '../store/usuarios.js';
 import { routes } from "../routes/routes.js"
 
-
 const rightDrawerOpen = ref(false);
 const router = useRouter();
 const usuariosStore = useUsuariosStore();
@@ -67,7 +66,6 @@ const logout = () => {
   router.push('/');
 };
 
-// Filtrar rutas según el rol del usuario
 const filteredRoutes = computed(() => {
   const userRole = user.roll;
   return routes.find(route => route.path === '/home').children.filter(childRoute => {
@@ -87,13 +85,13 @@ const filteredRoutes = computed(() => {
   z-index: 1;
 }
 
-.usuario h5{
-background-color: #f2650d;
-width: 15%;
-text-align: center;
-margin-left: 2%;
-color: white;
-border-radius: 5px;
+.usuario h5 {
+  background-color: #f2650d;
+  width: 15%;
+  text-align: center;
+  margin-left: 2%;
+  color: white;
+  border-radius: 5px;
 }
 
 .background-image {
@@ -124,4 +122,8 @@ border-radius: 5px;
   font-family: Edwardian Script ITC, Curlz MT, Brush Script MT, Baskerville Old Face, Algerian, Chiller;
 }
 
+.drawer-content {
+  overflow-y: auto;
+  max-height: 100vh; 
+}
 </style>
