@@ -42,7 +42,7 @@ const showPassword = ref(false);
 
 const usuariosStore = useUsuariosStore();
 const router = useRouter();
-
+const loading = ref(false);
 const passwordFieldType = computed(() => (showPassword.value ? 'text' : 'password'));
 const passwordIcon = computed(() => (showPassword.value ? 'visibility_off' : 'visibility'));
 
@@ -50,7 +50,10 @@ function togglePasswordVisibility() {
   showPassword.value = !showPassword.value;
 }
 
+const loadingState = ref({});
+
 async function onSubmit() {
+  loading.value = true;
   try {
     let r = await usuariosStore.login(email.value, password.value);
     console.log(r);
@@ -71,9 +74,11 @@ async function onSubmit() {
       position: 'top',
       timeout: 3000,
     });
-  }
+  }finally {
+    loading.value = false;
+    loadingList.value = null; 
 }
-
+}
 function onReset() {
   email.value = '';
   password.value = '';
