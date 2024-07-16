@@ -79,7 +79,7 @@
               <q-tooltip class="bg-accent">Editar</q-tooltip>🖋️
             </q-btn>
             
-            <q-btn :loading="loadingState[props.row._id]" v-if="props.row.estado === 1" @click="desactivar(props.row)">❌
+            <q-btn :loading="loadingState[props.row._id]" v-if="props.row.estado === 1" @click="desactivar(props.row_id)">❌
               <q-tooltip class="bg-accent">Desactivar</q-tooltip>
               <template v-slot:loading>
                 <q-spinner color="primary" size="1em" />
