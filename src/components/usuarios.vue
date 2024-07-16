@@ -2,6 +2,18 @@
   <div class="q-pa-md">
   
     <div class="flex justify-end">
+
+      <q-input filled label="Buscar por nombre"
+        
+        style="background-color:#d3d0d0; color: black; width: 30%; border-radius: 5px; margin-right: 1%;"
+        v-model="nombreUsuario" @keyup.enter="listarNombre">
+        <template v-slot:append>
+          <q-btn icon="search" @click="listarNombre" style="background-color:#ffff;" />
+        </template>
+      </q-input>
+
+
+
       <q-btn color="green" icon="add" @click="agregarUsuario()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
       <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
         <q-list>
@@ -24,7 +36,7 @@
             </template>
           </q-item>
         </q-list>
-        <q-input filled label="nombre"/>
+        
       </q-btn-dropdown>
     </div>
 
@@ -72,7 +84,7 @@
           <q-btn :loading="loadingState[props.row._id]" v-if="props.row.estado === 1" @click="desactivar(props.row)">❌
             <q-tooltip class="bg-accent">Desactivar</q-tooltip>
             <template v-slot:loading>
-              <q-spinner color="primary" size="1em" />
+              <q-spinner-hourglass color="primary" size="10em" />
             </template>
           </q-btn>
 
@@ -109,6 +121,8 @@ const rollOptions = ['Administrador', 'Instructor', 'Recepcion'];
 const usuarioSeleccionado = ref(null);
 const sedeOptions = ref([]);
 const rows = ref([]);
+
+const nombreUsuario =ref()
 
 const loading = ref(false); // Variable para controlar el estado de carga
 const loadingList = ref(null); // Lista actualmente en proceso
@@ -196,6 +210,44 @@ function listar(tipo) {
   }
 }
 
+async function listarNombre() {
+  if (!nombreUsuario.value || nombreUsuario.value.trim() === "") {
+    Notify.create({
+      type: 'negative',
+      message: 'Digite el nombre de un usuario'
+    });
+    return;
+  }
+  
+  try {
+    const r = await useUsuarios.getUser();
+    if (!r.data || !r.data.Usuario) {
+      throw new Error('No se encontraron usuarios en la respuesta');
+    }
+    
+    const usuarioFiltrado = r.data.Usuario.filter(usuario =>
+      usuario.nombre && usuario.nombre.toLowerCase().includes(nombreUsuario.value.toLowerCase())
+    );
+    
+    if (usuarioFiltrado.length === 0) {
+      Notify.create({
+        type: 'negative',
+        message: 'Usuario no existe'
+      });
+    } else {
+      rows.value = usuarioFiltrado;
+    }
+  } catch (error) {
+    console.error('Error al listar nombre:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al listar usuarios'
+    });
+  } finally {
+    nombreUsuario.value = "";
+  }
+}
+
 onMounted(() => {
   listarUsuarios();
   listarSedes();
@@ -275,12 +327,10 @@ else{
   verFormulario.value = true;
   usuarioSeleccionado.value = user;
   verPassword.value = false;
-  tituloFormulario.value = 'Editar Usuario';
+  tituloFormulario.value = 'Editar Usuario';  
   
-  // Encuentra la sede correspondiente
-  const sede = sedeOptions.value.find(option => option.value === user.idsede);
+  const sede = sedeOptions.value.find(option => option.value === user.idsede);  
   
-  // Asigna los valores al formulario
   nombre.value = user.nombre;
   telefono.value = user.telefono;
   email.value = user.email;
@@ -343,10 +393,7 @@ function limpiar() {
 </script>
 
 <style scoped>
-.loading-item {
-  pointer-events: none; /* Evita que se hagan clics en los elementos mientras se está cargando */
-  opacity: 0.6; /* Opacidad reducida para indicar que está en proceso */
-}
+
 .shadow-2 {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
@@ -423,4 +470,5 @@ function limpiar() {
 .close-btn {
   color: white;
 }
+
 </style>

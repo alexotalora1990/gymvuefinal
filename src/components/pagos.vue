@@ -64,14 +64,24 @@
             <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
           </q-tr>
         </template>
+        <template v-slot:body-cell-estado="props">
+        <q-td :props="props">
+          <p :style="{ color: props.row.estado === 1 ? 'green' : 'red' }">
+            {{ props.row.estado === 1 ? 'Activo' : 'Inactivo' }}
+          </p>
+        </q-td>
+      </template>
+
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
             <q-btn @click="editar(props.row)">✍
               <q-tooltip class="bg-accent">Editar</q-tooltip>
             </q-btn>
+
+            
         
             <q-btn 
-              :loading="loadingState[props.row._id]" 
+              :loading="loadingState[props.row]" 
               v-if="props.row.estado === 1" 
               @click="desactivar(props.row._id)">
               ❌
@@ -127,18 +137,11 @@ const loadingList = ref(null);
 const columns = ref([
   {
     name: "idcliente", label: "Cliente",
-    field: (row) => {
-      const cliente = clienteOptions.value.find(Option => Option.value === row.idcliente);
-      return cliente ? cliente.label : '';
-    },
-    align: "center"
+    field: (row) => row.idcliente?.nombre, align: "center"
   },
   {
-    name: "idplan", label: "ID plan",
-    field: (row) => {
-      const plan = planOptions.value.find(Option => Option.value === row.idplan);
-      return plan ? plan.label : '';
-    },
+    name: "idplan", label: "Plan",
+    field: (row) => row.idplan?.descripcion,
     align: "center"
   },
   { name: "valor", label: "Precio", field: "valor", align: "center" },
@@ -251,14 +254,17 @@ const procesarFormulario = async () => {
     const idpagoSeleccionado = idcliente.value.value
     console.log(idplan.value.value);
     const idpagoSeleccionado2 = idplan.value.value
+
+    const pago ={
+      idcliente:idpagoSeleccionado,
+      idplan:idpagoSeleccionado2
+    }
+
+
+
     if (pagoSeleccionado.value !== null) {
 
-      const pago = await usePagos.putPagos(pagoSeleccionado.value._id, {
-        idcliente: idpagoSeleccionado.value,
-        idplan: idpagoSeleccionado2.value
-
-
-      });
+       await usePagos.putPagos(pagoSeleccionado.value._id,pago);
       Notify.create({
         type: 'positive',
         message: 'Pago editado exitosamente',
@@ -271,11 +277,7 @@ const procesarFormulario = async () => {
     } else {
 
 
-      const pago = await usePagos.postPagos({
-        idcliente: idpagoSeleccionado.value,
-        idplan: idpagoSeleccionado2.value,
-
-      });
+      await usePagos.postPagos(pago);
       Notify.create({
         type: 'positive',
         message: 'Pago agregado exitosamente',
@@ -315,14 +317,15 @@ function editar(pago) {
     });
     return;
   }
-
+else{
   pagoSeleccionado.value = pago
   tituloFormulario.value = 'Editar Pago'
-  const cliente = clienteOptions.value.find(option => option.value === pago.idcliente);
-  const plan = planOptions.value.find(option => option.value === pago.idplan);
-  idcliente.value = cliente ? cliente.label : '';
-  idplan.value = plan ? plan.label : '';
+ 
+  idcliente.value =pago.idcliente.nombre;
+  idplan.value = pago.idplan.descripcion;
   verFormulario.value = (true)
+}
+  
 
 }
 
@@ -333,6 +336,7 @@ async function agregarPago()  {
   pagoSeleccionado.value = null
   verFormulario.value = (true)
   tituloFormulario.value = 'Agregar PAgo'
+  
     
   } 
   catch (error) {
