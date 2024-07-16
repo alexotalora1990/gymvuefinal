@@ -3,6 +3,18 @@
     <div class="q-pa-md">
 
       <div class="flex justify-end">
+
+        <q-input filled label="Buscar por nombre"
+        
+        style="background-color:#d3d0d0; color: black; width: 30%; border-radius: 5px; margin-right: 1%;"
+        v-model="nombreCliente" @keyup.enter="listarNombre">
+        <template v-slot:append>
+          <q-btn icon="search" @click="listarNombre" style="background-color:#ffff;" />
+        </template>
+      </q-input>
+
+
+
         <q-btn color="green" icon="add" @click="agregar()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
 
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
@@ -95,7 +107,7 @@
         </q-page>
       </div>
 
-      <div class="form-container q-pa-md q-mx-auto" v-show="verFormularioSeguimiento">
+      <!-- <div class="form-container q-pa-md q-mx-auto" v-show="verFormularioSeguimiento">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
 
           
@@ -135,8 +147,31 @@
             </div>
           </q-form>
         </q-page>
+      </div> -->
+
+
+      <div class="form-container q-pa-md q-mx-auto" v-show="verFormularioSeguimiento">
+    <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
+      <div class="q-flex q-justify-between q-items-center form-header">
+        <h5 class="form-title2 bg-primary text-white q-pa-sm rounded-borders">{{ tituloFormularioSeguimiento }}</h5>
+        <q-btn flat icon="close" color="white" @click="cerrarFormularioSeguimiento" class="close-btn" />
       </div>
 
+      <q-form class="q-gutter-md" @submit.prevent="procesarSeguimiento(clienteSeleccionado)">
+        <q-input filled v-model="fecha" label="Fecha" type="date" :rules="[(val) => !!val || 'Fecha no puede estar vacía']" />
+        <q-input filled v-model="peso" label="Peso" type="number" :rules="[(val) => val > 0 || 'Peso debe ser un número positivo']" />
+        <q-input filled v-model="tBrazo" label="Talla de Brazo" type="number" :rules="[(val) => val > 0 || 'Talla de Brazo debe ser un número positivo']" />
+        <q-input filled v-model="tPierna" label="Talla de Pierna" type="number" :rules="[(val) => val > 0 || 'Talla de Pierna debe ser un número positivo']" />
+        <q-input filled v-model="tCintura" label="Talla de Cintura" type="number" :rules="[(val) => val > 0 || 'Talla de Cintura debe ser un número positivo']" />
+        <q-input filled v-model="estatura" label="Estatura en centimetros ej.(180)" type="number" :rules="[(val) => val > 0 || 'Estatura debe ser un número positivo']" />
+        
+        <div class="q-mt-md">
+          <q-btn label="Guardar" color="green" type="submit" />
+          <q-tooltip class="bg-accent">Guardar</q-tooltip>
+        </div>
+      </q-form>
+    </q-page>
+  </div>
 
       <q-table title="Clientes" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
         <template v-slot:header="props">
@@ -239,6 +274,8 @@ const foto = ref('');
 const objetivo = ref('');
 const observaciones = ref('');
 const fechaVencimiento = ref('');
+
+const nombreCliente = ref('')
 
 const planOptions = ref([])
 
@@ -384,19 +421,6 @@ async function listarPlanes() {
 }
 
 
-function verSeguimiento(cliente) {
-  clienteSeleccionado.value = cliente;
-  selectedClienteSeguimiento.value = cliente.seguimiento.map(seg => ({
-    ...seg,
-    fecha: formatDate(seg.fecha),
-    createAt: formatDate(seg.createAt),
-  }));
-}
-
-function cerrarSeguimiento() {
-  clienteSeleccionado.value = false
-}
-
 
 
 
@@ -439,6 +463,45 @@ function listar(tipo) {
     listarClientesInactivos();
   } else {
     listarClientes();
+  }
+}
+
+async function listarNombre() {
+  if (!nombreCliente.value || nombreCliente.value.trim() === "") {
+    Notify.create({
+      type: 'negative',
+      message: 'Digite el nombre de un Cliente'
+    });
+    return;
+  }
+  
+  try {
+    const r = await useClientes.getCliente()
+       console.log(r.data.Cliente);
+    if (!r.data || !r.data.Cliente) {
+      throw new Error('No se encontraron clientes en la respuesta');
+    }
+    
+    const clienteFiltrado = r.data.Cliente.filter(cliente =>
+      cliente.nombre && cliente.nombre.toLowerCase().includes(nombreCliente.value.toLowerCase())
+    );
+    
+    if (clienteFiltrado.length === 0) {
+      Notify.create({
+        type: 'negative',
+        message: 'Cliente no existe'
+      });
+    } else {
+      rows.value = clienteFiltrado;
+    }
+  } catch (error) {
+    console.error('Error al listar nombre:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al listar clientes'
+    });
+  } finally {
+    nombreCliente.value = "";
   }
 }
 
@@ -628,29 +691,18 @@ function cerrarFormularioSeguimiento() {
 
 function editarSeguimiento() { }
 
-async function agregarSeguimiento(cliente) {
-  try {
-    if (!cliente || !cliente.nombre) {
-      throw new Error('El cliente seleccionado es inválido');
-    }
 
-    // Resto del código para agregar el seguimiento
-    clienteSeleccionado.value = cliente;
-    tituloFormularioSeguimiento.value = `Agregar Seguimiento para ${cliente.nombre}`;
-    verFormularioSeguimiento.value = true;
 
-  } catch (error) {
-    console.error('Error al agregar seguimiento:', error);
+async function procesarSeguimiento() {
+  if (!clienteSeleccionado.value) {
     Notify.create({
       type: 'negative',
-      message: error.message, // Mostrar el mensaje de error específico
+      message: 'No se ha seleccionado un cliente',
       icon: 'error',
     });
+    return;
   }
-}
 
-
-async function procesarSeguimiento(idCliente) {
   const seguimiento = {
     fecha: fecha.value,
     peso: peso.value,
@@ -661,37 +713,77 @@ async function procesarSeguimiento(idCliente) {
   };
 
   try {
-   
-    const response = await useClientes.postSeguimiento(idCliente, seguimiento);
+    const response = await useClientes.postSeguimiento(clienteSeleccionado.value._id, seguimiento);
+    console.log(response);  // Para depuración
 
-  
-    if (response && response.data && response.data.seguimiento) {
+    if (response && response.seguimiento) {
       Notify.create({
         type: 'positive',
         message: 'Seguimiento agregado exitosamente',
         icon: 'check_circle',
       });
-
-
+      // Actualizar la lista de seguimientos del cliente
+      clienteSeleccionado.value.seguimiento.push(seguimiento);
+      verFormularioSeguimiento(cliente)
     } else {
       Notify.create({
         type: 'negative',
-        message: 'Error al agregar seguimiento',
+        message: 'Error al agregar seguimiento 3',
         icon: 'error',
       });
     }
 
-    // Cerrar el formulario de seguimiento después de procesar
     cerrarFormularioSeguimiento();
   } catch (error) {
     console.error('Error al procesar seguimiento:', error);
     Notify.create({
       type: 'negative',
-      message: 'Error al agregar seguimiento',
+      message: 'Error al agregar seguimiento 2',
       icon: 'error',
     });
   }
 }
+
+
+function verSeguimiento(cliente) {
+  clienteSeleccionado.value = cliente;
+  selectedClienteSeguimiento.value = cliente.seguimiento.map(seg => ({
+    ...seg,
+    fecha: formatDate(seg.fecha),
+    createAt: formatDate(seg.createAt),
+  }));
+}
+
+function agregarSeguimiento(cliente) {
+  try {
+    if (!cliente || !cliente.nombre) {
+      throw new Error('El cliente seleccionado es inválido');
+    }
+
+    clienteSeleccionado.value = cliente;
+    tituloFormularioSeguimiento.value = `Agregar Seguimiento para ${cliente.nombre}`;
+    verFormularioSeguimiento.value = true;
+
+    // Actualizar los seguimientos del cliente seleccionado
+    verSeguimiento(cliente);
+  } catch (error) {
+    console.error('Error al agregar seguimiento 1:', error);
+    Notify.create({
+      type: 'negative',
+      message: error.message,
+      icon: 'error',
+    });
+  }
+}
+
+
+
+
+
+function cerrarSeguimiento() {
+  clienteSeleccionado.value = false
+}
+
 
 
 </script>

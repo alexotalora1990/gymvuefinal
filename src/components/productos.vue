@@ -4,13 +4,14 @@
       <div class="flex justify-end">
 
         <q-input filled label="Buscar por nombre"
+        
           style="background-color:#d3d0d0; color: black; width: 30%; border-radius: 5px; margin-right: 1%;"
           v-model="nombreProducto" @keyup.enter="listarNombre">
           <template v-slot:append>
             <q-btn icon="search" @click="listarNombre" style="background-color:#ffff;" />
           </template>
         </q-input>
-
+        
         <q-btn color="green" icon="add" @click="agregarProducto()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
           <q-list>

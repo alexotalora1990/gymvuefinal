@@ -57,19 +57,19 @@ export const useClientesStore = defineStore("clientes", ()=>{
         }
     };
 
-    const postSeguimiento = async(id, seguimiento)=>{
+  
+    const postSeguimiento = async (_id, seguimiento) => {
         try {
-            loading.value=true
-            const r = await axios.post(`clientes/segumiento/${id}`, seguimiento)
-            return r.data.seguimiento
+            const r = await axios.post(`clientes/seguimiento/${_id}`, seguimiento); 
+            return r.data.seguimiento;
         } catch (error) {
-            return error
-        }finally{
-            loading.value=false
+            console.error('Error en la solicitud de seguimiento:', error);
+            return error;
         }
     };
 
     const putClientes =async (id, cliente)=>{
+      
         try {
             loading.value=true
             const r = await axios.put(`clientes/${id}`,cliente)
