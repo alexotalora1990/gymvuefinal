@@ -210,10 +210,10 @@ const procesarFormulario = async () => {
 
     const user = {
       idsede: sedeSeleccionada,
-      nombre: nombre.value,
-      telefono: telefono.value,
-      email: email.value,
-      roll: roll.value,
+      nombre: nombre.value.trim,
+      telefono: telefono.value.trim,
+      email: email.value.trim,
+      roll: roll.value.trim,
       password: usuarioSeleccionado.value === null ? password.value : undefined, // Solo enviar el password si es un nuevo usuario
     };
 

@@ -174,7 +174,7 @@
     if (mantenimientoSeleccionado.value !== null) {
       const mantenimiento = await useMantenimiento.putMaintenance(mantenimientoSeleccionado.value._id, {
         idmaquina: idMaquinaSeleccionada, 
-        responsable: responsable.value,
+        responsable: responsable.value.trim,
         descripcion: descripcion.value,
         valor: valor.value
       });
@@ -190,8 +190,8 @@
     } else {
       const mantenimiento = await useMantenimiento.postMaintenance({
         idmaquina: idMaquinaSeleccionada, 
-        responsable: responsable.value,
-        descripcion: descripcion.value,
+        responsable: responsable.value.trim,
+        descripcion: descripcion.value.trim,
         valor: valor.value
       });
       Notify.create({

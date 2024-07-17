@@ -240,7 +240,7 @@ const procesarFormulario = async () => {
 
     const Maquina={
       idSede: idSede.value.value,
-        descripcion: descripcion.value,
+        descripcion: descripcion.value.trim,
         fechaUltimoMant: fechaUltimoMant.value,
     }
     if (maquinaSeleccionada !== null && maquinaSeleccionada.value !== null) {
@@ -366,7 +366,7 @@ async function desactivar(id) {
 
 function limpiar() {
   idSede.value = '';
-  descripcion.value = '';
+  descripcion.value.trim = '';
   fechaUltimoMant.value = '';
 }
 

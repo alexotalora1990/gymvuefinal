@@ -210,10 +210,10 @@ const procesarFormulario = async () => {
     } else {
 
       const plan = await usePlanes.postPlanes({
-        descripcion: descripcion.value,
-        valor: valor.value,
+        descripcion: descripcion.value.trim,
+        valor: valor.value.trim,
       
-        dias: dias.value
+        dias: dias.value.trim
 
       });
       Notify.create({

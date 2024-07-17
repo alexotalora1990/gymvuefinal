@@ -3,6 +3,15 @@
     <div class="q-pa-md">
 
       <div class="flex justify-end">
+
+        <q-input filled label="Buscar por nombre"
+          style="background-color:#d3d0d0; color: black; width: 30%; border-radius: 5px; margin-right: 1%;"
+          v-model="nombreCliente" @keyup.enter="listarNombre">
+          <template v-slot:append>
+            <q-btn icon="search" @click="listarNombre" style="background-color:#ffff;" />
+          </template>
+        </q-input>
+
         <q-btn color="green" icon="add" @click="agregar()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
 
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
@@ -254,7 +263,7 @@ const rowsSeguimiento = ref([])
 const rows = ref([]);
 const selectedClienteSeguimiento = ref([]);
 const clienteSeleccionado1 = ref(null);
-
+const nombreCliente = ref();
 const loading = ref(false); 
 const loadingList = ref(null); 
 
@@ -324,20 +333,49 @@ const loadingState = ref({});
 
 function getIMCColor(IMC) {
   if (IMC < 18.5) {
+    Notify.create({
+      type: 'info',
+      message: 'IMC categorizado como Bajo peso',
+      color: 'blue'
+    });
     return 'blue';
   } else if (IMC >= 18.5 && IMC <= 24.9) {
+    Notify.create({
+      type: 'positive',
+      message: 'IMC categorizado como Peso normal.',
+      color: 'green'
+    });
     return 'green';
   } else if (IMC >= 25 && IMC <= 29.9) {
+    Notify.create({
+      type: 'warning',
+      message: 'IMC categorizado como Sobrepeso grado I.',
+      color: 'orange'
+    });
     return 'orange';
   } else if (IMC >= 30 && IMC <= 34.9) {
+    Notify.create({
+      type: 'warning',
+      message: 'IMC categorizado como Obesidad tipo I',
+      color: 'darkorange'
+    });
     return 'darkorange';
   } else if (IMC >= 35 && IMC <= 39.9) {
+    Notify.create({
+      type: 'negative',
+      message: 'IMC categorizado como Obesidad tipo II.',
+      color: 'lightcoral'
+    });
     return 'lightcoral';
   } else {
+    Notify.create({
+      type: 'negative',
+      message: 'IMC categorizado como Obesidad tipo III (mórbida).',
+      color: 'red'
+    });
     return 'red';
   }
 }
-
 function formatDate(date) {
   const d = new Date(date);
   const year = d.getFullYear();
@@ -346,25 +384,37 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-async function listarClientes()  {
+async function listarClientes() {
   loading.value = true;
   loadingList.value = 'todos';
   try {
     const r = await useClientes.getCliente();
     const clientes = r.data.Cliente;
-     rows.value = clientes.map(cliente => ({
-    ...cliente,
-    fechaNacimiento: formatDate(cliente.fechaNacimiento),
-    fechaVencimiento: formatDate(cliente.fechaVencimiento),
-  }));
+    rows.value = clientes.map(cliente => ({
+      ...cliente,
+      fechaNacimiento: formatDate(cliente.fechaNacimiento),
+      fechaVencimiento: formatDate(cliente.fechaVencimiento),
+    }));
     console.log(r.data.Cliente);
+
+    Notify.create({
+      type: 'positive',
+      message: 'Clientes listados correctamente',
+      position: 'top'
+    });
   } catch (error) {
     console.error('Error al listar todos los clientes:', error);
+
+    Notify.create({
+      type: 'negative',
+      message: 'Hubo un error al listar los clientes'
+    });
   } finally {
     loading.value = false;
     loadingList.value = null;
   }
 }
+
 
 async function listarPlanes() {
   try {
@@ -374,7 +424,7 @@ async function listarPlanes() {
         label: idplan.descripcion,
         value: idplan._id
       }));
-      console.log(planOptions.value); // Mostrar contenido real del array
+      console.log(planOptions.value); 
     } else {
       console.error("Estructura de respuesta inesperada:", r.data.plan);
     }
@@ -398,8 +448,6 @@ function cerrarSeguimiento() {
 }
 
 
-
-
 async function listarClientesActivos() {
   loading.value = true;
   loadingList.value = 'activos';
@@ -407,6 +455,21 @@ async function listarClientesActivos() {
    const r = await useClientes.getClientesActivos();
   console.log(r.data.clientesActivos);
   rows.value = r.data.clientesActivos;
+  if (clientesActivos.length === 0) {
+    Notify.create({
+      type: 'negative',
+      message: "No hay clientes activos"
+    })
+  }
+  else {
+    rows.value = clientesActivos
+    Notify.create({
+    
+      type: 'positive',
+      message: 'clientes  Activos Listados Correctamente',
+      position: 'top'
+    })
+  }
   } catch (error) {
     console.error('Error al listar clientes activos:', error);
   } finally {
@@ -422,6 +485,22 @@ async function listarClientesInactivos() {
     const r = await useClientes.getClientesInactivos();
   console.log(r.data.clientesInactivos);
   rows.value = r.data.clientesInactivos;
+  if (clientesInactivos.length === 0) {
+    Notify.create({
+      type: 'negative',
+      message: "No hay clientes inactivos"
+    })
+  }
+  else {
+    rows.value = clientesInactivos
+    Notify.create({
+      color: 'orange',
+      type: 'positive',
+      message: 'Clientes Inactivos Listados Correctamente',
+      position: 'top'
+    })
+  }
+
   } catch (error) {
     console.error('Error al listar clientes inactivos:', error); 
   } finally {
@@ -442,7 +521,49 @@ function listar(tipo) {
   }
 }
 
-
+async function listarNombre() {
+  if (nombreCliente.value === "") {
+    Notify.create({
+      type: 'negative',
+      message: 'Digite el nombre del cliente'
+    });
+    return;
+  }
+  
+  loading.value = true;
+  loadingList.value = 'nombre';
+  try {
+    const r = await useClientes.getCliente();
+    const clienteFiltrado = r.data.Cliente.filter(cliente =>
+      cliente.nombre.toLowerCase().includes(nombreCliente.value.toLowerCase())
+    );
+    
+    if (clienteFiltrado.length === 0) {
+      Notify.create({
+        type: 'negative',
+        message: 'Cliente no existe'
+      });
+    } else {
+      rows.value = clienteFiltrado;
+      Notify.create({
+        position:'top',
+        type: 'positive',
+        message: 'Cliente encontrado'
+      });
+    }
+  } catch (error) {
+    console.error('Error al listar cliente por nombre:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al listar cliente por nombre'
+    });
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
+  
+  nombreCliente.value = "";
+}
 
 onMounted(() => {
   listarClientes();
@@ -459,17 +580,17 @@ const procesarFormulario = async (option) => {
 
     if (clienteSeleccionado.value !== null) {
       await useClientes.putClientes(clienteSeleccionado.value._id, {
-        nombre: nombre.value,
-        documento: documento.value,
-        email: email.value,
-        direccion: direccion.value,
-        telefono: telefono.value,
-        fechaNacimiento: fechaNacimiento.value,
+        nombre: nombre.value.trim,
+        documento: documento.value.trim,
+        email: email.value.trim,
+        direccion: direccion.value.trim,
+        telefono: telefono.value.trim,
+        fechaNacimiento: fechaNacimiento.value.trim,
         idPlan: idplanseleccionado.value,
-        foto: foto.value,
-        objetivo: objetivo.value,
-        observaciones: observaciones.value,
-        fechaVencimiento: fechaVencimiento.value,
+        foto: foto.value.trim,
+        objetivo: objetivo.value.trim,
+        observaciones: observaciones.value.trim,
+        fechaVencimiento: fechaVencimiento.value.trim,
       });
       Notify.create({
         type: 'positive',
@@ -482,17 +603,17 @@ const procesarFormulario = async (option) => {
       });
     } else {
       await useClientes.postClientes({
-        nombre: nombre.value,
-        documento: documento.value,
-        email: email.value,
-        direccion: direccion.value,
-        telefono: telefono.value,
-        fechaNacimiento: fechaNacimiento.value,
+        nombre: nombre.value.trim,
+        documento: documento.value.trim,
+        email: email.value.trim,
+        direccion: direccion.value.trim,
+        telefono: telefono.value.trim,
+        fechaNacimiento: fechaNacimiento.value.trim,
         idPlan: idplanseleccionado.value,
-        foto: foto.value,
-        objetivo: objetivo.value,
-        observaciones: observaciones.value,
-        fechaVencimiento: fechaVencimiento.value,
+        foto: foto.value.trim,
+        objetivo: objetivo.value.trim,
+        observaciones: observaciones.value.trim,
+        fechaVencimiento: fechaVencimiento.value.trim,
       });
       Notify.create({
         type: 'positive',
@@ -561,6 +682,7 @@ async function activar(id) {
     console.log('Respuesta de activación:', response);
     await listarClientes();
     Notify.create({
+      position: 'top',
       type: 'positive',
       message: 'Cliente activado exitosamente',
       icon: 'check',
@@ -585,6 +707,8 @@ async function desactivar(id) {
     console.log('Respuesta de desactivación:', response);
     await listarClientes();
     Notify.create({
+      color:'orange',
+      position: 'top',
       type: 'positive',
       message: 'Cliente desactivado exitosamente',
       icon: 'check',
@@ -592,6 +716,7 @@ async function desactivar(id) {
   } catch (error) {
     console.error('Error al desactivar cliente:', error);
     Notify.create({
+      position: 'top',
       type: 'negative',
       message: 'Error al desactivar cliente',
       icon: 'error',
@@ -652,12 +777,12 @@ async function agregarSeguimiento(cliente) {
 
 async function procesarSeguimiento(idCliente) {
   const seguimiento = {
-    fecha: fecha.value,
-    peso: peso.value,
-    tBrazo: tBrazo.value,
-    tPierna: tPierna.value,
-    tCintura: tCintura.value,
-    estatura: estatura.value,
+    fecha: fecha.value.trim,
+    peso: peso.value.trim,
+    tBrazo: tBrazo.value.trim,
+    tPierna: tPierna.value.trim,
+    tCintura: tCintura.value.trim,
+    estatura: estatura.value.trim,
   };
 
   try {

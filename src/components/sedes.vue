@@ -213,11 +213,11 @@ const procesarFormulario = async () => {
   try {
     if (  sedeSeleccionada !== null && sedeSeleccionada.value !== null) {
      const sede= await useSedes.putSede(sedeSeleccionada.value._id, {
-        nombre: nombre.value,
-        direccion: direccion.value,
-        horario: horario.value,
-        telefono: telefono.value,
-        ciudad: ciudad.value
+        nombre: nombre.value.trim,
+        direccion: direccion.value.trim,
+        horario: horario.value.trim,
+        telefono: telefono.value.trim,
+        ciudad: ciudad.value.trim
       });
       Notify.create({
         type: 'positive',
@@ -230,11 +230,11 @@ const procesarFormulario = async () => {
       });
     } else {
      const sede= await useSedes.postSede({
-        nombre: nombre.value,
-        direccion: direccion.value,
-        horario: horario.value,
-        telefono: telefono.value,
-        ciudad: ciudad.value
+        nombre: nombre.value.trim,
+        direccion: direccion.value.trim,
+        horario: horario.value.trim,
+        telefono: telefono.value.trim,
+        ciudad: ciudad.value.trim
 
       });
       Notify.create({

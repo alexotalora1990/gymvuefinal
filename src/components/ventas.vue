@@ -249,7 +249,7 @@ const listarProductos = async () => {
         idcliente: idcliente.value.value,
           idproducto: idproducto.value.value,
           idsede: idsede.value.value,         
-          cantidad: cantidad.value, 
+          cantidad: cantidad.value.trim, 
       }
       if (ventaSeleccionada.value !== null) {
         

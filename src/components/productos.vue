@@ -227,9 +227,9 @@ const procesarFormulario = async () => {
     if (productoSeleccionado.value !== null) {
       // Actualiza
       await useProductos.putProducts(productoSeleccionado.value._id, {
-        nombre: nombre.value,
-        valor: valor.value,
-        cantidad: cantidad.value,
+        nombre: nombre.value.trim,
+        valor: valor.value.trim,
+        cantidad: cantidad.value.trim,
       });
       Notify.create({
         type: 'positive',
@@ -239,9 +239,9 @@ const procesarFormulario = async () => {
     } else {
       // Agrega
       await useProductos.postProducts({
-        nombre: nombre.value,
-        valor: valor.value,
-        cantidad: cantidad.value,
+        nombre: nombre.value.trim,
+        valor: valor.value.trim,
+        cantidad: cantidad.value.trim,
       });
       Notify.create({
         type: 'positive',
