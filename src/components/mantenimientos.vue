@@ -25,21 +25,21 @@
              v-model="responsable"
               label="Responsable"
                type="text"
-              :rules="[val => !!val || 'Id Cliente no puede estar vacía']" />
+              :rules="[val => !!val.trim() || 'Responsable no puede estar vacío']" />
 
               <q-input
              filled 
              v-model="descripcion"
               label="Descripción"
                type="text"
-              :rules="[val => !!val || 'Id Cliente no puede estar vacía']" />
+              :rules="[val => !!val.trim() || 'Descripción no puede estar vacío']" />
 
               <q-input
              filled 
              v-model="valor"
               label="Valor"
                type="text"
-              :rules="[val => !!val || 'Id Cliente no puede estar vacía']" />
+              :rules="[val => !!val || 'Valor no puede estar vacío']" />
 
 
             
@@ -107,7 +107,7 @@
     
     { name: "responsable", label: "Responsable", field: "responsable", align: "center" },
     { name: "descripcion", label: "Nombre", field: "descripcion", align: "center" },
-    { name: "valor", label: "Precio", field: "valor", align: "center" },
+    { name: "valor", label: "Precio", field: row => puntosMil(row.valor), align: "center" },
     { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
   
   ])
@@ -136,15 +136,14 @@
   loadingList.value = 'todos';
   try {
     const r = await useMaquina.getMaquina();
-    if (r && r.data.maquina) {
-      maquinaOptions.value = r.data.maquina.map(idmaquina => ({
-        label: idmaquina.descripcion,
-        value: idmaquina._id
-      }));
-      console.log(maquinaOptions.value); // Mostrar contenido real del array
-    } else {
-      console.error("Estructura de respuesta inesperada:", r.data.maquina);
-    }
+    const maquinas=r.data.maquina
+    const maquinaActiva=maquinas.filter(maquina=>maquina.estado===1).map(idmaquina=>({
+      label: idmaquina.descripcion,
+      value: idmaquina._id
+    }))
+
+    maquinaOptions.value=maquinaActiva
+    
   } catch (error) {
     console.error("Error al obtener las Maquinas:", error);
   }finally {
@@ -267,7 +266,12 @@
     valor.value = ("")
     
   }
-  
+  const puntosMil = (num) => {
+  if (num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+  return '';
+};
   </script>
   
   
@@ -334,6 +338,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 7%;
   }
   
   .form-title {

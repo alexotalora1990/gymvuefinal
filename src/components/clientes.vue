@@ -851,6 +851,7 @@ function cerrarSeguimiento() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+ 
 }
 
 .form-title {

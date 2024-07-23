@@ -12,6 +12,7 @@
             <b> BODY CHAMPION</b>
           </q-toolbar-title>
 
+          <q-btn dense flat round icon="home" @click="goHome" />
           <q-btn dense flat round icon="menu" @click="toggleRightDrawer" />
           <q-btn dense flat round icon="logout" @click="logout" />
         </q-toolbar>
@@ -20,17 +21,40 @@
       <q-drawer v-model="rightDrawerOpen" side="right" overlay behavior="desktop">
         <div class="drawer-content">
           <q-tabs vertical class="bg-secondary">
-            <q-route-tab v-for="route in filteredRoutes" :key="route.path" :to="route.path" :label="route.name" />
+            <q-route-tab 
+              v-for="route in filteredRoutes" 
+              :key="route.path" 
+              :to="route.path" 
+              :label="route.name" 
+              @click="handleNavigation(route)" 
+            />
           </q-tabs>
         </div>
       </q-drawer>
 
       <q-page-container>
         <div class="usuario">
-          <h5> {{ user.roll }} </h5>
+          <h5>{{ user.roll }}</h5>
         </div>
-        <div>
-          <router-view />
+        <div class="q-pa-md">
+          <div v-if="!selectedCard" class="row">
+            <div v-for="route in filteredRoutes" :key="route.path" class="col-xs-12 col-sm-6 col-md-4 col-lg-3 q-mb-md">
+              <q-card @click="handleNavigation(route)" class="q-hoverabl" style="cursor: pointer;">
+                <q-card-section>
+                  <div class="text-h6">{{ route.name }}</div>
+                </q-card-section>
+              </q-card>
+            </div>
+          </div>
+          <div v-else>
+            <q-btn flat label="Volver" icon="arrow_back" @click="deselectCard" />
+            <q-card class="q-mb-md">
+              <q-card-section>
+                <div class="text-h5">{{ selectedCard.name }}</div>
+                <router-view />
+              </q-card-section>
+            </q-card>
+          </div>
         </div>
       </q-page-container>
 
@@ -54,7 +78,7 @@ import { routes } from "../routes/routes.js"
 const rightDrawerOpen = ref(false);
 const router = useRouter();
 const usuariosStore = useUsuariosStore();
- 
+
 const user = usuariosStore.user;
 
 const toggleRightDrawer = () => {
@@ -64,6 +88,23 @@ const toggleRightDrawer = () => {
 const logout = () => {
   usuariosStore.logout();
   router.push('/');
+};
+
+const goHome = () => {
+  selectedCard.value = null;
+  router.push('/home');
+};
+
+const selectedCard = ref(null);
+
+const handleNavigation = (route) => {
+  selectedCard.value = route;
+  router.push(route.path);
+};
+
+const deselectCard = () => {
+  selectedCard.value = null;
+  router.push('/home');
 };
 
 const filteredRoutes = computed(() => {
@@ -78,11 +119,13 @@ const filteredRoutes = computed(() => {
 .container {
   position: relative;
   width: 100%;
+  
 }
 
 .content {
   position: relative;
   z-index: 1;
+  
 }
 
 .usuario h5 {
@@ -124,6 +167,44 @@ const filteredRoutes = computed(() => {
 
 .drawer-content {
   overflow-y: auto;
-  max-height: 100vh; 
+  max-height: 100vh;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  
+}
+
+.col-xs-12 {
+  flex: 0 0 100%;
+  
+}
+
+.col-sm-6 {
+  flex: 0 0 50%;
+  
+}
+
+.col-md-4 {
+  flex: 0 0 33.33%;
+}
+
+.col-lg-3 {
+  flex: 0 0 25%;
+}
+.q-hoverabl {
+  background-color: rgba(203, 210, 217, 0.8); 
+  margin: 3%;
+  text-align: center;
+  border-radius: 8px; 
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.6); 
+  transition: box-shadow 0.3s ease, transform 0.3s ease; 
+  text-transform: uppercase;
+}
+
+.q-hoverabl:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.9); 
+  transform: translateY(-2px); 
 }
 </style>

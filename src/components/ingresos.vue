@@ -38,7 +38,9 @@
           </q-form>
         </q-page>
       </div>
-
+      <div v-if="loading" class="overlay">
+        <q-spinner-hourglass  color="primary" size="50px"  />
+      </div>
       <q-table title="Ingresos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
         <template v-slot:header="props">
           <q-tr :props="props" style="font-size: 24px;" class="table1">
@@ -116,24 +118,42 @@ const listarIngresos = async () => {
   }
 };
 
-const listarSedes = async () => {
+async function listarSedes() {
+  
   try {
     const r = await useSedes.getSede();
-    sedeOptions.value = r.sede.map(sede => ({ label: sede.nombre, value: sede._id }));
+    const sedes=r.sede
+    console.log(sedes);
+    const sedeActiva=sedes.filter(sede=>sede.estado===1).map(sede => ({
+        label: sede.nombre, 
+        value: sede._id 
+      }));
+
+        sedeOptions.value=sedeActiva
+ 
   } catch (error) {
     console.error('Error al obtener las sedes:', error);
   }
-};
+}
 
-const listarClientes = async () => {
+
+async function listarClientes() {
+  
   try {
     const r = await useClientes.getCliente();
-    clienteOptions.value = r.data.Cliente.map(cliente => ({ value: cliente._id, label: cliente.nombre }));
-    filteredClienteOptions.value = clienteOptions.value;
+    const clientes=r.data.Cliente
+    console.log(clientes);
+    const clienteActivo=clientes.filter(cliente=>cliente.estado===1).map(cliente => ({
+        label: cliente.nombre, 
+        value: cliente._id 
+      }));
+
+        clienteOptions.value=clienteActivo
+ 
   } catch (error) {
     console.error('Error al obtener los clientes:', error);
   }
-};
+}
 
 onMounted(() => {
   listarIngresos();
@@ -144,17 +164,20 @@ onMounted(() => {
 const procesarFormulario = async () => {
   loading.value = true;
   loadingList.value = 'guardar';
+  const sedeseleccionada=idsede.value.value
+  const clienteseleccionado=idcliente.value.value
+  
   try {
-    const Ingreso = {
-      idsede: idsede.value.value,
-      idcliente: idcliente.value.value
+    const ingreso = {
+      idsede: sedeseleccionada,
+      idcliente: clienteseleccionado
     };
-
+console.log(ingreso);
     if (ingresoSeleccionado.value !== null) {
-      await useIngresos.putIncome(ingresoSeleccionado.value._id, Ingreso);
+      await useIngresos.putIncome(ingresoSeleccionado.value._id, ingreso);
       Notify.create({ type: 'positive', message: 'Ingreso Actualizado Exitosamente', icon: 'check', position: 'top' });
     } else {
-      await useIngresos.postIncome(Ingreso);
+      await useIngresos.postIncome(ingreso);
       Notify.create({ type: 'positive', message: 'Ingreso Creado Exitosamente', icon: 'check', position: 'top' });
     }
 
@@ -274,6 +297,7 @@ const limpiar = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 7%;
 }
 
 .form-title {
@@ -286,5 +310,17 @@ const limpiar = () => {
 
 .close-btn {
   color: white;
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
 }
 </style>

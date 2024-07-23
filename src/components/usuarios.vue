@@ -48,12 +48,23 @@
         </div>
         
         <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
-          <q-input filled v-model="nombre" label="Nombre" :rules="[val => !!val || 'Nombre no puede estar vacío']" />
-          <q-input filled v-model="password" label="Contraseña" v-show="verPassword" :rules="[val => !!val || 'Contraseña no puede estar vacía']" />
+          <q-input 
+          filled 
+          v-model="nombre"
+           label="Nombre" 
+           :rules="[val => !!val.trim() || 'Nombre no puede estar vacío']"
+            />
+          <q-input
+           filled
+            v-model="password" 
+            label="Contraseña"
+             v-show="verPassword"
+              :rules="[val => !!val.trim() || 'Contraseña no puede estar vacía']" 
+              />
           <q-input filled v-model="telefono" label="Teléfono" :rules="[val => /^[0-9]+$/.test(val) || 'Teléfono no puede estar vacío y solo recibe números']" />
-          <q-input filled v-model="email" label="Email" :rules="[val => !!val || 'Email no puede estar vacío']" />
+          <q-input filled v-model="email" label="Email" :rules="[val => !!val.trim() || 'Email no puede estar vacío']" />
           <q-select filled v-model="idsede" label="Seleccione una sede" :options="sedeOptions" :rules="[val => !!val || 'Debe seleccionar una sede']" />
-          <q-select filled v-model="roll" label="Rol*" :options="rollOptions" :rules="[val => !!val || 'Debe seleccionar un rol']" />
+          <q-select filled v-model="roll" label="Rol*" :options="rollOptions" :rules="[val => !!val.trim() || 'Debe seleccionar un rol']" />
           <div class="q-mt-md q-flex q-justify-end">
             <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
             <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
@@ -61,7 +72,9 @@
         </q-form>
       </q-page>
     </div>
-
+    <div v-if="loading" class="overlay">
+        <q-spinner-hourglass  color="primary" size="50px"  />
+      </div>
     <q-table title="Usuarios" :rows="rows" :columns="columns" row-key="nombre" class="table">
       <template v-slot:header="props">
         <q-tr :props="props" style="font-size: 30px;" class="table1">
@@ -122,26 +135,25 @@ const usuarioSeleccionado = ref(null);
 const sedeOptions = ref([]);
 const rows = ref([]);
 
-const nombreUsuario =ref()
+const nombreUsuario =ref('')
 
-const loading = ref(false); // Variable para controlar el estado de carga
-const loadingList = ref(null); // Lista actualmente en proceso
-
+const loading = ref(false); 
+const loadingList = ref(null); 
 const columns = ref([
   { name: 'nombre', label: 'Nombre Usuario', field: 'nombre', align: 'center' },
   { name: 'roll', label: 'Roll', field: 'roll', align: 'center' },
   { name: 'telefono', label: 'Telefono', field: 'telefono', align: 'center' },
   { name: 'email', label: 'Email', field: 'email', align: 'center' },
-  { name: 'sede', label: 'Sede', field: 'sede', align: 'center' },
+  { name: 'idsede', label: 'Sede', field: (row)=>row.idsede?.nombre, align: 'center' },
   { name: 'estado', label: 'Estado', field: 'estado', align: 'center' },
   { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
 ]);
 
-const loadingState = ref({}); // Estado de carga para cada fila
+const loadingState = ref({}); 
 
 async function listarUsuarios()  {
   loading.value = true;
-  loadingList.value = 'todos';
+  
   try {
     const r = await useUsuarios.getUser();
     rows.value = r.data.Usuario;
@@ -149,22 +161,27 @@ async function listarUsuarios()  {
   } catch (error) {
     console.error('Error al listar todos los usuarios:', error);
   } finally {
-    loading.value = false;
-    loadingList.value = null;
+    setTimeout(() => {
+        loading.value = false;
+      },1000 );
+   
   }
 }
 
 async function listarSedes() {
+  
   try {
     const r = await useSedes.getSede();
-    if (r && r.sede) {
-      sedeOptions.value = r.sede.map((sede) => ({
-        label: sede.nombre,
-        value: sede._id,
+    const sedes=r.sede
+    console.log(sedes);
+    const sedeActiva=sedes.filter(sede=>sede.estado===1).map(sede => ({
+        label: sede.nombre, 
+        value: sede._id 
       }));
-    } else {
-      console.error('Estructura de respuesta inesperada:', r);
-    }
+
+    console.log(sedeActiva);
+    sedeOptions.value=sedeActiva
+ 
   } catch (error) {
     console.error('Error al obtener las sedes:', error);
   }
@@ -176,8 +193,18 @@ async function listarUsuariosActivos() {
   try {
     const r = await useUsuarios.getUserActivos();
     rows.value = r.data.UsuariosActivos;
+    
+    Notify.create({
+      type: 'positive',
+      message: 'Usuarios Activos Listados Correctamente',
+      position: 'top'
+    })
   } catch (error) {
     console.error('Error al listar usuarios activos:', error);
+    Notify.create({
+      type: 'negative',
+      message: "No hay Usuarios activos"
+    })
   } finally {
     loading.value = false;
     loadingList.value = null;
@@ -188,10 +215,27 @@ async function listarUsuariosInactivos() {
   loading.value = true;
   loadingList.value = 'inactivos';
   try {
+    
     const r = await useUsuarios.getUserInactivos();
-    rows.value = r.data.UsuariosInactivos;
+    const usuarioActivo = r.data.UsuariosInactivos;
+    if(usuarioActivo.length=== 0){
+      Notify.create({
+      type: 'negative',
+      message: "No hay Usuarios Inactivos"
+    })
+    }
+ else{
+  rows.value=usuarioActivo
+  Notify.create({
+      type: 'positive',
+      message: 'Usuarios Inactivos Listados Correctamente',
+      position: 'top'
+    })
+ }   
   } catch (error) {
     console.error('Error al listar usuarios inactivos:', error); 
+    
+ 
   } finally {
     loading.value = false;
     loadingList.value = null; 
@@ -225,8 +269,8 @@ async function listarNombre() {
       throw new Error('No se encontraron usuarios en la respuesta');
     }
     
-    const usuarioFiltrado = r.data.Usuario.filter(usuario =>
-      usuario.nombre && usuario.nombre.toLowerCase().includes(nombreUsuario.value.toLowerCase())
+    const usuarioFiltrado = r.data?.Usuario?.filter(usuario =>
+      usuario.nombre && usuario.nombre?.toLowerCase().includes(nombreUsuario.value.toLowerCase())
     );
     
     if (usuarioFiltrado.length === 0) {
@@ -256,9 +300,10 @@ onMounted(() => {
 const procesarFormulario = async () => {
   loading.value = true;
   loadingList.value = 'guardar';
-  try {
-    console.log(idsede.value.value);
+ 
     const sedeSeleccionada = idsede.value.value;
+console.log(sedeSeleccionada);
+  try { 
 
     const user = {
       idsede: sedeSeleccionada,
@@ -266,15 +311,17 @@ const procesarFormulario = async () => {
       telefono: telefono.value,
       email: email.value,
       roll: roll.value,
-      password: usuarioSeleccionado.value === null ? password.value : undefined, // Solo enviar el password si es un nuevo usuario
+      password: usuarioSeleccionado.value === null ? password.value : undefined,
     };
 
     console.log('Datos enviados:', user);
 
     if (usuarioSeleccionado.value !== null) {
       await useUsuarios.putUser(usuarioSeleccionado.value._id, user);
+      Notify.create({ type: 'positive', message: 'Usuario Actualizado Exitosamente', icon: 'check', position: 'top' });
     } else {
       await useUsuarios.postUser(user);
+      Notify.create({ type: 'positive', message: 'Usuario Creado Exitosamente', icon: 'check', position: 'top' });
     }
     
     listarUsuarios();
@@ -284,6 +331,7 @@ const procesarFormulario = async () => {
 
   } catch (error) {
     console.error('Error al procesar el formulario:', error);
+    Notify.create({ type: 'negative', message: 'Error al procesar el formulario', icon: 'error' });
   } finally {
     loading.value = false;
     loadingList.value = null;
@@ -299,6 +347,7 @@ async function agregarUsuario() {
     verPassword.value = true;
     tituloFormulario.value = 'Agregar Usuario';
     
+    
   } 
   catch (error) {
     console.error('Error al agregar usuario:', error); 
@@ -308,9 +357,9 @@ async function agregarUsuario() {
   }
 }
 
-async function editarUsuario(user) {
-  console.log(user);
-  if (user.estado !== 1) {
+const  editarUsuario= async (user)=> {
+  
+  if (user.estado !== 1) {   
     Notify.create({
       type: 'warning',
       message: 'Para editar un usuario debe estar activo',
@@ -324,17 +373,16 @@ async function editarUsuario(user) {
   }
 
 else{
+console.log(user);
   verFormulario.value = true;
   usuarioSeleccionado.value = user;
   verPassword.value = false;
-  tituloFormulario.value = 'Editar Usuario';  
-  
-  const sede = sedeOptions.value.find(option => option.value === user.idsede);  
+  tituloFormulario.value = 'Editar Usuario'; 
   
   nombre.value = user.nombre;
   telefono.value = user.telefono;
   email.value = user.email;
-  idsede.value = sede ? sede.label : '';
+  idsede.value =user.idsede.nombre;
   roll.value = user.roll;
 }
 }
@@ -344,8 +392,21 @@ async function activar(id) {
   try {
     await useUsuarios.putUserActivar(id);
     listarUsuarios();
+    Notify.create({
+      type: 'positive',
+      message: 'Usuario activado exitosamente',
+      icon: 'check',
+      position: 'top',
+      timeout: 3000,
+    });
   } catch (error) {
     console.error('Error al activar usuario:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al activar Usuario',
+      icon: 'error',
+
+    });
   } finally {
     loadingState.value[id] = false;
   }
@@ -369,8 +430,20 @@ async function desactivar(user) {
   try {
     await useUsuarios.putUserDesactivar(user._id);
     listarUsuarios();
+    Notify.create({
+      color: 'orange',
+      message: 'Usuario desactivado exitosamente',
+      icon: 'check',
+      position: 'top',
+      timeout: 3000,
+    });
   } catch (error) {
     console.error('Error al desactivar usuario:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al desactivar Usuario',
+      icon: 'error',
+    });
   } finally {
     loadingState.value[user._id] = false;
   }
@@ -457,6 +530,7 @@ function limpiar() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 5%;
 }
 
 .form-title {
@@ -470,5 +544,16 @@ function limpiar() {
 .close-btn {
   color: white;
 }
-
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
+}
 </style>

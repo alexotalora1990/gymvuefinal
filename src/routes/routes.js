@@ -45,8 +45,7 @@ const routes = [
   { path: '/recuperar-password', name: 'recuperarPassword', component: RecuperarPassword },
   {  path: '/resetpassword', name:'resetPassword',  component: ResetPassword    },
   {
-    path: '/home',
-    component: Home,
+    path: '/home', component: Home,
     children: [
       { path: '/productos', name: 'productos', component: Productos, beforeEnter: auth, meta: { rol: ['Administrador', 'Recepcion'] } },
       { path: '/usuarios', name: 'usuarios', component: Usuarios, beforeEnter: auth, meta: { rol: ['Administrador'] } },
