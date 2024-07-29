@@ -47,21 +47,21 @@ export const usePlanesStore = defineStore("planes", ()=>{
     };
     const putPlanesActivar = async(id)=>{
         try {
-            const r = await axios.put(`planes/activar/${id}`)
+            const r = await axios.put(`planes/activar/${id}`,null,)
             return r
         } catch (error) {
             return error
         }
     };
 
-    const putPlanesInactivar = async(id)=>{
+    const putPlanesDesactivar = async(id)=>{
         try {
-            const r = await axios.put(`planes/inactivar/${id}`)
+            const r = await axios.put(`planes/desactivar/${id}`,null,)
             return r
         } catch (error) {
             return error
         }
     };
 
-    return{ getPlanes,getPlanesActivos,getPlanesInactivos,postPlanes,putPlanes, putPlanesActivar, putPlanesInactivar}
+    return{ getPlanes,getPlanesActivos,getPlanesInactivos,postPlanes,putPlanes, putPlanesActivar, putPlanesDesactivar}
 })

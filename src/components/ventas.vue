@@ -1,12 +1,18 @@
 <template>
     <div>
 
-      <div class="q-pa-md">
-  
-        <div class="flex justify-end">
-          <q-btn color="green" icon="add" @click="agregarVenta()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
+      
 
-        </div>
+        <div class="q-pa-md">
+      <div class="flex justify-end">
+       
+        <q-input filled v-model="fechaFiltro" label="Filtrar por fecha" type="date" style="width: 30%; margin-left: 16px;" @input="listarPorFecha">
+          <template v-slot:append>
+            <q-btn icon="search" @click="listarPorFecha" style="background-color:#ffff;" />
+          </template>
+        </q-input>
+        <q-btn color="green" icon="add" @click="agregarVenta()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
+      </div>
         <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
   
@@ -95,10 +101,13 @@
   import { useSedesStore } from '../store/sedes.js';
   import { useClientesStore } from '../store/clientes.js';
   import { useProductsStore } from "../store/productos.js";
+
+  import { format } from 'date-fns';
   import axios from 'axios';
   import { useQuasar,Notify } from 'quasar';
   
   const verFormulario = ref(false)
+  const $q = useQuasar();
   
   const ventaSeleccionada = ref(null);
   const tituloFormulario = ref('Agregar Venta') 
@@ -118,6 +127,7 @@
   const filteredClienteOptions = ref([]);
   const filteredProductoOptions = ref([]);
   const filteredSedeOptions = ref([]);
+  const fechaFiltro = ref('');
   
   const rows = ref([])
   const loading = ref(false); 
@@ -139,7 +149,9 @@
     { name: "cantidad", label: "Cantidad", field: "cantidad", align: "center" },
     { name: "valorUnidad", label: "Precio", field: "valorUnidad", align: "center" },
     { name: "total", label: "Total", field: "total", align: "center" },
-    { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
+    
+     { name: "createAt", label: "Fecha de Venta", field: (row) => format(new Date(row.createAt), 'dd/MM/yyyy'), align: "center" },
+     { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
   
   ])
   
@@ -191,7 +203,7 @@ const filterSedeOptions = (val, update) => {
   loadingList.value = 'todos';
   try {
     const r = await useVentas.getVentas()
-    console.log(r.data.Venta);
+    // console.log(r.data.Venta);
     rows.value = r.data.Venta
   } catch (error) {
     console.error('Error al listar todos las ventas :', error);
@@ -224,7 +236,8 @@ const listarClientes = async () => {
 const listarProductos = async () => {
   try {
     const r = await useProductos.getProducts();
-    console.log(r.data);
+    console.log(r.data._id
+    );
     productoOptions.value = r.data.producto.map(producto => ({ value: producto._id, label: producto.nombre }));
     filteredProductoOptions.value = productoOptions.value;
   } catch (error) {
@@ -232,6 +245,32 @@ const listarProductos = async () => {
   }
 };
 
+const listarPorFecha = async () => {
+  if (!fechaFiltro.value) {
+    $q.notify({
+      type: 'negative',
+      message: 'Seleccione una fecha para filtrar'
+    });
+    return;
+  }
+
+  loading.value = true;
+  loadingList.value = 'fecha';
+  try {
+    const r = await useVentas.getVentasPorFecha(fechaFiltro.value);
+    if (r.data.ventasPorFecha) {
+      rows.value = r.data.createAt
+      ;
+    } else {
+      console.error('Error: La respuesta no contiene ventasPorFecha');
+    }
+  } catch (error) {
+    console.error('Error al listar ventas por fecha:', error);
+  } finally {
+    loading.value = false;
+    loadingList.value = null;
+  }
+};
   
   
   onMounted(() => {
@@ -410,6 +449,7 @@ const listarProductos = async () => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    margin-bottom: 7%;
   }
   
   .form-title {
