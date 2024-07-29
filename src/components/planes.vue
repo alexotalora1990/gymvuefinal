@@ -40,7 +40,7 @@
 
             <div>
               <q-input v-model="descripcion" label="Descripción"
-                :rules="[val => !!val || 'El plan no puede estar vacio ']" />
+                :rules="[val => !!val.trim() || 'El plan no puede estar vacio ']" />
             </div>
             <div>
               <q-input v-model="valor" label="Valor"
@@ -75,18 +75,23 @@
         </template>
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
-            <q-btn @click="editarUsuario(props.row)">
+            <q-btn @click="editar(props.row)">
               <q-tooltip class="bg-accent">Editar</q-tooltip>🖋️
             </q-btn>
             
-            <q-btn :loading="loadingState[props.row._id]" v-if="props.row.estado === 1" @click="desactivar(props.row_id)">❌
+            <q-btn 
+              :loading="loadingState[props.row._id]" 
+              v-if="props.row.estado === 1" 
+              @click="desactivar(props.row._id)">
+              ❌
               <q-tooltip class="bg-accent">Desactivar</q-tooltip>
               <template v-slot:loading>
                 <q-spinner color="primary" size="1em" />
               </template>
             </q-btn>
-  
-            <q-btn v-else @click="activar(props.row._id)" :loading="loadingState[props.row._id]">✅
+
+            <q-btn v-else @click="activar(props.row._id)"
+             :loading="loadingState[props.row._id]">✅
               <q-tooltip class="bg-accent">Activar</q-tooltip>
               <template v-slot:loading>
                 <q-spinner color="primary" size="1em" />
@@ -295,12 +300,14 @@ async function activar(id) {
     Notify.create({
       type: 'positive',
       message: 'Plan activado exitosamente',
+      position: 'top',
       icon: 'check',
     });
   } catch (error) {
     console.error('Error al activar Plan:', error);
     Notify.create({
       type: 'negative',
+      position:'top',
       message: 'Error al activar Plan',
       icon: 'error',
     });
@@ -313,11 +320,12 @@ async function desactivar(id) {
   loadingState.value[id] = true;
   try {
     console.log(`Intentando desactivar plan con ID: ${id}`);
-    const response = await usePlanes.putPlanesInactivar(id);
+    const response = await usePlanes.putPlanesDesactivar(id);
     console.log('Respuesta de desactivación:', response);
     await listarPlanes();
     Notify.create({
-      type: 'positive',
+      color:'orange',
+      position:'top',
       message: 'Plan desactivado exitosamente',
       icon: 'check',
     });

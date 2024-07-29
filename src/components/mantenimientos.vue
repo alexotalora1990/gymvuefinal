@@ -51,6 +51,11 @@
         </q-page>
       </div>
 
+
+      <div v-if="loading" class="overlay">
+        <q-spinner-hourglass  color="primary" size="50px"  />
+      </div>
+
         <q-table title="Mantenimiento" :rows="rows" :columns="columns" row-key="name" class="table">
           <template v-slot:header="props">
           <q-tr :props="props" style="font-size: 24px; " class="table1">
@@ -352,4 +357,16 @@
   .close-btn {
     color: white;
   }
+  .overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
+}
   </style>

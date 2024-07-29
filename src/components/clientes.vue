@@ -25,7 +25,7 @@
                 <q-spinner color="primary" size="2em" />
               </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('activos')" ::class="{ 'loading-item': loading && loadingList === 'activos' }">
+            <q-item clickable v-ripple @click="listar('activos')" :class="{ 'loading-item': loading && loadingList === 'activos' }">
               <q-item-section>Listar Activos</q-item-section>
               <template v-if="loading && loadingList === 'activos'">
                 <q-spinner color="primary" size="2em" />
@@ -107,47 +107,7 @@
         </q-page>
       </div>
 
-      <!-- <div class="form-container q-pa-md q-mx-auto" v-show="verFormularioSeguimiento">
-        <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
-
-          
-          <div class="q-flex q-justify-between q-items-center form-header">
-            <h5 class="form-title2 bg-primary text-white q-pa-sm rounded-borders
-            ">{{ tituloFormularioSeguimiento }}</h5>
-            <q-btn flat icon="close" color="white" @click="cerrarFormularioSeguimiento" class="close-btn" />
-          
-          </div>
-
-          <q-form class="q-gutter-md" @submit.prevent="procesarSeguimiento">
-
-            <q-input filled v-model="fecha" label="Fecha" type="date"
-              :rules="[(val) => !!val || 'Fecha no puede estar vacía']" />
-
-            <q-input filled v-model="peso" label="Peso" type="number"
-              :rules="[(val) => val > 0 || 'Peso debe ser un número positivo']" />
-
-
-
-            <q-input filled v-model="tBrazo" label="Talla de Brazo" type="number"
-              :rules="[(val) => val > 0 || 'Talla de Brazo debe ser un número positivo']" />
-
-            <q-input filled v-model="tPierna" label="Talla de Pierna" type="number"
-              :rules="[(val) => val > 0 || 'Talla de Pierna debe ser un número positivo']" />
-
-            <q-input filled v-model="tCintura" label="Talla de Cintura" type="number"
-              :rules="[(val) => val > 0 || 'Talla de Cintura debe ser un número positivo']" />
-
-            <q-input filled v-model="estatura" label="Estatura en centimetros ej.(180)" type="number"
-              :rules="[(val) => val > 0 || 'Estatura debe ser un número positivo']" />
-
-            <div class="q-mt-md">
-
-              <q-btn label="Guardar" color="green" @click="agregarSeguimiento(clienteSeleccionado.value)" />
-              <q-tooltip class="bg-accent">Guardar</q-tooltip>
-            </div>
-          </q-form>
-        </q-page>
-      </div> -->
+     
 
 
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormularioSeguimiento">
@@ -172,6 +132,9 @@
       </q-form>
     </q-page>
   </div>
+  <div v-if="loading" class="overlay">
+        <q-spinner-hourglass  color="primary" size="50px"  />
+      </div>
 
       <q-table title="Clientes" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
         <template v-slot:header="props">
@@ -359,21 +322,37 @@ const columnsSeguimiento = ref([
 ]);
 const loadingState = ref({});
 
+// function getIMCColor(IMC) {
+//   if (IMC < 18.5) {
+//     return 'blue';
+//   } else if (IMC >= 18.5 && IMC <= 24.9) {
+//     return 'green';
+//   } else if (IMC >= 25 && IMC <= 29.9) {
+//     return 'orange';
+//   } else if (IMC >= 30 && IMC <= 34.9) {
+//     return 'darkorange';
+//   } else if (IMC >= 35 && IMC <= 39.9) {
+//     return 'lightcoral';
+//   } else {
+//     return 'red';
+//   }
+// }
 function getIMCColor(IMC) {
   if (IMC < 18.5) {
-    return 'blue';
+    return { color: 'blue', description: 'peso insuficiente' };
   } else if (IMC >= 18.5 && IMC <= 24.9) {
-    return 'green';
+    return { color: 'green', description: 'saludable' };
   } else if (IMC >= 25 && IMC <= 29.9) {
-    return 'orange';
+    return { color: 'orange', description: 'sobrepeso' };
   } else if (IMC >= 30 && IMC <= 34.9) {
-    return 'darkorange';
+    return { color: 'darkorange', description: 'obesidad' };
   } else if (IMC >= 35 && IMC <= 39.9) {
-    return 'lightcoral';
+    return { color: 'lightcoral', description: 'obesidad' };
   } else {
-    return 'red';
+    return { color: 'red', description: 'obesidad extrema' };
   }
 }
+
 
 function formatDate(date) {
   const d = new Date(date);
@@ -851,7 +830,7 @@ function cerrarSeguimiento() {
   display: flex;
   justify-content: space-between;
   align-items: center;
- 
+  margin-bottom: 7%;
 }
 
 .form-title {
@@ -877,6 +856,19 @@ function cerrarSeguimiento() {
   text-align: center;
   font-weight: bold;
   margin-left: 15%;}
+
+  .overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
+}
 
 
 </style>

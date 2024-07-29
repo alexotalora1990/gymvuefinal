@@ -48,15 +48,23 @@
 
             <q-select filled v-model="idcliente" label="Seleccione un cliente" :options="clienteOptions"
               :rules="[val => !!val || 'Debe seleccionar un cliente']" />
+              <q-input filled v-model="fechaVencimiento" label="Fecha de Vencimiento" type="date"
+              :rules="[
+                val => !!val || 'Fecha de vencimiento no debe estar vacía',
+                val => new Date(val) > new Date() || 'La fecha de vencimiento debe ser mayor a la fecha actual'
+              ]" />
 
               <div class="q-mt-md q-flex q-justify-end">
-                <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
+              
                 <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
               </div>
           </q-form>
         </q-page>
       </div>
 
+      <div v-if="loading" class="overlay">
+        <q-spinner-hourglass  color="primary" size="50px"  />
+      </div>
 
       <q-table title="Pagos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
         <template v-slot:header="props">
@@ -128,6 +136,7 @@ const useClientes = useClientesStore();
 const usePlanes = usePlanesStore();
 const idcliente = ref()
 const idplan = ref()
+const fechaVencimiento = ref()
 const clienteOptions = ref([])
 const planOptions = ref([])
 const rows = ref([])
@@ -144,7 +153,8 @@ const columns = ref([
     field: (row) => row.idplan?.descripcion,
     align: "center"
   },
-  { name: "valor", label: "Precio", field: "valor", align: "center" },
+  { name: "valor", label: "Precio", field: row => puntosMil(row.valor), align: "center" },
+  { name: "fechaVencimiento", label: "Fecha Vencimiento", field: "fechaVencimiento", align: "center" },
   { name: "estado", label: "Estado", field: "estado", align: "center" },
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
 
@@ -158,7 +168,11 @@ async function listarpagos()  {
   try {
     const r = await usePagos.getPagos()
   console.log(r.data.pago);
-  rows.value = r.data.pago
+  rows.value = r.data.pago.map(pago=>({
+    ...pago,
+    fechaVencimiento: new Date(pago.fechaVencimiento).toLocaleDateString('es-ES')
+  }))
+  
   } catch (error) {
     console.error('Error al listar todos los pagos:', error);
   } finally {
@@ -257,7 +271,8 @@ const procesarFormulario = async () => {
 
     const pago ={
       idcliente:idpagoSeleccionado,
-      idplan:idpagoSeleccionado2
+      idplan:idpagoSeleccionado2,
+      fechaVencimiento:fechaVencimiento.value
     }
 
 
@@ -323,6 +338,7 @@ else{
  
   idcliente.value =pago.idcliente.nombre;
   idplan.value = pago.idplan.descripcion;
+  fechaVencimiento.value=pago.fechaVencimiento;
   verFormulario.value = (true)
 }
   
@@ -417,6 +433,12 @@ function limpiar() {
   idplan.value = ("")
 
 }
+const puntosMil = (num) => {
+  if (num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+  return '';
+};
 </script>
 
 
@@ -484,6 +506,7 @@ function limpiar() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 7%;
 }
 
 .form-title {
@@ -496,5 +519,17 @@ function limpiar() {
 
 .close-btn {
   color: white;
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
 }
 </style>

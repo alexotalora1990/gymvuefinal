@@ -47,14 +47,15 @@
             </div>
           </div>
           <div v-else>
-            <q-btn flat label="Volver" icon="arrow_back" @click="deselectCard" />
+            
             <q-card class="q-mb-md">
               <q-card-section>
-                <div class="text-h5">{{ selectedCard.name }}</div>
+                <!-- <div class="text-h5">{{ selectedCard.name }}</div> -->
                 <router-view />
               </q-card-section>
             </q-card>
           </div>
+          <q-btn flat label="Volver" icon="arrow_back" @click="deselectCard" />
         </div>
       </q-page-container>
 
