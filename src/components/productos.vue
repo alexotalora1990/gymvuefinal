@@ -353,7 +353,7 @@ async function activar(id) {
 async function desactivar(id) {
   loadingState.value[id] = true;
   try {
-    console.log(`Intentando desactivar producto con ID: ${id}`);
+   
     const response = await useProductos.putProductsDesactivar(id);
     console.log('Respuesta de desactivación:', response);
     await listarProductos();

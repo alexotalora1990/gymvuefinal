@@ -14,6 +14,14 @@ export const useVentasStore = defineStore("ventas", ()=>{
         }
     };
 
+    const getVentasPorFecha = async (fecha) => {
+        try {
+          const res = await axios.get('/ventas/porFecha?fecha=${fecha}');
+          return res;
+        } catch (error) {
+          return error;
+        }
+      };
     const postVentas=async(venta)=>{
 try {
     const r=await axios.post("ventas", venta)
@@ -34,5 +42,5 @@ try {
         }
             };
 
-    return{ getVentas, postVentas, putVentas}
+    return{ getVentas, postVentas, putVentas, getVentasPorFecha}
 })

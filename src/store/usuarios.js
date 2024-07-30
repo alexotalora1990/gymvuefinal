@@ -48,7 +48,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
             return response
             
         } catch (error) {
-            return error;
+            throw error;
         }
     };
 
@@ -74,7 +74,7 @@ export const useUsuariosStore = defineStore('usuarios', () => {
             const response = await axios.put(`usuarios/${id}`, user);
             return response;
         } catch (error) {
-            return error;
+            throw error;
         }
     };
 

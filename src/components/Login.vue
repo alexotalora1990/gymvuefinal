@@ -12,6 +12,8 @@
         <q-form @submit="onSubmit()" @reset="onReset" class="q-gutter-md">
           <q-input filled type="email" v-model="email" label="Email*" hint="Digite su email de cuenta" lazy-rules
             :rules="[val => val && val.length > 0 || 'Email no puede estar vacío, debe ser un email válido']" />
+
+            
           <q-input filled :type="passwordFieldType" v-model="password" label="Contraseña*" lazy-rules
             :rules="[val => val && val.length > 0 || 'Contraseña no puede estar vacía']">
             <template v-slot:append>

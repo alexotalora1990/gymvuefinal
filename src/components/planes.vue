@@ -40,7 +40,7 @@
 
             <div>
               <q-input v-model="descripcion" label="Descripción"
-                :rules="[val => !!val || 'El plan no puede estar vacio ']" />
+                :rules="[val => !!val.trim() || 'El plan no puede estar vacio ']" />
             </div>
             <div>
               <q-input v-model="valor" label="Valor"
@@ -60,7 +60,9 @@
 
         </q-page>
       </div>
-
+      <div v-if="loading" class="overlay">
+        <q-spinner-hourglass  color="primary" size="50px"  />
+      </div>
       
       <q-table title="Planes" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
           <template v-slot:header="props">
@@ -75,18 +77,23 @@
         </template>
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
-            <q-btn @click="editarUsuario(props.row)">
+            <q-btn @click="editar(props.row)">
               <q-tooltip class="bg-accent">Editar</q-tooltip>🖋️
             </q-btn>
             
-            <q-btn :loading="loadingState[props.row._id]" v-if="props.row.estado === 1" @click="desactivar(props.row_id)">❌
+            <q-btn 
+              :loading="loadingState[props.row._id]" 
+              v-if="props.row.estado === 1" 
+              @click="desactivar(props.row._id)">
+              ❌
               <q-tooltip class="bg-accent">Desactivar</q-tooltip>
               <template v-slot:loading>
                 <q-spinner color="primary" size="1em" />
               </template>
             </q-btn>
-  
-            <q-btn v-else @click="activar(props.row._id)" :loading="loadingState[props.row._id]">✅
+
+            <q-btn v-else @click="activar(props.row._id)"
+             :loading="loadingState[props.row._id]">✅
               <q-tooltip class="bg-accent">Activar</q-tooltip>
               <template v-slot:loading>
                 <q-spinner color="primary" size="1em" />
@@ -125,7 +132,7 @@ const loadingList = ref(null);
 
 const columns = ref([
   { name: "descripcion", label: "Nombre", field: "descripcion", align: "center" },
-  { name: "valor", label: "Precio", field: "valor", align: "center" },
+  { name: "valor", label: "Precio", field: row=>puntosMil(row.valor), align: "center" },
   { name: "estado", label: "Estado", field: "estado", align: "center" },
   { name: "dias", label: "Dias", field: "dias", align: "center" },
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
@@ -295,12 +302,14 @@ async function activar(id) {
     Notify.create({
       type: 'positive',
       message: 'Plan activado exitosamente',
+      position: 'top',
       icon: 'check',
     });
   } catch (error) {
     console.error('Error al activar Plan:', error);
     Notify.create({
       type: 'negative',
+      position:'top',
       message: 'Error al activar Plan',
       icon: 'error',
     });
@@ -313,11 +322,12 @@ async function desactivar(id) {
   loadingState.value[id] = true;
   try {
     console.log(`Intentando desactivar plan con ID: ${id}`);
-    const response = await usePlanes.putPlanesInactivar(id);
+    const response = await usePlanes.putPlanesDesactivar(id);
     console.log('Respuesta de desactivación:', response);
     await listarPlanes();
     Notify.create({
-      type: 'positive',
+      color:'orange',
+      position:'top',
       message: 'Plan desactivado exitosamente',
       icon: 'check',
     });
@@ -357,7 +367,12 @@ function limpiar() {
   
   dias.value = ("")
 }
-
+const puntosMil = (num) => {
+  if (num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+  return '';
+};
 </script>
 
 <style scoped>
@@ -435,6 +450,19 @@ function limpiar() {
 
 .close-btn {
   color: white;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
 }
 </style>
 

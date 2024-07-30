@@ -329,10 +329,21 @@ console.log(sedeSeleccionada);
     limpiar();
     usuarioSeleccionado.value = null;
 
-  } catch (error) {
+  } catch (error)   {
     console.error('Error al procesar el formulario:', error);
-    Notify.create({ type: 'negative', message: 'Error al procesar el formulario', icon: 'error' });
-  } finally {
+    if (error.response && error.response.data && error.response.data.errors) {
+      const errores = error.response.data.errors;
+      const emailError = errores.find(e => e.param === 'email');
+      if (emailError) {
+        Notify.create({ type: 'negative', message: emailError.msg, icon: 'error', position: 'top' });
+      } else {
+        Notify.create({ type: 'negative', message: 'Error al guardar, email ya existe', icon: 'error' });
+      }
+    } else {
+      Notify.create({ type: 'negative', message: 'Error al procesar el formulario 2', icon: 'error' });
+    }
+  } 
+  finally {
     loading.value = false;
     loadingList.value = null;
   }
