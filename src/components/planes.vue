@@ -60,7 +60,9 @@
 
         </q-page>
       </div>
-
+      <div v-if="loading" class="overlay">
+        <q-spinner-hourglass  color="primary" size="50px"  />
+      </div>
       
       <q-table title="Planes" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
           <template v-slot:header="props">
@@ -130,7 +132,7 @@ const loadingList = ref(null);
 
 const columns = ref([
   { name: "descripcion", label: "Nombre", field: "descripcion", align: "center" },
-  { name: "valor", label: "Precio", field: "valor", align: "center" },
+  { name: "valor", label: "Precio", field: row=>puntosMil(row.valor), align: "center" },
   { name: "estado", label: "Estado", field: "estado", align: "center" },
   { name: "dias", label: "Dias", field: "dias", align: "center" },
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
@@ -365,7 +367,12 @@ function limpiar() {
   
   dias.value = ("")
 }
-
+const puntosMil = (num) => {
+  if (num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+  return '';
+};
 </script>
 
 <style scoped>
@@ -443,6 +450,19 @@ function limpiar() {
 
 .close-btn {
   color: white;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
 }
 </style>
 

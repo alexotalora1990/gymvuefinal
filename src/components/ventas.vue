@@ -72,7 +72,12 @@
   
           </q-page>
         </div>
-  
+
+        <div v-if="loading" class="overlay">
+        <q-spinner-hourglass  color="primary" size="50px"  />
+      </div>
+
+
         <q-table title="Ventas" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
 
         
@@ -147,8 +152,10 @@
   },
      
     { name: "cantidad", label: "Cantidad", field: "cantidad", align: "center" },
-    { name: "valorUnidad", label: "Precio", field: "valorUnidad", align: "center" },
-    { name: "total", label: "Total", field: "total", align: "center" },
+
+    { name: "valorUnidad", label: "Precio", field: row =>puntosMil(row.valorUnidad), align: "center" },
+    { name: "total", label: "Total", field: row =>puntosMil(row.total), align: "center" },
+
     
      { name: "createAt", label: "Fecha de Venta", field: (row) => format(new Date(row.createAt), 'dd/MM/yyyy'), align: "center" },
      { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
@@ -381,6 +388,12 @@ const listarPorFecha = async () => {
     
 
   }
+  const puntosMil = (num) => {
+  if (num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+  return '';
+};
   
   </script>
   
@@ -463,4 +476,16 @@ const listarPorFecha = async () => {
   .close-btn {
     color: white;
   }
+  .overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
+}
   </style>
