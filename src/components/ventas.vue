@@ -152,8 +152,10 @@
   },
      
     { name: "cantidad", label: "Cantidad", field: "cantidad", align: "center" },
+
     { name: "valorUnidad", label: "Precio", field: row =>puntosMil(row.valorUnidad), align: "center" },
     { name: "total", label: "Total", field: row =>puntosMil(row.total), align: "center" },
+
     
      { name: "createAt", label: "Fecha de Venta", field: (row) => format(new Date(row.createAt), 'dd/MM/yyyy'), align: "center" },
      { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
