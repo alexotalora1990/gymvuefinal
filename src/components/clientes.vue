@@ -5,33 +5,36 @@
       <div class="flex justify-end">
 
         <q-input filled label="Buscar por nombre"
-        
-        style="background-color:#d3d0d0; color: black; width: 30%; border-radius: 5px; margin-right: 1%;"
-        v-model="nombreCliente" @keyup.enter="listarNombre">
-        <template v-slot:append>
-          <q-btn icon="search" @click="listarNombre" style="background-color:#ffff;" />
-        </template>
-      </q-input>
+          style="background-color:#d3d0d0; color: black; width: 30%; border-radius: 5px; margin-right: 1%;"
+          v-model="nombreCliente" @keyup.enter="listarNombre">
+          <template v-slot:append>
+            <q-btn icon="search" @click="listarNombre" style="background-color:#ffff;" />
+          </template>
+        </q-input>
 
 
 
-        <q-btn color="green" icon="add" @click="agregar()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
+        <q-btn color="green" icon="add" @click="agregar()"
+          :loading="loading && loadingList === 'agregar'">agregar</q-btn>
 
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
           <q-list>
-            <q-item clickable v-ripple @click="listar('todos')" :class="{ 'loading-item': loading && loadingList === 'todos' }">
+            <q-item clickable v-ripple @click="listar('todos')"
+              :class="{ 'loading-item': loading && loadingList === 'todos' }">
               <q-item-section>Listar Todos</q-item-section>
               <template v-if="loading && loadingList === 'todos'">
                 <q-spinner color="primary" size="2em" />
               </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('activos')" :class="{ 'loading-item': loading && loadingList === 'activos' }">
+            <q-item clickable v-ripple @click="listar('activos')"
+              :class="{ 'loading-item': loading && loadingList === 'activos' }">
               <q-item-section>Listar Activos</q-item-section>
               <template v-if="loading && loadingList === 'activos'">
                 <q-spinner color="primary" size="2em" />
               </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('inactivos')" :class="{ 'loading-item': loading && loadingList === 'inactivos' }">
+            <q-item clickable v-ripple @click="listar('inactivos')"
+              :class="{ 'loading-item': loading && loadingList === 'inactivos' }">
               <q-item-section>Listar Inactivos</q-item-section>
               <template v-if="loading && loadingList === 'inactivos'">
                 <q-spinner color="primary" size="2em" />
@@ -47,7 +50,7 @@
           <div class="q-flex q-justify-between q-items-center form-header">
             <h5 class="form-title">{{ tituloFormulario }}</h5>
             <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
-          
+
           </div>
 
 
@@ -93,47 +96,50 @@
             <q-input filled v-model="observaciones" label="Observaciones" type="textarea"
               :rules="[(val) => !!val || 'Observaciones no deben estar vacías']" />
 
-            <q-input filled v-model="fechaVencimiento" label="Fecha de Vencimiento" type="date" @input="validateDate"
-              :rules="[
-                val => !!val || 'Fecha de vencimiento no debe estar vacía',
-                val => new Date(val) > new Date() || 'La fecha de vencimiento debe ser mayor a la fecha actual'
-              ]" />
 
-              <div class="q-mt-md q-flex q-justify-end">
-                <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
-                <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
-              </div>
+
+            <div class="q-mt-md q-flex q-justify-end">
+              <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
+              <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm"
+                :loading="loading && loadingList === 'guardar'" />
+            </div>
           </q-form>
         </q-page>
       </div>
 
-     
+
 
 
       <div class="form-container q-pa-md q-mx-auto" v-show="verFormularioSeguimiento">
-    <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
-      <div class="q-flex q-justify-between q-items-center form-header">
-        <h5 class="form-title2 bg-primary text-white q-pa-sm rounded-borders">{{ tituloFormularioSeguimiento }}</h5>
-        <q-btn flat icon="close" color="white" @click="cerrarFormularioSeguimiento" class="close-btn" />
-      </div>
+        <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
+          <div class="q-flex q-justify-between q-items-center form-header">
+            <h5 class="form-title2 bg-primary text-white q-pa-sm rounded-borders">{{ tituloFormularioSeguimiento }}</h5>
+            <q-btn flat icon="close" color="white" @click="cerrarFormularioSeguimiento" class="close-btn" />
+          </div>
 
-      <q-form class="q-gutter-md" @submit.prevent="procesarSeguimiento(clienteSeleccionado)">
-        <q-input filled v-model="fecha" label="Fecha" type="date" :rules="[(val) => !!val || 'Fecha no puede estar vacía']" />
-        <q-input filled v-model="peso" label="Peso" type="number" :rules="[(val) => val > 0 || 'Peso debe ser un número positivo']" />
-        <q-input filled v-model="tBrazo" label="Talla de Brazo" type="number" :rules="[(val) => val > 0 || 'Talla de Brazo debe ser un número positivo']" />
-        <q-input filled v-model="tPierna" label="Talla de Pierna" type="number" :rules="[(val) => val > 0 || 'Talla de Pierna debe ser un número positivo']" />
-        <q-input filled v-model="tCintura" label="Talla de Cintura" type="number" :rules="[(val) => val > 0 || 'Talla de Cintura debe ser un número positivo']" />
-        <q-input filled v-model="estatura" label="Estatura en centimetros ej.(180)" type="number" :rules="[(val) => val > 0 || 'Estatura debe ser un número positivo']" />
-        
-        <div class="q-mt-md">
-          <q-btn label="Guardar" color="green" type="submit" />
-          <q-tooltip class="bg-accent">Guardar</q-tooltip>
-        </div>
-      </q-form>
-    </q-page>
-  </div>
-  <div v-if="loading" class="overlay">
-        <q-spinner-hourglass  color="primary" size="50px"  />
+          <q-form class="q-gutter-md" @submit.prevent="procesarSeguimiento(clienteSeleccionado)">
+            <q-input filled v-model="fecha" label="Fecha" type="date"
+              :rules="[(val) => !!val || 'Fecha no puede estar vacía']" />
+            <q-input filled v-model="peso" label="Peso" type="number"
+              :rules="[(val) => val > 0 || 'Peso debe ser un número positivo']" />
+            <q-input filled v-model="tBrazo" label="Talla de Brazo" type="number"
+              :rules="[(val) => val > 0 || 'Talla de Brazo debe ser un número positivo']" />
+            <q-input filled v-model="tPierna" label="Talla de Pierna" type="number"
+              :rules="[(val) => val > 0 || 'Talla de Pierna debe ser un número positivo']" />
+            <q-input filled v-model="tCintura" label="Talla de Cintura" type="number"
+              :rules="[(val) => val > 0 || 'Talla de Cintura debe ser un número positivo']" />
+            <q-input filled v-model="estatura" label="Estatura en centimetros ej.(180)" type="number"
+              :rules="[(val) => val > 0 || 'Estatura debe ser un número positivo']" />
+
+            <div class="q-mt-md">
+              <q-btn label="Guardar" color="green" type="submit" />
+              <q-tooltip class="bg-accent">Guardar</q-tooltip>
+            </div>
+          </q-form>
+        </q-page>
+      </div>
+      <div v-if="loading" class="overlay">
+        <q-spinner-hourglass color="primary" size="50px" />
       </div>
 
       <q-table title="Clientes" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
@@ -155,10 +161,8 @@
             <q-btn @click="editar(props.row)">✍
               <q-tooltip class="bg-accent">Editar</q-tooltip>
             </q-btn>
-        
-            <q-btn 
-              :loading="loadingState[props.row._id]" 
-              v-if="props.row.estado === 1" 
+
+            <q-btn :loading="loadingState[props.row._id]" v-if="props.row.estado === 1"
               @click="desactivar(props.row._id)">
               ❌
               <q-tooltip class="bg-accent">Desactivar</q-tooltip>
@@ -166,11 +170,8 @@
                 <q-spinner color="primary" size="1em" />
               </template>
             </q-btn>
-        
-            <q-btn 
-              :loading="loadingState[props.row._id]" 
-              v-else 
-              @click="activar(props.row._id)">
+
+            <q-btn :loading="loadingState[props.row._id]" v-else @click="activar(props.row._id)">
               ✅
               <q-tooltip class="bg-accent">Activar</q-tooltip>
               <template v-slot:loading>
@@ -179,33 +180,44 @@
             </q-btn>
           </q-td>
         </template>
-        
+
         <template v-slot:body-cell-seguimiento="props">
           <q-td :props="props">
             <q-btn @click="agregarSeguimiento(props.row)">➕
               <q-tooltip class="bg-accent">Agregar Seguimiento</q-tooltip>
             </q-btn>
-            <q-btn @click="verSeguimiento(props.row)">💫
+            <q-btn @click="verSeguimiento(props.row)">👁️
               <q-tooltip class="bg-accent">Ver Seguimiento</q-tooltip>
             </q-btn>
+
+
           </q-td>
         </template>
+
+
       </q-table>
       <div v-if="clienteSeleccionado" class="seguimiento">
 
-        <div class="q-flex q-justify-between q-items-center form-header" >
-        <h3 class="seg-title">Seguimiento de {{ clienteSeleccionado.nombre }}</h3>
-        <q-btn flat icon="close" color="white" @click="cerrarSeguimiento" class="close-btn" />
+        <div class="q-flex q-justify-between q-items-center form-header">
+          <h3 class="seg-title">Seguimiento de {{ clienteSeleccionado.nombre }}</h3>
+          <q-btn flat icon="close" color="white" @click="cerrarSeguimiento" class="close-btn" />
         </div>
 
-        
+
+       
         <q-table :rows="selectedClienteSeguimiento" :columns="columnsSeguimiento" row-key="fecha" class="table">
-      <template #body-cell-IMC="props">
-        <q-td :props="props" :style="{ backgroundColor: getIMCColor(props.row.IMC) }">
-          {{ props.row.IMC.toFixed(2) }}
-        </q-td>
-      </template>
-    </q-table>
+  <template #body-cell-opciones="props">
+    <q-td :props="props">
+      <q-btn icon="edit" @click="editarSeguimiento(clienteSeleccionado.value, props.row)" />
+    </q-td>
+  </template>
+  <template #body-cell-IMC="props">
+    <q-td :props="props" :style="{ backgroundColor: getIMCColor(props.row.IMC).color }">
+      {{ props.row.IMC.toFixed(2) }} - {{ getIMCColor(props.row.IMC).description }}
+    </q-td>
+  </template>
+</q-table>
+
       </div>
     </div>
   </div>
@@ -242,9 +254,11 @@ const nombreCliente = ref('')
 
 const planOptions = ref([])
 
+const isEditing = ref(false);
+const seguimientoSeleccionado = ref(null);
+
 const fecha = ref('');
 const peso = ref('');
-
 const tBrazo = ref('');
 const tPierna = ref('');
 const tCintura = ref('');
@@ -255,8 +269,8 @@ const rows = ref([]);
 const selectedClienteSeguimiento = ref([]);
 const clienteSeleccionado1 = ref(null);
 
-const loading = ref(false); 
-const loadingList = ref(null); 
+const loading = ref(false);
+const loadingList = ref(null);
 
 const validateDateOfBirth = () => {
   if (!fechaNacimiento.value) return;
@@ -271,7 +285,7 @@ const validateDateOfBirth = () => {
   }
 
   if (age < 14) {
-    fechaNacimiento.value = ''; // Reset the value if age is less than 14
+    fechaNacimiento.value = '';
     $q.notify({
       type: 'negative',
       message: 'Debe ser mayor de 14 años'
@@ -305,7 +319,7 @@ const columns = ref([
 
   { name: "objetivo", label: "Objetivo", field: "objetivo", align: "center" },
   { name: "observaciones", label: "Observaciones", field: "observaciones", align: "center" },
-  { name: "fechaVencimiento", label: "Fecha Vencimiento", field: "fechaVencimiento", align: "center" },
+
   { name: "seguimiento", label: "Seguimiento", field: "seguimiento", align: "center" },
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
 ]);
@@ -319,24 +333,11 @@ const columnsSeguimiento = ref([
   { name: "tBrazo", label: "Tamaño Brazo", field: "tBrazo", align: "center" },
   { name: "tCintura", label: "Tamaño Cintura", field: "tCintura", align: "center" },
   { name: "tPierna", label: "Tamaño Pierna", field: "tPierna", align: "center" },
+  { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
 ]);
 const loadingState = ref({});
 
-// function getIMCColor(IMC) {
-//   if (IMC < 18.5) {
-//     return 'blue';
-//   } else if (IMC >= 18.5 && IMC <= 24.9) {
-//     return 'green';
-//   } else if (IMC >= 25 && IMC <= 29.9) {
-//     return 'orange';
-//   } else if (IMC >= 30 && IMC <= 34.9) {
-//     return 'darkorange';
-//   } else if (IMC >= 35 && IMC <= 39.9) {
-//     return 'lightcoral';
-//   } else {
-//     return 'red';
-//   }
-// }
+
 function getIMCColor(IMC) {
   if (IMC < 18.5) {
     return { color: 'blue', description: 'peso insuficiente' };
@@ -362,17 +363,17 @@ function formatDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-async function listarClientes()  {
+async function listarClientes() {
   loading.value = true;
   loadingList.value = 'todos';
   try {
     const r = await useClientes.getCliente();
     const clientes = r.data.Cliente;
-     rows.value = clientes.map(cliente => ({
-    ...cliente,
-    fechaNacimiento: formatDate(cliente.fechaNacimiento),
-    fechaVencimiento: formatDate(cliente.fechaVencimiento),
-  }));
+    rows.value = clientes.map(cliente => ({
+      ...cliente,
+      fechaNacimiento: formatDate(cliente.fechaNacimiento),
+      fechaVencimiento: formatDate(cliente.fechaVencimiento),
+    }));
     console.log(r.data.Cliente);
   } catch (error) {
     console.error('Error al listar todos los clientes:', error);
@@ -407,9 +408,9 @@ async function listarClientesActivos() {
   loading.value = true;
   loadingList.value = 'activos';
   try {
-   const r = await useClientes.getClientesActivos();
-  console.log(r.data.clientesActivos);
-  rows.value = r.data.clientesActivos;
+    const r = await useClientes.getClientesActivos();
+    console.log(r.data.clientesActivos);
+    rows.value = r.data.clientesActivos;
   } catch (error) {
     console.error('Error al listar clientes activos:', error);
   } finally {
@@ -423,13 +424,13 @@ async function listarClientesInactivos() {
   loadingList.value = 'inactivos';
   try {
     const r = await useClientes.getClientesInactivos();
-  console.log(r.data.clientesInactivos);
-  rows.value = r.data.clientesInactivos;
+    console.log(r.data.clientesInactivos);
+    rows.value = r.data.clientesInactivos;
   } catch (error) {
-    console.error('Error al listar clientes inactivos:', error); 
+    console.error('Error al listar clientes inactivos:', error);
   } finally {
     loading.value = false;
-    loadingList.value = null; 
+    loadingList.value = null;
   }
 }
 
@@ -453,18 +454,18 @@ async function listarNombre() {
     });
     return;
   }
-  
+
   try {
     const r = await useClientes.getCliente()
-       console.log(r.data.Cliente);
+    console.log(r.data.Cliente);
     if (!r.data || !r.data.Cliente) {
       throw new Error('No se encontraron clientes en la respuesta');
     }
-    
+
     const clienteFiltrado = r.data.Cliente.filter(cliente =>
       cliente.nombre && cliente.nombre.toLowerCase().includes(nombreCliente.value.toLowerCase())
     );
-    
+
     if (clienteFiltrado.length === 0) {
       Notify.create({
         type: 'negative',
@@ -552,7 +553,7 @@ const procesarFormulario = async (option) => {
     limpiar();
   } catch (error) {
     console.error("Error al procesar el formulario:", error);
-  }finally {
+  } finally {
     loading.value = false;
     loadingList.value = null;
   }
@@ -582,12 +583,12 @@ async function agregar() {
   loadingList.value = 'agregar';
   try {
     clienteSeleccionado.value = null;
-  verFormulario.value = true;
-  tituloFormulario.value = "Agregar Cliente";
-    
-  } 
+    verFormulario.value = true;
+    tituloFormulario.value = "Agregar Cliente";
+
+  }
   catch (error) {
-    console.error('Error al agregar cliente:', error); 
+    console.error('Error al agregar cliente:', error);
   } finally {
     loading.value = false;
     loadingList.value = null;
@@ -668,8 +669,6 @@ function cerrarFormularioSeguimiento() {
   verFormularioSeguimiento.value = false;
 }
 
-function editarSeguimiento() { }
-
 
 
 async function procesarSeguimiento() {
@@ -692,22 +691,40 @@ async function procesarSeguimiento() {
   };
 
   try {
-    const response = await useClientes.postSeguimiento(clienteSeleccionado.value._id, seguimiento);
+    let response;
+    if (isEditing.value && seguimientoSeleccionado.value) {
+      response = await useClientes.putSeguimiento(clienteSeleccionado.value._id, seguimientoSeleccionado.value._id, seguimiento);
+    } else {
+      response = await useClientes.postSeguimiento(clienteSeleccionado.value._id, seguimiento);
+      Notify.create({
+        type: 'positive',
+        message:  'Seguimiento agregado exitosamente',
+        icon: 'check_circle',
+      });
+      verSeguimiento()
+    }
+
     console.log(response);  // Para depuración
 
     if (response && response.seguimiento) {
       Notify.create({
         type: 'positive',
-        message: 'Seguimiento agregado exitosamente',
+        message: isEditing.value ? 'Seguimiento actualizado exitosamente' : 'Seguimiento agregado exitosamente',
         icon: 'check_circle',
       });
-      // Actualizar la lista de seguimientos del cliente
-      clienteSeleccionado.value.seguimiento.push(seguimiento);
-      verFormularioSeguimiento(cliente)
+      if (isEditing.value) {
+        const index = clienteSeleccionado.value.seguimiento.findIndex(seg => seg._id === seguimientoSeleccionado.value._id);
+        if (index !== -1) {
+          clienteSeleccionado.value.seguimiento[index] = seguimiento;
+        }
+      } else {
+        clienteSeleccionado.value.seguimiento.push(response.seguimiento);
+      }
+      verSeguimiento(clienteSeleccionado.value);
     } else {
       Notify.create({
         type: 'negative',
-        message: 'Error al agregar seguimiento 3',
+        message: 'Error al procesar el seguimiento',
         icon: 'error',
       });
     }
@@ -717,7 +734,7 @@ async function procesarSeguimiento() {
     console.error('Error al procesar seguimiento:', error);
     Notify.create({
       type: 'negative',
-      message: 'Error al agregar seguimiento 2',
+      message: 'Error al procesar seguimiento',
       icon: 'error',
     });
   }
@@ -732,8 +749,8 @@ function verSeguimiento(cliente) {
     createAt: formatDate(seg.createAt),
   }));
 }
-
 function agregarSeguimiento(cliente) {
+  verSeguimiento(cliente)
   try {
     if (!cliente || !cliente.nombre) {
       throw new Error('El cliente seleccionado es inválido');
@@ -742,11 +759,13 @@ function agregarSeguimiento(cliente) {
     clienteSeleccionado.value = cliente;
     tituloFormularioSeguimiento.value = `Agregar Seguimiento para ${cliente.nombre}`;
     verFormularioSeguimiento.value = true;
+    isEditing.value = false;
+    seguimientoSeleccionado.value = null;
 
-    // Actualizar los seguimientos del cliente seleccionado
-    verSeguimiento(cliente);
+    // Limpiar el formulario
+    limpiarFormularioSeguimiento();
   } catch (error) {
-    console.error('Error al agregar seguimiento 1:', error);
+    console.error('Error al agregar seguimiento:', error);
     Notify.create({
       type: 'negative',
       message: error.message,
@@ -755,7 +774,43 @@ function agregarSeguimiento(cliente) {
   }
 }
 
+function editarSeguimiento(cliente, seguimiento) {
+  try {
+    if (!cliente || !cliente.nombre || !seguimiento) {
+      throw new Error('Datos inválidos para editar el seguimiento');
+    }
 
+    clienteSeleccionado.value = cliente;
+    seguimientoSeleccionado.value = seguimiento;
+    tituloFormularioSeguimiento.value = `Editar Seguimiento para ${cliente.nombre}`;
+    verFormularioSeguimiento.value = true;
+    isEditing.value = true;
+
+    // Rellenar el formulario con los datos del seguimiento seleccionado
+    fecha.value = seguimiento.fecha;
+    peso.value = seguimiento.peso;
+    tBrazo.value = seguimiento.tBrazo;
+    tPierna.value = seguimiento.tPierna;
+    tCintura.value = seguimiento.tCintura;
+    estatura.value = seguimiento.estatura;
+  } catch (error) {
+    console.error('Error al editar seguimiento:', error);
+    Notify.create({
+      type: 'negative',
+      message: error.message,
+      icon: 'error',
+    });
+  }
+}
+
+function limpiarFormularioSeguimiento() {
+  fecha.value = '';
+  peso.value = '';
+  tBrazo.value = '';
+  tPierna.value = '';
+  tCintura.value = '';
+  estatura.value = '';
+}
 
 
 
@@ -803,7 +858,7 @@ function cerrarSeguimiento() {
 
 .q-mt-md {
   text-align: right;
- margin: 0;
+  margin: 0;
 
 }
 
@@ -840,7 +895,8 @@ function cerrarSeguimiento() {
   font-weight: bold;
   margin-left: 35%;
 }
-.form-title2{
+
+.form-title2 {
   color: white;
   margin: 0;
   text-align: center;
@@ -851,13 +907,16 @@ function cerrarSeguimiento() {
 .close-btn {
   color: white;
 }
-.seg-title{color: white;
+
+.seg-title {
+  color: white;
   margin: 0;
   text-align: center;
   font-weight: bold;
-  margin-left: 15%;}
+  margin-left: 15%;
+}
 
-  .overlay {
+.overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -869,6 +928,4 @@ function cerrarSeguimiento() {
   background-color: rgba(255, 255, 255, 0.8);
   z-index: 1000;
 }
-
-
 </style>
