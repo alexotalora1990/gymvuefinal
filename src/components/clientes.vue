@@ -208,7 +208,7 @@
         <q-table :rows="selectedClienteSeguimiento" :columns="columnsSeguimiento" row-key="fecha" class="table">
   <template #body-cell-opciones="props">
     <q-td :props="props">
-      <q-btn icon="edit" @click="editarSeguimiento(clienteSeleccionado.value, props.row)" />
+      <q-btn icon="edit" @click="editarSeguimiento(props.row)" />
     </q-td>
   </template>
   <template #body-cell-IMC="props">
@@ -665,6 +665,8 @@ function limpiar() {
   fechaVencimiento.value = "";
 }
 
+
+// seguimiento
 function cerrarFormularioSeguimiento() {
   verFormularioSeguimiento.value = false;
 }
@@ -693,7 +695,7 @@ async function procesarSeguimiento() {
   try {
     let response;
     if (isEditing.value && seguimientoSeleccionado.value) {
-      response = await useClientes.putSeguimiento(clienteSeleccionado.value._id, seguimientoSeleccionado.value._id, seguimiento);
+      response = await useClientes.putSeguimiento(seguimiento);
     } else {
       response = await useClientes.postSeguimiento(clienteSeleccionado.value._id, seguimiento);
       Notify.create({
@@ -704,7 +706,7 @@ async function procesarSeguimiento() {
       verSeguimiento()
     }
 
-    console.log(response);  // Para depuración
+    console.log(response);  
 
     if (response && response.seguimiento) {
       Notify.create({
@@ -774,19 +776,22 @@ function agregarSeguimiento(cliente) {
   }
 }
 
-function editarSeguimiento(cliente, seguimiento) {
-  try {
-    if (!cliente || !cliente.nombre || !seguimiento) {
-      throw new Error('Datos inválidos para editar el seguimiento');
-    }
+function editarSeguimiento(seguimiento) {
 
-    clienteSeleccionado.value = cliente;
+  // console.log(cliente);
+  console.log(seguimiento);
+  try {
+    // if (!cliente || !cliente.nombre || !seguimiento) {
+    //   throw new Error('Datos inválidos para editar el seguimiento');
+    // }
+
+    clienteSeleccionado.value = seguimiento;
     seguimientoSeleccionado.value = seguimiento;
-    tituloFormularioSeguimiento.value = `Editar Seguimiento para ${cliente.nombre}`;
+    tituloFormularioSeguimiento.value = `Editar Seguimiento para `;
     verFormularioSeguimiento.value = true;
     isEditing.value = true;
 
-    // Rellenar el formulario con los datos del seguimiento seleccionado
+   
     fecha.value = seguimiento.fecha;
     peso.value = seguimiento.peso;
     tBrazo.value = seguimiento.tBrazo;
