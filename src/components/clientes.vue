@@ -26,8 +26,10 @@
                 <q-spinner color="primary" size="2em" />
               </template>
             </q-item>
+
             <q-item clickable v-ripple @click="listar('activos')"
               :class="{ 'loading-item': loading && loadingList === 'activos' }">
+
               <q-item-section>Listar Activos</q-item-section>
               <template v-if="loading && loadingList === 'activos'">
                 <q-spinner color="primary" size="2em" />
@@ -140,6 +142,7 @@
       </div>
       <div v-if="loading" class="overlay">
         <q-spinner-hourglass color="primary" size="50px" />
+
       </div>
 
       <q-table title="Clientes" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
@@ -918,8 +921,25 @@ function cerrarSeguimiento() {
   margin: 0;
   text-align: center;
   font-weight: bold;
+
   margin-left: 15%;
 }
+
+
+  .overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
+}
+
+
 
 .overlay {
   position: fixed;
