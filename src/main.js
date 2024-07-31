@@ -21,6 +21,8 @@ const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
 
 const myApp = createApp(App);
+
+myApp.use(Quasar, {
   plugins: {
     Notify,
     Loading
