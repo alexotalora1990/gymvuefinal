@@ -67,6 +67,25 @@ export const useClientesStore = defineStore("clientes", ()=>{
             return error;
         }
     };
+    // const putSeguimiento = async (seguimiento)=>{
+    //     try {
+    //         const r= await axios.put(`seguimiento/`,seguimiento)
+    //         return r
+    //     } catch (error) {
+    //         return error
+    //     }
+
+
+    // };
+    const putSeguimiento= async(clienteId, seguimientoId, seguimiento)=> {
+        try {
+          const response = await axios.put(`clientes/${clienteId}/seguimiento/${seguimientoId}`, seguimiento);
+          return response.data;
+        } catch (error) {
+          console.error("Error al actualizar el seguimiento:", error);
+          throw error;
+        }
+      };
 
     const putClientes =async (id, cliente)=>{
       
@@ -107,6 +126,6 @@ export const useClientesStore = defineStore("clientes", ()=>{
 
    
 
-    return{ getCliente, postClientes, postSeguimiento,putClientes,putClientesActivar,putClientesDesactivar, getClientesActivos, getClientesInactivos, loading}
+    return{ getCliente, postClientes, postSeguimiento,putClientes,putClientesActivar,putClientesDesactivar, putSeguimiento, getClientesActivos, getClientesInactivos, loading}
 
 })
