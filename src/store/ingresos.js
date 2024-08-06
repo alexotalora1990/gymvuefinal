@@ -13,17 +13,18 @@ export const useIncomeStore = defineStore("ingresos", ()=>{
             return error 
         }
     };
-    const postIncome= async(income)=>{
+    const postIncome= async(ingreso)=>{
         try {
-            const newIncome=await axios.post("ingresos", income)
+            const newIncome=await axios.post("ingresos", ingreso)
             return newIncome
         } catch (error) {
             return error            
         }
     };
-    const putIncome=async(id,income)=>{
+    const putIncome=async(id,ingreso)=>{
         try {
-            const upadteIncome= await axios.put(`ingresos/${id}`, income)
+            const upadteIncome= await axios.put(`ingresos/${id}`, ingreso)
+            return upadteIncome
         } catch (error) {
             
         }

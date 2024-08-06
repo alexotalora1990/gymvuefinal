@@ -3,6 +3,16 @@
   <div>
     <div class="q-pa-md">
       <div class="flex justify-end">
+
+        <q-input filled label="Buscar por nombre"
+          style="background-color:#d3d0d0; color: black; width: 30%; border-radius: 5px; margin-right: 1%;"
+          v-model="nombreMaquina" @keyup.enter="listarNombre">
+          <template v-slot:append>
+            <q-btn icon="search" @click="listarNombre" style="background-color:#ffff;" />
+          </template>
+        </q-input>
+
+
         <q-btn color="green" icon="add" @click="agregar()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
 
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
@@ -39,7 +49,7 @@
 
           <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
             <q-input filled v-model="descripcion" label="Descripción" type="text"
-              :rules="[(val) => !!val || 'Descripción no puede estar vacía']" />
+              :rules="[(val) => !!val.trim() || 'Descripción no puede estar vacía']" />
 
               <q-select
                  filled 
@@ -61,6 +71,10 @@
               </div>
           </q-form>
         </q-page>
+      </div>
+
+      <div v-if="loading" class="overlay">
+        <q-spinner-hourglass  color="primary" size="50px"  />
       </div>
 
       <q-table title="Maquinas" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
@@ -129,6 +143,7 @@ const descripcion = ref();
 const fechaUltimoMant = ref();
 const sedeOptions = ref([]);
 const filteredSedeOptions = ref([]);
+const nombreMaquina=ref('')
 
 const rows = ref([]);
 const loading = ref(false); 
@@ -136,7 +151,7 @@ const loadingList = ref(null);
 
 const columns = ref([
   { name: 'idSede', label: 'Sede', field: (row)=>row.idSede?.nombre || 'Sin Nombre', align: 'center' },
-  { name: 'descripcion', label: 'Descripción', field: 'descripcion', align: 'center' },
+  { name: 'descripcion', label: 'Nombre', field: 'descripcion', align: 'center' },
   { name: 'fechaUltimoMant', label: 'Fecha Último Mantenimiento', field: 'fechaUltimoMant', align: 'center' },
   { name: 'estado', label: 'Estado', field: 'estado', align: 'center' },
   { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
@@ -228,6 +243,30 @@ async function listarMaquinasInactivas() {
   }
 }
 
+async function listarNombre() {
+  if (nombreMaquina.value === "") {
+    Notify.create({
+      type: 'negative',
+      message: 'Digite el nombre de un producto'
+    });
+  }
+  const r = await useMaquina.getMaquina();
+  const maquinaFiltrada = r.data.maquina.filter(maquina =>
+    maquina.descripcion.toLowerCase().includes(nombreMaquina.value.toLowerCase())
+  );
+  if (maquinaFiltrada.length === 0) {
+    Notify.create({
+      type: 'negative',
+      message: 'Producto no existe'
+    });
+  }
+  else {
+    rows.value = maquinaFiltrada
+  }
+  nombreMaquina.value = ("")
+}
+
+
 onMounted(async () => {
   await listarSedes();
   listarMaquina();
@@ -240,7 +279,7 @@ const procesarFormulario = async () => {
 
     const Maquina={
       idSede: idSede.value.value,
-        descripcion: descripcion.value.trim,
+        descripcion: descripcion.value,
         fechaUltimoMant: fechaUltimoMant.value,
     }
     if (maquinaSeleccionada !== null && maquinaSeleccionada.value !== null) {
@@ -366,7 +405,7 @@ async function desactivar(id) {
 
 function limpiar() {
   idSede.value = '';
-  descripcion.value.trim = '';
+  descripcion.value = '';
   fechaUltimoMant.value = '';
 }
 
@@ -447,6 +486,7 @@ function listar(tipo) {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 7%;
 }
 
 .form-title {
@@ -459,5 +499,17 @@ function listar(tipo) {
 
 .close-btn {
   color: white;
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
 }
 </style>

@@ -1,4 +1,5 @@
 
+
 <template>
   <div class="container">
     <div class="welcome-container">
@@ -11,6 +12,8 @@
         <q-form @submit="onSubmit()" @reset="onReset" class="q-gutter-md">
           <q-input filled type="email" v-model="email" label="Email*" hint="Digite su email de cuenta" lazy-rules
             :rules="[val => val && val.length > 0 || 'Email no puede estar vacío, debe ser un email válido']" />
+
+            
           <q-input filled :type="passwordFieldType" v-model="password" label="Contraseña*" lazy-rules
             :rules="[val => val && val.length > 0 || 'Contraseña no puede estar vacía']">
             <template v-slot:append>
@@ -18,13 +21,16 @@
             </template>
           </q-input>
           <div class="q-mt-md">
-            <q-btn label="Ingresar" type="submit" color="primary" :disable="loading"  />
+            <q-btn label="Ingresar" type="submit" color="primary" :disable="loading" />
           </div>
           <div class="forgot-password">
             <router-link to="/recuperar-password">¿Olvidaste tu contraseña?</router-link>
           </div>
         </q-form>
-        <q-spinner v-if="loading" size="lg" color="primary" class="loading-spinner" />
+        <div v-if="loading" class="loading-overlay">
+          <q-spinner-hourglass  color="primary"  size="5em"/>
+         
+        </div>
       </div>
     </div>
   </div>
@@ -54,6 +60,7 @@ const loadingState = ref({});
 
 async function onSubmit() {
   loading.value = true;
+  await new Promise(resolve => setTimeout(resolve, 1000));
   try {
     let r = await usuariosStore.login(email.value, password.value);
     console.log(r);
@@ -74,11 +81,11 @@ async function onSubmit() {
       position: 'top',
       timeout: 3000,
     });
-  }finally {
+  } finally {
     loading.value = false;
-    loadingList.value = null; 
+  }
 }
-}
+
 function onReset() {
   email.value = '';
   password.value = '';
@@ -129,6 +136,7 @@ body {
   padding: 20px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   margin: 2% 3%;
+  position: relative; /* Added */
 }
 
 .logo {
@@ -166,16 +174,21 @@ body {
   cursor: pointer;
 }
 
-
-
 .forgot-password {
   text-align: center;
   margin-top: 20px;
 }
-.loading-spinner {
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100px;
+  background-color: rgba(255, 255, 255, 0.8); /* Add a slight background to make the spinner more visible */
+  z-index: 999; /* Ensure it is on top of other elements */
 }
 </style>

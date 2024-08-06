@@ -48,15 +48,23 @@
 
             <q-select filled v-model="idcliente" label="Seleccione un cliente" :options="clienteOptions"
               :rules="[val => !!val || 'Debe seleccionar un cliente']" />
+              <q-input filled v-model="fechaVencimiento" label="Fecha de Vencimiento" type="date"
+              :rules="[
+                val => !!val || 'Fecha de vencimiento no debe estar vacía',
+                val => new Date(val) > new Date() || 'La fecha de vencimiento debe ser mayor a la fecha actual'
+              ]" />
 
               <div class="q-mt-md q-flex q-justify-end">
-                <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
+              
                 <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
               </div>
           </q-form>
         </q-page>
       </div>
 
+      <div v-if="loading" class="overlay">
+        <q-spinner-hourglass  color="primary" size="50px"  />
+      </div>
 
       <q-table title="Pagos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
         <template v-slot:header="props">
@@ -64,14 +72,24 @@
             <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
           </q-tr>
         </template>
+        <template v-slot:body-cell-estado="props">
+        <q-td :props="props">
+          <p :style="{ color: props.row.estado === 1 ? 'green' : 'red' }">
+            {{ props.row.estado === 1 ? 'Activo' : 'Inactivo' }}
+          </p>
+        </q-td>
+      </template>
+
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
             <q-btn @click="editar(props.row)">✍
               <q-tooltip class="bg-accent">Editar</q-tooltip>
             </q-btn>
+
+            
         
             <q-btn 
-              :loading="loadingState[props.row._id]" 
+              :loading="loadingState[props.row]" 
               v-if="props.row.estado === 1" 
               @click="desactivar(props.row._id)">
               ❌
@@ -118,6 +136,7 @@ const useClientes = useClientesStore();
 const usePlanes = usePlanesStore();
 const idcliente = ref()
 const idplan = ref()
+const fechaVencimiento = ref()
 const clienteOptions = ref([])
 const planOptions = ref([])
 const rows = ref([])
@@ -127,21 +146,15 @@ const loadingList = ref(null);
 const columns = ref([
   {
     name: "idcliente", label: "Cliente",
-    field: (row) => {
-      const cliente = clienteOptions.value.find(Option => Option.value === row.idcliente);
-      return cliente ? cliente.label : '';
-    },
-    align: "center"
+    field: (row) => row.idcliente?.nombre, align: "center"
   },
   {
-    name: "idplan", label: "ID plan",
-    field: (row) => {
-      const plan = planOptions.value.find(Option => Option.value === row.idplan);
-      return plan ? plan.label : '';
-    },
+    name: "idplan", label: "Plan",
+    field: (row) => row.idplan?.descripcion,
     align: "center"
   },
-  { name: "valor", label: "Precio", field: "valor", align: "center" },
+  { name: "valor", label: "Precio", field: row => puntosMil(row.valor), align: "center" },
+  { name: "fechaVencimiento", label: "Fecha Vencimiento", field: "fechaVencimiento", align: "center" },
   { name: "estado", label: "Estado", field: "estado", align: "center" },
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
 
@@ -155,7 +168,11 @@ async function listarpagos()  {
   try {
     const r = await usePagos.getPagos()
   console.log(r.data.pago);
-  rows.value = r.data.pago
+  rows.value = r.data.pago.map(pago=>({
+    ...pago,
+    fechaVencimiento: new Date(pago.fechaVencimiento).toLocaleDateString('es-ES')
+  }))
+  
   } catch (error) {
     console.error('Error al listar todos los pagos:', error);
   } finally {
@@ -251,14 +268,18 @@ const procesarFormulario = async () => {
     const idpagoSeleccionado = idcliente.value.value
     console.log(idplan.value.value);
     const idpagoSeleccionado2 = idplan.value.value
+
+    const pago ={
+      idcliente:idpagoSeleccionado,
+      idplan:idpagoSeleccionado2,
+      fechaVencimiento:fechaVencimiento.value
+    }
+
+
+
     if (pagoSeleccionado.value !== null) {
 
-      const pago = await usePagos.putPagos(pagoSeleccionado.value._id, {
-        idcliente: idpagoSeleccionado.value,
-        idplan: idpagoSeleccionado2.value
-
-
-      });
+       await usePagos.putPagos(pagoSeleccionado.value._id,pago);
       Notify.create({
         type: 'positive',
         message: 'Pago editado exitosamente',
@@ -271,11 +292,7 @@ const procesarFormulario = async () => {
     } else {
 
 
-      const pago = await usePagos.postPagos({
-        idcliente: idpagoSeleccionado.value,
-        idplan: idpagoSeleccionado2.value,
-
-      });
+      await usePagos.postPagos(pago);
       Notify.create({
         type: 'positive',
         message: 'Pago agregado exitosamente',
@@ -315,14 +332,16 @@ function editar(pago) {
     });
     return;
   }
-
+else{
   pagoSeleccionado.value = pago
   tituloFormulario.value = 'Editar Pago'
-  const cliente = clienteOptions.value.find(option => option.value === pago.idcliente);
-  const plan = planOptions.value.find(option => option.value === pago.idplan);
-  idcliente.value = cliente ? cliente.label : '';
-  idplan.value = plan ? plan.label : '';
+ 
+  idcliente.value =pago.idcliente.nombre;
+  idplan.value = pago.idplan.descripcion;
+  fechaVencimiento.value=pago.fechaVencimiento;
   verFormulario.value = (true)
+}
+  
 
 }
 
@@ -333,6 +352,7 @@ async function agregarPago()  {
   pagoSeleccionado.value = null
   verFormulario.value = (true)
   tituloFormulario.value = 'Agregar PAgo'
+  
     
   } 
   catch (error) {
@@ -413,6 +433,12 @@ function limpiar() {
   idplan.value = ("")
 
 }
+const puntosMil = (num) => {
+  if (num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+  return '';
+};
 </script>
 
 
@@ -480,6 +506,7 @@ function limpiar() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 7%;
 }
 
 .form-title {
@@ -492,5 +519,17 @@ function limpiar() {
 
 .close-btn {
   color: white;
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
 }
 </style>

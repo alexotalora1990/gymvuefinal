@@ -41,13 +41,14 @@ export const useUsuariosStore = defineStore('usuarios', () => {
     };
 
     const postUser = async (user) => {
+        console.log(user);
         try {
             
             const response = await axios.post("usuarios",user)
-            return response.data;
-            console.log(user);
+            return response
+            
         } catch (error) {
-            return error;
+            throw error;
         }
     };
 
@@ -70,12 +71,10 @@ export const useUsuariosStore = defineStore('usuarios', () => {
     const putUser = async (id, user) => {
         try {
            
-            const response = await axios.put(`usuarios/${id}`, user, {
-                headers: { Authorization: `Bearer ${token.value}` }
-            });
+            const response = await axios.put(`usuarios/${id}`, user);
             return response;
         } catch (error) {
-            return error;
+            throw error;
         }
     };
 

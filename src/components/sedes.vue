@@ -3,6 +3,17 @@
     <div class="q-pa-md">
 
       <div class="flex justify-end">
+
+        <q-input filled label="Buscar por nombre"
+        
+        style="background-color:#d3d0d0; color: black; width: 30%; border-radius: 5px; margin-right: 1%;"
+        v-model="nombreSede" @keyup.enter="listarNombre">
+        <template v-slot:append>
+          <q-btn icon="search" @click="listarNombre" style="background-color:#ffff;" />
+        </template>
+      </q-input>
+
+
         <q-btn color="green" icon="add" @click="agregar()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
 
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
@@ -40,20 +51,20 @@
           <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
 
             <q-input filled v-model="nombre" label="Nombre" type="text"
-              :rules="[val => !!val || 'Nombre no puede estar vacía']" />
+              :rules="[val => !!val.trim() || 'Nombre no puede estar vacía']" />
 
 
             <q-input filled v-model="direccion" label="Dirección" type="text"
-              :rules="[val => !!val || 'Dirección debe ser un número positivo']" />
+              :rules="[val => !!val.trim() || 'Dirección debe ser un número positivo']" />
 
             <q-input filled v-model="horario" label="Horario" type="text"
-              :rules="[val => !!val || 'Horario no debe estar vacio']" />
+              :rules="[val => !!val.trim() || 'Horario no debe estar vacio']" />
 
             <q-input filled v-model="telefono" label="Telefono" type="number"
               :rules="[val => val && val > 0 || 'telefono debe ser un número positivo']" />
 
             <q-input filled v-model="ciudad" label="Ciudad" type="text"
-              :rules="[val => !!val || 'Ciudad no debe estar vacio']" />
+              :rules="[val => !!val.trim() || 'Ciudad no debe estar vacio']" />
 
               <div class="q-mt-md q-flex q-justify-end">
                 <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
@@ -63,7 +74,9 @@
         </q-page>
       </div>
 
-
+      <div v-if="loading" class="overlay">
+        <q-spinner-hourglass  color="primary" size="50px"  />
+      </div>
 
       <q-table title="Sedes" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
         <template v-slot:header="props">
@@ -122,11 +135,12 @@ const verFormulario = ref(false)
 const sedeSeleccionada = ref(null)
 const tituloFormulario = ref('Agregar Sede')
 
-const nombre = ref()
-const direccion = ref()
-const horario = ref()
-const telefono = ref()
-const ciudad = ref()
+const nombre = ref('')
+const direccion = ref('')
+const horario = ref('')
+const telefono = ref('')
+const ciudad = ref('')
+const nombreSede=ref('')
 
 const rows = ref([]);
 const loading = ref(false); 
@@ -188,7 +202,46 @@ async function listarSedesInactivas() {
   }
 }
 
+async function listarNombre() {
+  if (!nombreSede.value || nombreSede.value.trim() === "") {
+ 
+    Notify.create({
+      type: 'negative',
+      message: 'Digite el nombre de una sede'
+    });
+    return;
+  }
 
+  try {
+    const r = await useSedes.getSede();
+    if ( !r.sede) {
+      throw new Error('No se encontraron sedes en la respuesta');
+    }
+    console.log(r.sede);
+    const sedeFiltrada = r.sede?.filter(sede =>
+    
+      sede.nombre && sede.nombre?.toLowerCase().includes(nombreSede.value.toLowerCase())
+    );
+    console.log(sedeFiltrada);
+    
+    if (sedeFiltrada.length === 0) {
+      Notify.create({
+        type: 'negative',
+        message: 'Sede no existe'
+      });
+    } else {
+      rows.value = sedeFiltrada;
+    }
+  } catch (error) {
+    console.error('Error al listar nombre:', error);
+    Notify.create({
+      type: 'negative',
+      message: 'Error al listarsedes'
+    });
+  } finally {
+    nombreSede.value = "";
+  }
+}
 
 onMounted(() => {
   listarSedes();
@@ -213,11 +266,11 @@ const procesarFormulario = async () => {
   try {
     if (  sedeSeleccionada !== null && sedeSeleccionada.value !== null) {
      const sede= await useSedes.putSede(sedeSeleccionada.value._id, {
-        nombre: nombre.value.trim,
-        direccion: direccion.value.trim,
-        horario: horario.value.trim,
-        telefono: telefono.value.trim,
-        ciudad: ciudad.value.trim
+        nombre: nombre.value,
+        direccion: direccion.value,
+        horario: horario.value,
+        telefono: telefono.value,
+        ciudad: ciudad.value
       });
       Notify.create({
         type: 'positive',
@@ -230,11 +283,11 @@ const procesarFormulario = async () => {
       });
     } else {
      const sede= await useSedes.postSede({
-        nombre: nombre.value.trim,
-        direccion: direccion.value.trim,
-        horario: horario.value.trim,
-        telefono: telefono.value.trim,
-        ciudad: ciudad.value.trim
+        nombre: nombre.value,
+        direccion: direccion.value,
+        horario: horario.value,
+        telefono: telefono.value,
+        ciudad: ciudad.value
 
       });
       Notify.create({
@@ -435,6 +488,7 @@ function limpiar() {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 5%;
 }
 
 .form-title {
@@ -447,5 +501,17 @@ function limpiar() {
 
 .close-btn {
   color: white;
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
 }
 </style>

@@ -11,22 +11,26 @@
           </template>
         </q-input>
 
-        <q-btn color="green" icon="add" @click="agregarProducto()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
+        <q-btn color="green" icon="add" @click="agregarProducto()"
+          :loading="loading && loadingList === 'agregar'">agregar</q-btn>
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
           <q-list>
-            <q-item clickable v-ripple @click="listar('todos')" :class="{ 'loading-item': loading && loadingList === 'todos' }">
+            <q-item clickable v-ripple @click="listar('todos')"
+              :class="{ 'loading-item': loading && loadingList === 'todos' }">
               <q-item-section>Listar Todos</q-item-section>
               <template v-if="loading && loadingList === 'todos'">
                 <q-spinner color="primary" size="2em" />
               </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('activos')" ::class="{ 'loading-item': loading && loadingList === 'activos' }">
+            <q-item clickable v-ripple @click="listar('activos')"
+              ::class="{ 'loading-item': loading && loadingList === 'activos' }">
               <q-item-section>Listar Activos</q-item-section>
               <template v-if="loading && loadingList === 'activos'">
                 <q-spinner color="primary" size="2em" />
               </template>
             </q-item>
-            <q-item clickable v-ripple @click="listar('inactivos')" :class="{ 'loading-item': loading && loadingList === 'inactivos' }">
+            <q-item clickable v-ripple @click="listar('inactivos')"
+              :class="{ 'loading-item': loading && loadingList === 'inactivos' }">
               <q-item-section>Listar Inactivos</q-item-section>
               <template v-if="loading && loadingList === 'inactivos'">
                 <q-spinner color="primary" size="2em" />
@@ -45,20 +49,24 @@
           </div>
 
           <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
-            <q-input v-model="nombre" label="Nombre" :rules="[val => !!val || 'Descripción no puede estar vacía']" />
+            <q-input filled v-model="nombre" label="Nombre"
+              :rules="[val => !!val.trim() || 'Descripción no puede estar vacía']" @blur="nombre = nombre.trim()" />
             <q-input filled v-model="cantidad" label="Cantidad" type="number"
               :rules="[val => val && val > 0 || 'Cantidad debe ser un número positivo']" />
             <q-input filled v-model="valor" label="Valor" type="number"
               :rules="[val => val && val > 0 || 'Valor debe ser un número positivo']" />
-              <div class="q-mt-md q-flex q-justify-end">
-                <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
-                <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
-              </div>
+
+            <div class="q-mt-md q-flex q-justify-end">
+              <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm"
+                :loading="loading && loadingList === 'guardar'" />
+            </div>
           </q-form>
         </q-page>
       </div>
-
-      <q-table title="Productos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
+      <div v-if="loading" class="overlay">
+        <q-spinner-hourglass  color="primary" size="50px"  />
+      </div>
+        <q-table title="Productos" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
         <template v-slot:header="props">
           <q-tr :props="props" style="font-size: 24px; " class="table1">
             <q-th v-for="col in props.cols" :key="col.name" :props="props">{{ col.label }}</q-th>
@@ -100,6 +108,9 @@
           </q-td>
         </template>
       </q-table>
+
+      
+
     </div>
   </div>
 </template>
@@ -120,23 +131,27 @@ const cantidad = ref();
 const valor = ref();
 const nombreProducto = ref()
 const rows = ref([]);
-const loading = ref(false); 
-const loadingList = ref(null); 
+const loadingState = ref({});
+const loadingList = ref(null);
+
+const loading = ref(false);
 
 const columns = ref([
   { name: "nombre", label: "Nombre", field: "nombre", align: "center" },
   { name: "cantidad", label: "Cantidad", field: "cantidad", align: "center" },
-  { name: "valor", label: "Precio", field: "valor", align: "center" },
+  { name: "valor", label: "Precio", field: row => puntosMil(row.valor), align: "center" },
   { name: "estado", label: "Estado", field: "estado", align: "center" },
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
 ]);
 
-const loadingState = ref({});
+
 
 async function listarProductos() {
   const r = await useProductos.getProducts();
   console.log(r.data.producto);
+  loading.value= true;
   const producto = r.data.producto;
+  
   if (producto.length === 0) {
     Notify.create({
       type: 'negative',
@@ -144,9 +159,14 @@ async function listarProductos() {
     })
   }
   else {
+    
     rows.value = producto
+   
+    
 
-  }
+  }setTimeout(() => {
+        loading.value = false;
+      },1000 );
 
 
 }
@@ -154,6 +174,7 @@ async function listarProductos() {
 async function listarProductosActivos() {
   const r = await useProductos.getProductsActivos();
   const productoActivo = r.data.productosActivos;
+ 
   if (productoActivo.length === 0) {
     Notify.create({
       type: 'negative',
@@ -167,7 +188,7 @@ async function listarProductosActivos() {
       message: 'Productos Activos Listados Correctamente',
       position: 'top'
     })
-  }
+  } loading.value = false;
 
 }
 
@@ -188,7 +209,7 @@ async function listarProductosInactivos() {
       message: 'Productos Inactivos Listados Correctamente',
       position: 'top'
     })
-  }
+  } loading.value = false;
 
 
 }
@@ -227,9 +248,9 @@ const procesarFormulario = async () => {
     if (productoSeleccionado.value !== null) {
       // Actualiza
       await useProductos.putProducts(productoSeleccionado.value._id, {
-        nombre: nombre.value.trim,
-        valor: valor.value.trim,
-        cantidad: cantidad.value.trim,
+        nombre: nombre.value,
+        valor: valor.value,
+        cantidad: cantidad.value,
       });
       Notify.create({
         type: 'positive',
@@ -239,9 +260,9 @@ const procesarFormulario = async () => {
     } else {
       // Agrega
       await useProductos.postProducts({
-        nombre: nombre.value.trim,
-        valor: valor.value.trim,
-        cantidad: cantidad.value.trim,
+        nombre: nombre.value,
+        valor: valor.value,
+        cantidad: cantidad.value,
       });
       Notify.create({
         type: 'positive',
@@ -255,7 +276,7 @@ const procesarFormulario = async () => {
     limpiar();
   } catch (error) {
     console.error('Error al procesar el formulario:', error);
-  }finally {
+  } finally {
     loading.value = false;
     loadingList.value = null;
   }
@@ -289,13 +310,13 @@ async function agregarProducto() {
   loading.value = true;
   loadingList.value = 'agregar';
   try {
-  productoSeleccionado.value = null;
-  verFormulario.value = true;
-  tituloFormulario.value = 'Agregar Producto';
-    
-  } 
+    productoSeleccionado.value = null;
+    verFormulario.value = true;
+    tituloFormulario.value = 'Agregar Producto';
+
+  }
   catch (error) {
-    console.error('Error al agregar producto:', error); 
+    console.error('Error al agregar producto:', error);
   } finally {
     loading.value = false;
     loadingList.value = null;
@@ -322,7 +343,7 @@ async function activar(id) {
       type: 'negative',
       message: 'Error al activar producto',
       icon: 'error',
-    
+
     });
   } finally {
     loadingState.value[id] = false;
@@ -332,12 +353,12 @@ async function activar(id) {
 async function desactivar(id) {
   loadingState.value[id] = true;
   try {
-    console.log(`Intentando desactivar producto con ID: ${id}`);
+   
     const response = await useProductos.putProductsDesactivar(id);
     console.log('Respuesta de desactivación:', response);
     await listarProductos();
     Notify.create({
-      color:'orange',
+      color: 'orange',
       message: 'Producto desactivado exitosamente',
       icon: 'check',
       position: 'top',
@@ -379,6 +400,14 @@ function listar(tipo) {
     listarProductos();
   }
 }
+
+const puntosMil = (num) => {
+  if (num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+  }
+  return '';
+};
+
 </script>
 
 <style scoped>
@@ -417,7 +446,7 @@ function listar(tipo) {
 
 .q-mt-md {
   text-align: right;
- margin: 0;
+  margin: 0;
 
 }
 
@@ -444,6 +473,7 @@ function listar(tipo) {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 7%;
 }
 
 .form-title {
@@ -456,5 +486,18 @@ function listar(tipo) {
 
 .close-btn {
   color: white;
+}
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.8);
+  z-index: 1000;
 }
 </style>

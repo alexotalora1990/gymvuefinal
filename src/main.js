@@ -15,7 +15,7 @@ import 'quasar/src/css/index.sass';
 
   
   axios.defaults.baseURL="https://gymapp-lgjb.onrender.com/api/";
-  
+  // axios.defaults.baseURL="http://localhost:4000/api/"
 
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
