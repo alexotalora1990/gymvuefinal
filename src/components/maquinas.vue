@@ -223,6 +223,11 @@ async function listarMaquinasActivas() {
     loadingList.value = null;
   }
 }
+const formatDates = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toISOString().substr(0,10);
+};
 
 async function listarMaquinasInactivas() {
   loading.value = true;
@@ -323,11 +328,14 @@ async function editar(maquina) {
 console.log(maquina.idSede.nombre);
   idSede.value = maquina.idSede.nombre;
   descripcion.value = maquina.descripcion;
-  fechaUltimoMant.value = maquina.fechaUltimoMant.split('/').reverse().join('-');
+  fechaUltimoMant.value = formatDates(maquina.fechaUltimoMant);
+  
   
 
   verFormulario.value = true;
 }
+
+
 
 async function agregar() {
   loading.value = true;

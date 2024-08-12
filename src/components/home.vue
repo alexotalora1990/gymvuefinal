@@ -5,20 +5,21 @@
     <q-layout view="hHh lpR fFf">
       <q-header class="bg-primary text-white">
         <q-toolbar>
-          <q-toolbar-title>
+          <q-btn dense flat round icon="menu" @click="toggleRightDrawer" />
+          
+          <q-toolbar-title class="q-toolbar-title-center">
             <q-avatar>
               <img src="./imagenes/logo-removebg-preview.png">
             </q-avatar>
-            <b> BODY CHAMPION</b>
+            <b>BODY CHAMPION</b>
           </q-toolbar-title>
 
           <q-btn dense flat round icon="home" @click="goHome" />
-          <q-btn dense flat round icon="menu" @click="toggleRightDrawer" />
           <q-btn dense flat round icon="logout" @click="logout" />
         </q-toolbar>
       </q-header>
 
-      <q-drawer v-model="rightDrawerOpen" side="right" overlay behavior="desktop">
+      <q-drawer v-model="rightDrawerOpen" side="left" overlay behavior="desktop">
         <div class="drawer-content">
           <q-tabs vertical class="bg-secondary">
             <q-route-tab 
@@ -50,7 +51,6 @@
             
             <q-card class="q-mb-md">
               <q-card-section>
-                <!-- <div class="text-h5">{{ selectedCard.name }}</div> -->
                 <router-view />
               </q-card-section>
             </q-card>
@@ -120,13 +120,11 @@ const filteredRoutes = computed(() => {
 .container {
   position: relative;
   width: 100%;
-  
 }
 
 .content {
   position: relative;
   z-index: 1;
-  
 }
 
 .usuario h5 {
@@ -174,17 +172,14 @@ const filteredRoutes = computed(() => {
 .row {
   display: flex;
   flex-wrap: wrap;
-  
 }
 
 .col-xs-12 {
   flex: 0 0 100%;
-  
 }
 
 .col-sm-6 {
   flex: 0 0 50%;
-  
 }
 
 .col-md-4 {
@@ -194,6 +189,7 @@ const filteredRoutes = computed(() => {
 .col-lg-3 {
   flex: 0 0 25%;
 }
+
 .q-hoverabl {
   background-color: rgba(203, 210, 217, 0.8); 
   margin: 3%;
@@ -207,5 +203,17 @@ const filteredRoutes = computed(() => {
 .q-hoverabl:hover {
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.9); 
   transform: translateY(-2px); 
+}
+
+.q-toolbar-title-center {
+  flex: 1;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.q-toolbar-title-center q-avatar {
+  margin-right: 8px;
 }
 </style>

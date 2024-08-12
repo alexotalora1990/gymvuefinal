@@ -11,11 +11,11 @@ import { Quasar, Notify,Loading } from 'quasar';
 // Importa icon libraries
 import '@quasar/extras/material-icons/material-icons.css';
 // Importa Quasar css
-import 'quasar/src/css/index.sass';
+import 'quasar/src/css/index.sass'; 
 
   
-  axios.defaults.baseURL="https://gymapp-lgjb.onrender.com/api/";
-  // axios.defaults.baseURL="http://localhost:4000/api/"
+  // axios.defaults.baseURL="https://gymapp-lgjb.onrender.com/api/";
+  axios.defaults.baseURL="http://localhost:4000/api/"
 
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
