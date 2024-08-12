@@ -70,6 +70,7 @@
             <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
           </div>
         </q-form>
+        
       </q-page>
     </div>
     <div v-if="loading" class="overlay">
@@ -90,7 +91,7 @@
       </template>
       <template v-slot:body-cell-opciones="props">
         <q-td :props="props">
-          <q-btn @click="editarUsuario(props.row)">
+          <q-btn @click="editar(props.row)">
             <q-tooltip class="bg-accent">Editar</q-tooltip>🖋️
           </q-btn>
           
@@ -296,40 +297,42 @@ onMounted(() => {
   listarUsuarios();
   listarSedes();
 });
-
 const procesarFormulario = async () => {
   loading.value = true;
   loadingList.value = 'guardar';
- 
-    const sedeSeleccionada = idsede.value.value;
-console.log(sedeSeleccionada);
-  try { 
 
+  const sedeSeleccionada = idsede.value.value;
+  console.log(sedeSeleccionada);
+
+  try {
     const user = {
       idsede: sedeSeleccionada,
       nombre: nombre.value,
       telefono: telefono.value,
       email: email.value,
       roll: roll.value,
+      // Solo incluye la contraseña si es un nuevo usuario
       password: usuarioSeleccionado.value === null ? password.value : undefined,
     };
 
     console.log('Datos enviados:', user);
 
     if (usuarioSeleccionado.value !== null) {
+      // Llamada API para actualizar usuario
       await useUsuarios.putUser(usuarioSeleccionado.value._id, user);
       Notify.create({ type: 'positive', message: 'Usuario Actualizado Exitosamente', icon: 'check', position: 'top' });
     } else {
+      // Llamada API para crear nuevo usuario
       await useUsuarios.postUser(user);
       Notify.create({ type: 'positive', message: 'Usuario Creado Exitosamente', icon: 'check', position: 'top' });
     }
-    
+
     listarUsuarios();
     cerrarFormulario();
     limpiar();
     usuarioSeleccionado.value = null;
 
-  } catch (error)   {
+  } catch (error) {
     console.error('Error al procesar el formulario:', error);
     if (error.response && error.response.data && error.response.data.errors) {
       const errores = error.response.data.errors;
@@ -342,8 +345,7 @@ console.log(sedeSeleccionada);
     } else {
       Notify.create({ type: 'negative', message: 'Error al procesar el formulario 2', icon: 'error' });
     }
-  } 
-  finally {
+  } finally {
     loading.value = false;
     loadingList.value = null;
   }
@@ -357,20 +359,16 @@ async function agregarUsuario() {
     verFormulario.value = true;
     verPassword.value = true;
     tituloFormulario.value = 'Agregar Usuario';
-    
-    
-  } 
-  catch (error) {
-    console.error('Error al agregar usuario:', error); 
+  } catch (error) {
+    console.error('Error al agregar usuario:', error);
   } finally {
     loading.value = false;
     loadingList.value = null;
   }
 }
 
-const  editarUsuario= async (user)=> {
-  
-  if (user.estado !== 1) {   
+const editar = async (user) => {
+  if (user.estado !== 1) {
     Notify.create({
       type: 'warning',
       message: 'Para editar un usuario debe estar activo',
@@ -383,20 +381,118 @@ const  editarUsuario= async (user)=> {
     return;
   }
 
-else{
-console.log(user);
+  console.log(user);
   verFormulario.value = true;
   usuarioSeleccionado.value = user;
   verPassword.value = false;
-  tituloFormulario.value = 'Editar Usuario'; 
-  
+  tituloFormulario.value = 'Editar Usuario';
+
   nombre.value = user.nombre;
   telefono.value = user.telefono;
   email.value = user.email;
-  idsede.value =user.idsede.nombre;
+  idsede.value = user.idsede.nombre;
   roll.value = user.roll;
-}
-}
+};
+// const procesarFormulario = async () => {
+//   loading.value = true;
+//   loadingList.value = 'guardar';
+ 
+//     const sedeSeleccionada = idsede.value.value;
+// console.log(sedeSeleccionada);
+//   try { 
+
+//     const user = {
+//       idsede: sedeSeleccionada,
+//       nombre: nombre.value,
+//       telefono: telefono.value,
+//       email: email.value,
+//       roll: roll.value,
+//       password: usuarioSeleccionado.value === null ? password.value : undefined,
+//     };
+
+//     console.log('Datos enviados:', user);
+
+//     if (usuarioSeleccionado.value !== null) {
+//       await useUsuarios.putUser(usuarioSeleccionado.value._id, user);
+//       Notify.create({ type: 'positive', message: 'Usuario Actualizado Exitosamente', icon: 'check', position: 'top' });
+//     } else {
+//       await useUsuarios.postUser(user);
+//       Notify.create({ type: 'positive', message: 'Usuario Creado Exitosamente', icon: 'check', position: 'top' });
+//     }
+    
+//     listarUsuarios();
+//     cerrarFormulario();
+//     limpiar();
+//     usuarioSeleccionado.value = null;
+
+//   } catch (error)   {
+//     console.error('Error al procesar el formulario:', error);
+//     if (error.response && error.response.data && error.response.data.errors) {
+//       const errores = error.response.data.errors;
+//       const emailError = errores.find(e => e.param === 'email');
+//       if (emailError) {
+//         Notify.create({ type: 'negative', message: emailError.msg, icon: 'error', position: 'top' });
+//       } else {
+//         Notify.create({ type: 'negative', message: 'Error al guardar, email ya existe', icon: 'error' });
+//       }
+//     } else {
+//       Notify.create({ type: 'negative', message: 'Error al procesar el formulario 2', icon: 'error' });
+//     }
+//   } 
+//   finally {
+//     loading.value = false;
+//     loadingList.value = null;
+//   }
+// };
+
+// async function agregarUsuario() {
+//   loading.value = true;
+//   loadingList.value = 'agregar';
+//   try {
+//     usuarioSeleccionado.value = null;
+//     verFormulario.value = true;
+//     verPassword.value = true;
+//     tituloFormulario.value = 'Agregar Usuario';
+    
+    
+//   } 
+//   catch (error) {
+//     console.error('Error al agregar usuario:', error); 
+//   } finally {
+//     loading.value = false;
+//     loadingList.value = null;
+//   }
+// }
+
+// const  editar= async (user)=> {
+  
+//   if (user.estado !== 1) {   
+//     Notify.create({
+//       type: 'warning',
+//       message: 'Para editar un usuario debe estar activo',
+//       classes: 'customNotify',
+//       icon: 'warning',
+//       position: 'top',
+//       timeout: 3000,
+//       actions: [{ label: '❌', color: 'black' }],
+//     });
+//     return;
+//   }
+
+// else{
+// console.log(user);
+//   verFormulario.value = true;
+//   usuarioSeleccionado.value = user;
+//   verPassword.value = false;
+//   tituloFormulario.value = 'Editar Usuario'; 
+  
+//   nombre.value = user.nombre;
+//   telefono.value = user.telefono;
+//   email.value = user.email;
+//   idsede.value =user.idsede.nombre;
+//   roll.value = user.roll;
+// }
+// }
 
 async function activar(id) {
   loadingState.value[id] = true;

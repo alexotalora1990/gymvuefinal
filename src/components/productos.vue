@@ -56,6 +56,15 @@
             <q-input filled v-model="valor" label="Valor" type="number"
               :rules="[val => val && val > 0 || 'Valor debe ser un número positivo']" />
 
+              <q-input filled v-model="diasAlerta" label="Dias Alerta" type="number"
+              :rules="[val => val && val > 0 || 'Dias Alerta debe ser un número positivo']" />
+
+              <q-input filled v-model="vencimiento" label="Fecha Vencimiento" type="date"
+              :rules="[
+                val => !!val || 'Fecha de vencimiento no debe estar vacía',
+                val => new Date(val) > new Date() || 'La fecha de vencimiento debe ser mayor a la fecha actual'
+              ]" />
+
             <div class="q-mt-md q-flex q-justify-end">
               <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm"
                 :loading="loading && loadingList === 'guardar'" />
@@ -120,6 +129,7 @@
 import { ref, onMounted } from "vue";
 import { useProductsStore } from "../store/productos.js";
 import { useQuasar, Notify } from 'quasar';
+import { format } from 'date-fns';
 
 const $q = useQuasar();
 const verFormulario = ref(false);
@@ -129,6 +139,8 @@ const useProductos = useProductsStore();
 const nombre = ref();
 const cantidad = ref();
 const valor = ref();
+const vencimiento=ref();
+const diasAlerta=ref();
 const nombreProducto = ref()
 const rows = ref([]);
 const loadingState = ref({});
@@ -140,17 +152,31 @@ const columns = ref([
   { name: "nombre", label: "Nombre", field: "nombre", align: "center" },
   { name: "cantidad", label: "Cantidad", field: "cantidad", align: "center" },
   { name: "valor", label: "Precio", field: row => puntosMil(row.valor), align: "center" },
+  { name: "vencimiento", label: "Fecha Ven.", field: (row)=>format(new Date(row.vencimiento),'dd/MM/yyyy'), align: "center" },
+  { name: "diasAlerta", label: "Alerta Ven.", field: "diasAlerta", align: "center" },
   { name: "estado", label: "Estado", field: "estado", align: "center" },
   { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
 ]);
 
-
+function formatDate(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+const formatDates = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toISOString().substr(0,10);
+};
 
 async function listarProductos() {
   const r = await useProductos.getProducts();
   console.log(r.data.producto);
   loading.value= true;
   const producto = r.data.producto;
+  
   
   if (producto.length === 0) {
     Notify.create({
@@ -251,6 +277,8 @@ const procesarFormulario = async () => {
         nombre: nombre.value,
         valor: valor.value,
         cantidad: cantidad.value,
+        vencimiento:vencimiento.value,
+        diasAlerta:diasAlerta.value,
       });
       Notify.create({
         type: 'positive',
@@ -263,6 +291,8 @@ const procesarFormulario = async () => {
         nombre: nombre.value,
         valor: valor.value,
         cantidad: cantidad.value,
+        vencimiento:vencimiento.value,
+        diasAlerta:diasAlerta.value,
       });
       Notify.create({
         type: 'positive',
@@ -303,6 +333,8 @@ async function editarProducto(producto) {
   nombre.value = producto.nombre;
   cantidad.value = producto.cantidad;
   valor.value = producto.valor;
+  vencimiento.value=formatDates(producto.vencimiento);
+  diasAlerta.value=producto.diasAlerta;
   verFormulario.value = true;
 }
 

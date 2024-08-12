@@ -61,7 +61,7 @@
               val => !!val || 'Nombre no puede estar vacío',
               val => /^[a-zA-Z ]+$/.test(val) || 'El nombre solo puede contener letras y espacios',
               val => val.trim().length >= 3 || 'El nombre debe tener al menos 3 caracteres'
-            ]" />
+            ]"  />
 
             <q-input filled v-model="documento" label="Documento" type="number" :rules="[
               val => !!val || 'Documento no puede estar vacío',
@@ -209,11 +209,11 @@
 
        
         <q-table :rows="selectedClienteSeguimiento" :columns="columnsSeguimiento" row-key="fecha" class="table">
-  <template #body-cell-opciones="props">
+          <template v-slot:body-cell-opciones="props">
     <q-td :props="props">
-      <q-btn icon="edit" @click="editarSeguimiento(props.row)" />
+        <q-btn icon="edit" @click="editarSeguimiento(clienteSeleccionado.value, props.row)" />
     </q-td>
-  </template>
+</template>
   <template #body-cell-IMC="props">
     <q-td :props="props" :style="{ backgroundColor: getIMCColor(props.row.IMC).color }">
       {{ props.row.IMC.toFixed(2) }} - {{ getIMCColor(props.row.IMC).description }}
@@ -534,7 +534,7 @@ const procesarFormulario = async (option) => {
         direccion: direccion.value,
         telefono: telefono.value,
         fechaNacimiento: fechaNacimiento.value,
-        idPlan: idplanseleccionado.value,
+        idPlan: idplanseleccionado,
         foto: foto.value,
         objetivo: objetivo.value,
         observaciones: observaciones.value,
@@ -561,6 +561,8 @@ const procesarFormulario = async (option) => {
     loadingList.value = null;
   }
 };
+
+
 
 async function editar(cliente) {
   clienteSeleccionado.value = cliente;
@@ -669,91 +671,104 @@ function limpiar() {
 }
 
 
+
+
 // seguimiento
-function cerrarFormularioSeguimiento() {
-  verFormularioSeguimiento.value = false;
-}
-
-
-
-async function procesarSeguimiento() {
-  if (!clienteSeleccionado.value) {
-    Notify.create({
-      type: 'negative',
-      message: 'No se ha seleccionado un cliente',
-      icon: 'error',
-    });
-    return;
-  }
-
-  const seguimiento = {
-    fecha: fecha.value,
-    peso: peso.value,
-    tBrazo: tBrazo.value,
-    tPierna: tPierna.value,
-    tCintura: tCintura.value,
-    estatura: estatura.value,
-  };
-
-  try {
-    let response;
-    if (isEditing.value && seguimientoSeleccionado.value) {
-      response = await useClientes.putSeguimiento(seguimiento);
-    } else {
-      response = await useClientes.postSeguimiento(clienteSeleccionado.value._id, seguimiento);
-      Notify.create({
-        type: 'positive',
-        message:  'Seguimiento agregado exitosamente',
-        icon: 'check_circle',
-      });
-      verSeguimiento()
-    }
-
-    console.log(response);  
-
-    if (response && response.seguimiento) {
-      Notify.create({
-        type: 'positive',
-        message: isEditing.value ? 'Seguimiento actualizado exitosamente' : 'Seguimiento agregado exitosamente',
-        icon: 'check_circle',
-      });
-      if (isEditing.value) {
-        const index = clienteSeleccionado.value.seguimiento.findIndex(seg => seg._id === seguimientoSeleccionado.value._id);
-        if (index !== -1) {
-          clienteSeleccionado.value.seguimiento[index] = seguimiento;
-        }
-      } else {
-        clienteSeleccionado.value.seguimiento.push(response.seguimiento);
-      }
-      verSeguimiento(clienteSeleccionado.value);
-    } else {
-      Notify.create({
-        type: 'negative',
-        message: 'Error al procesar el seguimiento',
-        icon: 'error',
-      });
-    }
-
-    cerrarFormularioSeguimiento();
-  } catch (error) {
-    console.error('Error al procesar seguimiento:', error);
-    Notify.create({
-      type: 'negative',
-      message: 'Error al procesar seguimiento',
-      icon: 'error',
-    });
-  }
-}
-
-
 function verSeguimiento(cliente) {
-  clienteSeleccionado.value = cliente;
-  selectedClienteSeguimiento.value = cliente.seguimiento.map(seg => ({
-    ...seg,
-    fecha: formatDate(seg.fecha),
-    createAt: formatDate(seg.createAt),
-  }));
+    clienteSeleccionado.value = cliente;
+    selectedClienteSeguimiento.value = cliente.seguimiento.map(seg => ({
+        ...seg,
+        fecha: formatDate(seg.fecha),
+        createAt: formatDate(seg.createAt),
+    }));
 }
+
+function editarSeguimiento(cliente, seguimiento) {
+    console.log('Cliente:', cliente); // Para depuración
+    console.log('Seguimiento:', seguimiento); // Para depuración
+
+    try {
+        if (!cliente || !seguimiento) {
+            throw new Error('Datos inválidos para editar el seguimiento');
+        }
+
+        clienteSeleccionado.value = cliente;
+        seguimientoSeleccionado.value = seguimiento;
+
+        tituloFormularioSeguimiento.value = `Editar Seguimiento para ${cliente.nombre}`;
+        verFormularioSeguimiento.value = true;
+        isEditing.value = true;
+
+        fecha.value = seguimiento.fecha || '';
+        peso.value = seguimiento.peso || '';
+        tBrazo.value = seguimiento.tBrazo || '';
+        tPierna.value = seguimiento.tPierna || '';
+        tCintura.value = seguimiento.tCintura || '';
+        estatura.value = seguimiento.estatura || '';
+    } catch (error) {
+        console.error('Error al editar seguimiento:', error);
+        Notify.create({
+            type: 'negative',
+            message: error.message,
+            icon: 'error',
+        });
+    }
+}
+
+
+// Al guardar el seguimiento
+async function procesarSeguimiento() {
+    if (!clienteSeleccionado.value) {
+        Notify.create({
+            type: 'negative',
+            message: 'No se ha seleccionado un cliente',
+            icon: 'error',
+        });
+        return;
+    }
+
+    const seguimiento = {
+        fecha: fecha.value,
+        peso: peso.value,
+        tBrazo: tBrazo.value,
+        tPierna: tPierna.value,
+        tCintura: tCintura.value,
+        estatura: estatura.value,
+    };
+
+    try {
+        let response;
+        if (isEditing.value && seguimientoSeleccionado.value) {
+            response = await putSeguimiento(clienteSeleccionado.value._id, seguimientoSeleccionado.value._id, seguimiento);
+            Notify.create({
+                type: 'positive',
+                message: 'Seguimiento editado exitosamente',
+                icon: 'check_circle',
+            });
+        } else {
+            response = await postSeguimiento(clienteSeleccionado.value._id, seguimiento);
+            Notify.create({
+                type: 'positive',
+                message: 'Seguimiento agregado exitosamente',
+                icon: 'check_circle',
+            });
+            verSeguimiento(clienteSeleccionado.value);
+        }
+
+        cerrarFormularioSeguimiento();
+    } catch (error) {
+        console.error('Error al procesar seguimiento:', error);
+        Notify.create({
+            type: 'negative',
+            message: 'Error al procesar seguimiento',
+            icon: 'error',
+        });
+    }
+}
+
+
+
+
 function agregarSeguimiento(cliente) {
   verSeguimiento(cliente)
   try {
@@ -779,37 +794,7 @@ function agregarSeguimiento(cliente) {
   }
 }
 
-function editarSeguimiento(seguimiento) {
 
-  // console.log(cliente);
-  console.log(seguimiento);
-  try {
-    // if (!cliente || !cliente.nombre || !seguimiento) {
-    //   throw new Error('Datos inválidos para editar el seguimiento');
-    // }
-
-    clienteSeleccionado.value = seguimiento;
-    seguimientoSeleccionado.value = seguimiento;
-    tituloFormularioSeguimiento.value = `Editar Seguimiento para `;
-    verFormularioSeguimiento.value = true;
-    isEditing.value = true;
-
-   
-    fecha.value = seguimiento.fecha;
-    peso.value = seguimiento.peso;
-    tBrazo.value = seguimiento.tBrazo;
-    tPierna.value = seguimiento.tPierna;
-    tCintura.value = seguimiento.tCintura;
-    estatura.value = seguimiento.estatura;
-  } catch (error) {
-    console.error('Error al editar seguimiento:', error);
-    Notify.create({
-      type: 'negative',
-      message: error.message,
-      icon: 'error',
-    });
-  }
-}
 
 function limpiarFormularioSeguimiento() {
   fecha.value = '';
@@ -824,6 +809,9 @@ function limpiarFormularioSeguimiento() {
 
 function cerrarSeguimiento() {
   clienteSeleccionado.value = false
+}
+function cerrarFormularioSeguimiento() {
+  verFormularioSeguimiento.value = false;
 }
 
 
