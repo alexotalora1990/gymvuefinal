@@ -215,14 +215,15 @@ const filterSedeOptions = (val, update) => {
 };
 
 async function listarVentas() {
+
   loading.value = true;
   loadingList.value = 'todos';
   try {
-    const r = await useVentas.getVentas()
-    // console.log(r.data.Venta);
-    rows.value = r.data.Venta
+    const r = await useCompra.getCompras()
+    // console.log(r.data.Compra);
+    rows.value = r.data.Compra
   } catch (error) {
-    console.error('Error al listar todos las ventas :', error);
+    console.error('Error al listar todos las Compras :', error);
   } finally {
     loading.value = false;
     loadingList.value = null;
