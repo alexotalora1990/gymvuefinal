@@ -11,7 +11,7 @@
             <q-btn icon="search" @click="listarPorFecha" style="background-color:#ffff;" />
           </template>
         </q-input>
-        <q-btn color="green" icon="add" @click="agregarVenta()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
+        <q-btn color="green" icon="add" @click="agregarCompra()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
       </div>
         <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
@@ -26,13 +26,13 @@
               <div>
                 <q-select
                  filled
-                  v-model="idcliente"
-                   label="Seleccione un cliente"
-                    :options="clienteOptions"
-                :rules="[val => !!val || 'Debe seleccionar un cliente']" 
+                  v-model="idProveedor"
+                   label="Seleccione un proveedor"
+                    :options="proveedorOptions"
+                :rules="[val => !!val || 'Debe seleccionar un proveedor']" 
                 use-input
               input-debounce="300"
-              @filter="filterClienteOptions"
+              @filter="filterProveedorOptions"
               />
                 
               </div>
@@ -102,11 +102,10 @@
   
   <script setup>
   import { ref, onMounted } from "vue"
-  import { useVentasStore } from "../store/ventas.js"
+  import { useCompraStore } from "../store/compras.js"
   import { useSedesStore } from '../store/sedes.js';
-  import { useClientesStore } from '../store/clientes.js';
+  import { useProveedorStore } from '../store/proveedor.js';
   import { useProductsStore } from "../store/productos.js";
-
   import { format } from 'date-fns';
   import axios from 'axios';
   import { useQuasar,Notify } from 'quasar';
@@ -114,22 +113,22 @@
   const verFormulario = ref(false)
   const $q = useQuasar();
   
-  const ventaSeleccionada = ref(null);
-  const tituloFormulario = ref('Agregar Venta') 
+  const compraSeleccionada = ref(null);
+  const tituloFormulario = ref('Agregar Compra') 
   
-  const useVentas = useVentasStore()
+  const useCompra = useCompraStore()
   const useSedes = useSedesStore();
-  const useClientes = useClientesStore();
+  const useProveedor = useProveedorStore();
   const useProductos = useProductsStore();
-  const idcliente = ref()
+  const idProveedor = ref()
   const idproducto = ref ()
   const idsede = ref()
   const cantidad = ref()
   
   const sedeOptions = ref([]);
-  const clienteOptions = ref([])
+  const proveedorOptions = ref([])
   const productoOptions = ref([])
-  const filteredClienteOptions = ref([]);
+  const filteredProveedorOptions = ref([]);
   const filteredProductoOptions = ref([]);
   const filteredSedeOptions = ref([]);
   const fechaFiltro = ref('');
@@ -139,8 +138,8 @@
   const loadingList = ref(null); 
 
   const columns = ref([
-    { name: "idcliente", label: "Cliente",
-     field:  (row) => row.idcliente?.nombre,    
+    { name: "idProveedor", label: "Proveedor",
+     field:  (row) => row.idproveedor?.nombre,    
     align: "center" },
    
     { name: "idproducto", label: "Producto",
@@ -155,26 +154,24 @@
 
     { name: "valorUnidad", label: "Precio", field: row =>puntosMil(row.valorUnidad), align: "center" },
     { name: "total", label: "Total", field: row =>puntosMil(row.total), align: "center" },
-
-    
-     { name: "createAt", label: "Fecha de Venta", field: (row) => format(new Date(row.createAt), 'dd/MM/yyyy'), align: "center" },
+     { name: "createAt", label: "Fecha de Compra", field: (row) => format(new Date(row.createAt), 'dd/MM/yyyy'), align: "center" },
      { name: "opciones", label: "Opciones", field: "opciones", align: "center" },
   
   ])
   
   const loadingState = ref({});
 
-  const filterClienteOptions = (val, update) => {
+  const filterProveedorOptions = (val, update) => {
   if (val === '') {
     update(() => {
-      filteredClienteOptions.value = clienteOptions.value;
+      filteredProveedorOptions.value = proveedorOptions.value;
     });
     return;
   }
   
   const needle = val.toLowerCase();
   update(() => {
-    filteredClienteOptions.value = clienteOptions.value.filter(v => v.label.toLowerCase().includes(needle));
+    filteredSedeOptions.value = clienteOptions.value.filter(v => v.label.toLowerCase().includes(needle));
   });
 };
 const filterProductoOptions = (val, update) => {
@@ -213,7 +210,7 @@ const filterSedeOptions = (val, update) => {
     // console.log(r.data.Compra);
     rows.value = r.data.Compra
   } catch (error) {
-    console.error('Error al listar todos las Compras :', error);
+    console.error('Error al listar todos las Compra :', error);
   } finally {
     loading.value = false;
     loadingList.value = null;
@@ -229,13 +226,13 @@ const listarSedes = async () => {
   }
 };
 
-const listarClientes = async () => {
+const listarProveedores = async () => {
   try {
-    const r = await useClientes.getCliente();
-    clienteOptions.value = r.data.Cliente.map(cliente => ({ value: cliente._id, label: cliente.nombre }));
-    filteredClienteOptions.value = clienteOptions.value;
+    const r = await useProveedor.getProveedor();
+    proveedorOptions.value = r.data.Proveedor.map(proveedor => ({ value: proveedor._id, label: proveedor.nombre }));
+    filteredSedeOptions.value = proveedorOptions.value;
   } catch (error) {
-    console.error('Error al obtener los clientes:', error);
+    console.error('Error al obtener los proveedores:', error);
   }
 };
 
@@ -264,15 +261,15 @@ const listarPorFecha = async () => {
   loading.value = true;
   loadingList.value = 'fecha';
   try {
-    const r = await useVentas.getVentasPorFecha(fechaFiltro.value);
-    if (r.data.ventasPorFecha) {
+    const r = await useCompra.getVentasPorFecha(fechaFiltro.value);
+    if (r.data.ComprasPorFecha) {
       rows.value = r.data.createAt
       ;
     } else {
-      console.error('Error: La respuesta no contiene ventasPorFecha');
+      console.error('Error: La respuesta no contiene Compra Por Fecha');
     }
   } catch (error) {
-    console.error('Error al listar ventas por fecha:', error);
+    console.error('Error al listar Compras por fecha:', error);
   } finally {
     loading.value = false;
     loadingList.value = null;
@@ -281,9 +278,9 @@ const listarPorFecha = async () => {
   
   
   onMounted(() => {
-    listarVentas()
+    listarCompras()
     listarSedes()
-    listarClientes()
+    listarProveedores()
     listarProductos()
   })
   
@@ -291,18 +288,18 @@ const listarPorFecha = async () => {
     loading.value = true;
   loadingList.value = 'guardar';
     try {
-      const Venta={
-        idcliente: idcliente.value.value,
+      const Compra={
+        idProveedor: idProveedor.value.value,
           idproducto: idproducto.value.value,
           idsede: idsede.value.value,         
           cantidad: cantidad.value, 
       }
-      if (ventaSeleccionada.value !== null) {
+      if (compraSeleccionada.value !== null) {
         
-       const venta= await useVentas.putVentas(ventaSeleccionada.value._id, Venta);
+       const compra= await useCompra.putCompras(compraSeleccionada.value._id, Compra);
         Notify.create({
         type: 'positive',
-        message: 'Venta editada exitosamente',
+        message: 'Compra editada exitosamente',
         classes: 'customNotify',
         icon: 'check',
         position: 'top',
@@ -312,10 +309,10 @@ const listarPorFecha = async () => {
       } else {
         
   
-     const venta=   await useVentas.postVentas(Venta);
+     const compra=   await useCompra.postCompras(Compra);
         Notify.create({
         type: 'positive',
-        message: 'Venta editada exitosamente',
+        message: 'Compra creada exitosamente',
         classes: 'customNotify',
         icon: 'check',
         position: 'top',
@@ -324,10 +321,10 @@ const listarPorFecha = async () => {
       });
       }
   
-      listarVentas();
+      listarCompras();
       cerrarFormulario();
       limpiar();
-      ventaSeleccionada.value = null;
+      compraSeleccionada.value = null;
     } catch (error) {
       console.error('Error al procesar el formulario:', error);
     }finally {
@@ -338,35 +335,35 @@ const listarPorFecha = async () => {
   
   
   
-  function editar(venta) {
+  function editar(compra) {
     
-    ventaSeleccionada.value = venta
-    tituloFormulario.value = 'Editar Venta'
+    compraSeleccionada.value = compra
+    tituloFormulario.value = 'Editar Compra'
    
   
-    idcliente.value = venta.idcliente.nombre;
-    idproducto.value = venta.idproducto.nombre;
-    idsede.value = venta.idsede.nombre;
-    cantidad.value = venta.cantidad;
+    idProveedor.value = compra.idProveedor.nombre;
+    idproducto.value = compra.idproducto.nombre;
+    idsede.value = compra.idsede.nombre;
+    cantidad.value = compra.cantidad;
     verFormulario.value = (true)
    
   
   }
   
-  async function agregarVenta() {
+  async function agregarCompra() {
   loading.value = true;
   loadingList.value = 'agregar';
   try {
-    ventaSeleccionada.value = null
+    compraSeleccionada.value = null
     verFormulario.value = (true)
-    tituloFormulario.value = 'Agregar Venta'
-    idcliente.value=null;
+    tituloFormulario.value = 'Agregar Compra'
+    idProveedor.value=null;
    idproducto.value=null;
   idsede.value=null;         
   cantidad.value=null    
   } 
   catch (error) {
-    console.error('Error al agregar venta:', error); 
+    console.error('Error al agregar compra:', error); 
   } finally {
     loading.value = false;
     loadingList.value = null;
@@ -375,12 +372,12 @@ const listarPorFecha = async () => {
   
   function cerrarFormulario() {
     verFormulario.value = (false)
-    ventaSeleccionada.value = null;
+    compraSeleccionada.value = null;
     limpiar()
   }
   function limpiar() {
     
-    idcliente.value = ("")
+    idproveedor.value = ("")
     idproducto.value = ("")
     idsede.value = ("")
     

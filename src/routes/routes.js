@@ -17,6 +17,8 @@ import Maquinas from '../components/maquinas.vue';
 import Pagos from '../components/pagos.vue';
 import Planes from '../components/planes.vue';
 import Ventas from '../components/ventas.vue';
+import Proveedor from '../components/proveedores.vue';
+import Compras from '../components/compras.vue';
 import Home from '../components/home.vue'; 
 import ResetPassword from "../components/ResetPassword.vue";
 
@@ -56,7 +58,9 @@ const routes = [
       { path: '/maquinas', name: 'maquinas', component: Maquinas, beforeEnter: auth, meta: { rol: ['Administrador','Instructor'] } },
       { path: '/pagos', name: 'pagos', component: Pagos, beforeEnter: auth, meta: { rol: ['Administrador'] } },
       { path: '/planes', name: 'planes', component: Planes, beforeEnter: auth, meta: { rol: ['Administrador', 'Recepcion'] } },
-      { path: '/ventas', name: 'ventas', component: Ventas, beforeEnter: auth, meta: { rol: ['Administrador', 'Recepcion'] } }
+      { path: '/ventas', name: 'ventas', component: Ventas, beforeEnter: auth, meta: { rol: ['Administrador', 'Recepcion'] } },
+      { path: "/proveedor",name: 'proveedor', component: Proveedor, beforeEnter: auth, meta: { rol: ['Administrador', 'Recepcion'] } },
+      { path: '/compras', name: 'compras', component: Compras, beforeEnter: auth, meta: { rol: ['Administrador', 'Recepcion'] } }
     ]
   }
 ];
