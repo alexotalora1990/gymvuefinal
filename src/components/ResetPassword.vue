@@ -65,6 +65,8 @@
       const token = route.query.reset;
       const response = await useReset.postResetPassword(newPassword.value, token);
       const message = response?.data?.msg || 'Contraseña actualizada con éxito';
+      console.log(response);
+      
       $q.notify({
         message: message,
         color: 'green',

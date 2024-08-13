@@ -116,10 +116,10 @@ export const useProductsStore = defineStore("productos", ()=>{
         try {
             loading.value=true
             const r = await axios.put(`productos/desactivar/${id}/`,null,{
-                headers:{
-                    "x-token":useUsuarios.token
-                    
-            },});
+            //     headers:{
+            //         "x-token":useUsuarios.token                    
+            // },
+        });
             return r;
         } catch (error) {
             return error;
