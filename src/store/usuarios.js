@@ -118,6 +118,8 @@ export const useUsuariosStore = defineStore('usuarios', () => {
             
             const response= await axios.post('usuarios/resetPassword', {token,newPassword});
             return response;
+            console.log(response);
+            
         } catch (error) {
             
             return error;

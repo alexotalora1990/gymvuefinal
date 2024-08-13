@@ -46,9 +46,12 @@ export const useClientesStore = defineStore("clientes", ()=>{
     };
 
     const postClientes = async(cliente)=>{
+        console.log(cliente);
         try {
            
             const r = await axios.post("clientes", cliente)
+           
+            
             return r
         } catch (error) {
             throw error

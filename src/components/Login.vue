@@ -42,7 +42,7 @@ import { useRouter } from 'vue-router';
 import { useUsuariosStore } from "../store/usuarios.js";
 import { useQuasar, Notify } from 'quasar';
 
-const email = ref('alex@gmail.com');
+const email = ref('alexotalora2024@gmail.com');
 const password = ref('Alex12345$');    
 const showPassword = ref(false);
 
