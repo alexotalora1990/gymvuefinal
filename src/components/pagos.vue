@@ -181,6 +181,9 @@ async function listarpagos()  {
   }
 }
 
+
+
+
 async function listarClientes() {
   try {
     const r = await useClientes.getCliente();
@@ -338,7 +341,7 @@ else{
  
   idcliente.value =pago.idcliente.nombre;
   idplan.value = pago.idplan.descripcion;
-  fechaVencimiento.value=pago.fechaVencimiento;
+  fechaVencimiento.value=formatDates(pago.fechaVencimiento);
   verFormulario.value = (true)
 }
   
@@ -438,6 +441,12 @@ const puntosMil = (num) => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   }
   return '';
+};
+
+const formatDates = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toISOString().substr(0,10);
 };
 </script>
 

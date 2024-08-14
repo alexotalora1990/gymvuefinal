@@ -1,10 +1,9 @@
 <template>
   <div class="q-pa-md">
-  
+
     <div class="flex justify-end">
 
       <q-input filled label="Buscar por nombre"
-        
         style="background-color:#d3d0d0; color: black; width: 30%; border-radius: 5px; margin-right: 1%;"
         v-model="nombreUsuario" @keyup.enter="listarNombre">
         <template v-slot:append>
@@ -14,67 +13,68 @@
 
 
 
-      <q-btn color="green" icon="add" @click="agregarUsuario()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
+      <q-btn color="green" icon="add" @click="abrir()"
+        :loading="loading && loadingList === 'agregar'">agregar</q-btn>
       <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
         <q-list>
-          <q-item clickable v-ripple @click="listar('todos')" :class="{ 'loading-item': loading && loadingList === 'todos' }">
+          <q-item clickable v-ripple @click="listar('todos')"
+            :class="{ 'loading-item': loading && loadingList === 'todos' }">
             <q-item-section>Listar Todos</q-item-section>
             <template v-if="loading && loadingList === 'todos'">
               <q-spinner color="primary" size="2em" />
             </template>
           </q-item>
-          <q-item clickable v-ripple @click="listar('activos')" :class="{ 'loading-item': loading && loadingList === 'activos' }">
+          <q-item clickable v-ripple @click="listar('activos')"
+            :class="{ 'loading-item': loading && loadingList === 'activos' }">
             <q-item-section>Listar Activos</q-item-section>
             <template v-if="loading && loadingList === 'activos'">
               <q-spinner color="primary" size="2em" />
             </template>
           </q-item>
-          <q-item clickable v-ripple @click="listar('inactivos')" :class="{ 'loading-item': loading && loadingList === 'inactivos' }">
+          <q-item clickable v-ripple @click="listar('inactivos')"
+            :class="{ 'loading-item': loading && loadingList === 'inactivos' }">
             <q-item-section>Listar Inactivos</q-item-section>
             <template v-if="loading && loadingList === 'inactivos'">
               <q-spinner color="primary" size="2em" />
             </template>
           </q-item>
         </q-list>
-        
+
       </q-btn-dropdown>
     </div>
 
     <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
       <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
         <div class="q-flex q-justify-between q-items-center form-header">
-          <h5 class="form-title">{{ tituloFormulario }}</h5>
+          <h5 class="form-title">{{ accion == 1 ? "Crear Usuario" : "Editar Usuario" }}</h5>
           <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
         </div>
-        
-        <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
-          <q-input 
-          filled 
-          v-model="nombre"
-           label="Nombre" 
-           :rules="[val => !!val.trim() || 'Nombre no puede estar vacío']"
-            />
-          <q-input
-           filled
-            v-model="password" 
-            label="Contraseña"
-             v-show="verPassword"
-              :rules="[val => !!val.trim() || 'Contraseña no puede estar vacía']" 
-              />
-          <q-input filled v-model="telefono" label="Teléfono" :rules="[val => /^[0-9]+$/.test(val) || 'Teléfono no puede estar vacío y solo recibe números']" />
-          <q-input filled v-model="email" label="Email" :rules="[val => !!val.trim() || 'Email no puede estar vacío']" />
-          <q-select filled v-model="idsede" label="Seleccione una sede" :options="sedeOptions" :rules="[val => !!val || 'Debe seleccionar una sede']" />
-          <q-select filled v-model="roll" label="Rol*" :options="rollOptions" :rules="[val => !!val.trim() || 'Debe seleccionar un rol']" />
+
+        <q-form class="q-gutter-md" @submit.prevent="procesar">
+          <q-input filled v-model="nombre" label="Nombre"
+            :rules="[val => !!val.trim() || 'Nombre no puede estar vacío']" />
+          <q-input filled v-model="password" label="Contraseña" v-if="accion === 1"
+            :rules="[val => !!val.trim() || 'Contraseña no puede estar vacía']" />
+          <q-input filled v-model="telefono" label="Teléfono"
+            :rules="[val => /^[0-9]+$/.test(val) || 'Teléfono no puede estar vacío y solo recibe números']" />
+          <q-input filled v-model="email" label="Email"
+            :rules="[val => !!val.trim() || 'Email no puede estar vacío']" />
+          <q-select filled v-model="idsedes" label="Seleccione una sede" :options="sedeOptions" @filter="filterFn"
+            :rules="[val => !!val || 'Debe seleccionar una sede']" />
+          <q-select filled v-model="roll" label="Rol*" :options="rollOptions"
+            :rules="[val => !!val.trim() || 'Debe seleccionar un rol']" />
           <div class="q-mt-md q-flex q-justify-end">
             <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
-            <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm" :loading="loading && loadingList === 'guardar'" />
+            <q-btn label="Guardar" color="green" type="submit" class="q-mr-sm"
+              :loading="loading && loadingList === 'guardar'" />
           </div>
         </q-form>
+
       </q-page>
     </div>
     <div v-if="loading" class="overlay">
-        <q-spinner-hourglass  color="primary" size="50px"  />
-      </div>
+      <q-spinner-hourglass color="primary" size="50px" />
+    </div>
     <q-table title="Usuarios" :rows="rows" :columns="columns" row-key="nombre" class="table">
       <template v-slot:header="props">
         <q-tr :props="props" style="font-size: 30px;" class="table1">
@@ -90,10 +90,10 @@
       </template>
       <template v-slot:body-cell-opciones="props">
         <q-td :props="props">
-          <q-btn @click="editarUsuario(props.row)">
+          <q-btn @click="traer(props.row)">
             <q-tooltip class="bg-accent">Editar</q-tooltip>🖋️
           </q-btn>
-          
+
           <q-btn :loading="loadingState[props.row._id]" v-if="props.row.estado === 1" @click="desactivar(props.row)">❌
             <q-tooltip class="bg-accent">Desactivar</q-tooltip>
             <template v-slot:loading>
@@ -123,37 +123,44 @@ const tituloFormulario = ref('Agregar Usuario');
 const useUsuarios = useUsuariosStore();
 const useSedes = useSedesStore();
 const verFormulario = ref(false);
-const verPassword = ref(true);
+
 const nombre = ref('');
 const telefono = ref('');
 const email = ref('');
-const idsede = ref(null);
+const idsede = ref('');
+const idsedes=ref('')
 const roll = ref('');
 const password = ref('');
+let id = ref("")
 const rollOptions = ['Administrador', 'Instructor', 'Recepcion'];
 const usuarioSeleccionado = ref(null);
-const sedeOptions = ref([]);
+let datos={}
+let sedes=[]
+const sedeOptions = ref(sedes);
 const rows = ref([]);
+let accion = ref(1);
+const nombreUsuario = ref('')
 
-const nombreUsuario =ref('')
+const loading = ref(false);
+const loadingList = ref(null);
+const loadingState = ref({});
 
-const loading = ref(false); 
-const loadingList = ref(null); 
+// Listar Tabla..............................
 const columns = ref([
   { name: 'nombre', label: 'Nombre Usuario', field: 'nombre', align: 'center' },
   { name: 'roll', label: 'Roll', field: 'roll', align: 'center' },
   { name: 'telefono', label: 'Telefono', field: 'telefono', align: 'center' },
   { name: 'email', label: 'Email', field: 'email', align: 'center' },
-  { name: 'idsede', label: 'Sede', field: (row)=>row.idsede?.nombre, align: 'center' },
+  { name: 'idsede', label: 'Sede', field: (row) => row.idsede?.nombre, align: 'center' },
   { name: 'estado', label: 'Estado', field: 'estado', align: 'center' },
   { name: 'opciones', label: 'Opciones', field: 'opciones', align: 'center' },
 ]);
 
-const loadingState = ref({}); 
+// listar .........................................................
 
-async function listarUsuarios()  {
+async function listarUsuarios() {
   loading.value = true;
-  
+
   try {
     const r = await useUsuarios.getUser();
     rows.value = r.data.Usuario;
@@ -162,38 +169,45 @@ async function listarUsuarios()  {
     console.error('Error al listar todos los usuarios:', error);
   } finally {
     setTimeout(() => {
-        loading.value = false;
-      },1000 );
-   
+      loading.value = false;
+    }, 1000);
+
   }
 }
 
 async function listarSedes() {
-  
-  try {
-    const r = await useSedes.getSede();
-    const sedes=r.sede
-    console.log(sedes);
-    const sedeActiva=sedes.filter(sede=>sede.estado===1).map(sede => ({
-        label: sede.nombre, 
-        value: sede._id 
-      }));
 
-    console.log(sedeActiva);
-    sedeOptions.value=sedeActiva
- 
+  try {
+    const r = await useSedes.getSedesActivas();
+    r.data.sedeActiva.forEach(item=>{
+      datos={
+        label:item.nombre,
+        value:item._id
+      }
+      sedes.push(datos)
+    })
+    
+
+    
+    console.log(sedeOptions);
+    
   } catch (error) {
     console.error('Error al obtener las sedes:', error);
   }
 }
-
+function filterFn(val, update, abort) {
+  update(() => {
+    const needle = val.toLowerCase();
+    sedeOptions.value = sedes.filter(v => v.label.toLowerCase().indexOf(needle) > -1);
+  })
+}
 async function listarUsuariosActivos() {
   loading.value = true;
   loadingList.value = 'activos';
   try {
     const r = await useUsuarios.getUserActivos();
     rows.value = r.data.UsuariosActivos;
-    
+
     Notify.create({
       type: 'positive',
       message: 'Usuarios Activos Listados Correctamente',
@@ -215,30 +229,30 @@ async function listarUsuariosInactivos() {
   loading.value = true;
   loadingList.value = 'inactivos';
   try {
-    
+
     const r = await useUsuarios.getUserInactivos();
     const usuarioActivo = r.data.UsuariosInactivos;
-    if(usuarioActivo.length=== 0){
+    if (usuarioActivo.length === 0) {
       Notify.create({
-      type: 'negative',
-      message: "No hay Usuarios Inactivos"
-    })
+        type: 'negative',
+        message: "No hay Usuarios Inactivos"
+      })
     }
- else{
-  rows.value=usuarioActivo
-  Notify.create({
-      type: 'positive',
-      message: 'Usuarios Inactivos Listados Correctamente',
-      position: 'top'
-    })
- }   
+    else {
+      rows.value = usuarioActivo
+      Notify.create({
+        type: 'positive',
+        message: 'Usuarios Inactivos Listados Correctamente',
+        position: 'top'
+      })
+    }
   } catch (error) {
-    console.error('Error al listar usuarios inactivos:', error); 
-    
- 
+    console.error('Error al listar usuarios inactivos:', error);
+
+
   } finally {
     loading.value = false;
-    loadingList.value = null; 
+    loadingList.value = null;
   }
 }
 
@@ -262,17 +276,17 @@ async function listarNombre() {
     });
     return;
   }
-  
+
   try {
     const r = await useUsuarios.getUser();
     if (!r.data || !r.data.Usuario) {
       throw new Error('No se encontraron usuarios en la respuesta');
     }
-    
+
     const usuarioFiltrado = r.data?.Usuario?.filter(usuario =>
       usuario.nombre && usuario.nombre?.toLowerCase().includes(nombreUsuario.value.toLowerCase())
     );
-    
+
     if (usuarioFiltrado.length === 0) {
       Notify.create({
         type: 'negative',
@@ -297,105 +311,86 @@ onMounted(() => {
   listarSedes();
 });
 
-const procesarFormulario = async () => {
-  loading.value = true;
-  loadingList.value = 'guardar';
- 
-    const sedeSeleccionada = idsede.value.value;
-console.log(sedeSeleccionada);
-  try { 
 
-    const user = {
-      idsede: sedeSeleccionada,
+
+// agregar editar ..........................................
+
+async function agregar() {
+  loading.value = true;
+    loadingList.value = 'agregar';
+    
+  try {
+  
+    const user= await useUsuarios.postUser({
+      idsede:idsedes.value.value,
       nombre: nombre.value,
       telefono: telefono.value,
       email: email.value,
       roll: roll.value,
-      password: usuarioSeleccionado.value === null ? password.value : undefined,
-    };
+      password: password.value
 
-    console.log('Datos enviados:', user);
-
-    if (usuarioSeleccionado.value !== null) {
-      await useUsuarios.putUser(usuarioSeleccionado.value._id, user);
-      Notify.create({ type: 'positive', message: 'Usuario Actualizado Exitosamente', icon: 'check', position: 'top' });
-    } else {
-      await useUsuarios.postUser(user);
-      Notify.create({ type: 'positive', message: 'Usuario Creado Exitosamente', icon: 'check', position: 'top' });
-    }
-    
-    listarUsuarios();
-    cerrarFormulario();
-    limpiar();
-    usuarioSeleccionado.value = null;
-
-  } catch (error)   {
-    console.error('Error al procesar el formulario:', error);
-    if (error.response && error.response.data && error.response.data.errors) {
-      const errores = error.response.data.errors;
-      const emailError = errores.find(e => e.param === 'email');
-      if (emailError) {
-        Notify.create({ type: 'negative', message: emailError.msg, icon: 'error', position: 'top' });
-      } else {
-        Notify.create({ type: 'negative', message: 'Error al guardar, email ya existe', icon: 'error' });
-      }
-    } else {
-      Notify.create({ type: 'negative', message: 'Error al procesar el formulario 2', icon: 'error' });
-    }
-  } 
-  finally {
-    loading.value = false;
-    loadingList.value = null;
-  }
-};
-
-async function agregarUsuario() {
-  loading.value = true;
-  loadingList.value = 'agregar';
-  try {
-    usuarioSeleccionado.value = null;
-    verFormulario.value = true;
-    verPassword.value = true;
-    tituloFormulario.value = 'Agregar Usuario';
-    
-    
-  } 
-  catch (error) {
-    console.error('Error al agregar usuario:', error); 
-  } finally {
-    loading.value = false;
-    loadingList.value = null;
-  }
-}
-
-const  editarUsuario= async (user)=> {
-  
-  if (user.estado !== 1) {   
+    })
     Notify.create({
-      type: 'warning',
-      message: 'Para editar un usuario debe estar activo',
-      classes: 'customNotify',
-      icon: 'warning',
-      position: 'top',
-      timeout: 3000,
-      actions: [{ label: '❌', color: 'black' }],
+      type: "positive",
+      message: "Usuario creado exitosamente",
+      icon: "check_circle",
+      position:"top",
     });
-    return;
+    listarUsuarios()
+    limpiar()
+    verFormulario.value=false
+    return user
+  } catch (error) {
+    console.error("Error al agregar usuario:", error);
+    Notify.create({
+      type: "negative",
+      message: "Error al agregar usuario",
+      icon: "error",
+    });
   }
 
-else{
-console.log(user);
-  verFormulario.value = true;
-  usuarioSeleccionado.value = user;
-  verPassword.value = false;
-  tituloFormulario.value = 'Editar Usuario'; 
-  
-  nombre.value = user.nombre;
-  telefono.value = user.telefono;
-  email.value = user.email;
-  idsede.value =user.idsede.nombre;
-  roll.value = user.roll;
 }
+
+async function traer(user) {
+  verFormulario.value=true
+  accion.value=2;
+  idsedes.value={
+    label:user.idsede.nombre,
+    value:user.idsede._id
+  }
+  id.value=user._id,
+  nombre.value=user.nombre,
+  telefono.value=user.telefono,
+  email.value=user.email,
+  roll.value=user.roll,
+  password.value=user.password
+}
+async function editar() {
+  try {
+    await useUsuarios.putUser(id.value,{
+      idsede:idsedes.value.value,
+      nombre:nombre.value,
+      telefono:telefono.value,
+      email:email.value,
+      roll:roll.value,
+      password:password.value
+    })
+    Notify.create({
+            message: 'Usuario actualizado correctamente!', 
+            position: "top",
+            color: "green"
+        });
+  } catch (error) {
+    Notify.create({
+            type: 'negative',
+            message: error.response?.data?.errors?.[0]?.msg || 'Error al modificar el usuario',
+        });
+        console.log('Error al modificar el usuario', error);  
+    
+  }
+  listarUsuarios()
+    limpiar()
+    verFormulario.value=false
 }
 
 async function activar(id) {
@@ -474,10 +469,23 @@ function limpiar() {
   roll.value = '';
   password.value = '';
 }
+
+function abrir() {
+    verFormulario.value = true;
+    limpiar();
+    accion.value = 1;
+}
+
+function procesar(){
+    if(accion.value===1){
+        agregar()
+    } else{
+        editar()
+    }
+}
 </script>
 
 <style scoped>
-
 .shadow-2 {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
 }
@@ -513,7 +521,7 @@ function limpiar() {
 
 .q-mt-md {
   text-align: right;
- margin: 0;
+  margin: 0;
 
 }
 
@@ -555,6 +563,7 @@ function limpiar() {
 .close-btn {
   color: white;
 }
+
 .overlay {
   position: fixed;
   top: 0;

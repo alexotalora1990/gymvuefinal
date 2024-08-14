@@ -14,7 +14,7 @@
 
 
 
-        <q-btn color="green" icon="add" @click="agregar()"
+        <q-btn color="green" icon="add" @click="abrir()"
           :loading="loading && loadingList === 'agregar'">agregar</q-btn>
 
         <q-btn-dropdown color="primary" icon="visibility" label="Ver" style="margin-left: 16px;">
@@ -50,18 +50,18 @@
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
 
           <div class="q-flex q-justify-between q-items-center form-header">
-            <h5 class="form-title">{{ tituloFormulario }}</h5>
+            <h5 class="form-title">{{ accion == 1 ? "Crear Cliente" : "Editar Cliente"}}</h5>
             <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
 
           </div>
 
 
-          <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
+          <q-form class="q-gutter-md" @submit.prevent="procesar">
             <q-input filled v-model="nombre" label="Nombre" :rules="[
               val => !!val || 'Nombre no puede estar vacío',
               val => /^[a-zA-Z ]+$/.test(val) || 'El nombre solo puede contener letras y espacios',
               val => val.trim().length >= 3 || 'El nombre debe tener al menos 3 caracteres'
-            ]" />
+            ]"  />
 
             <q-input filled v-model="documento" label="Documento" type="number" :rules="[
               val => !!val || 'Documento no puede estar vacío',
@@ -86,7 +86,7 @@
                 val => isOverFourteen(val) || 'Debe ser mayor de 14 años'
               ]" />
 
-            <q-select filled v-model="idPlan" label="Seleccione un plan" :options="planOptions"
+            <q-select filled v-model="idplanes" label="Seleccione un plan" :options="planOptions" @filter="filterFn"
               :rules="[val => !!val || 'Debe seleccionar un plan']" />
 
             <q-input filled v-model="foto" label="Link Foto" type="text"
@@ -119,7 +119,7 @@
             <q-btn flat icon="close" color="white" @click="cerrarFormularioSeguimiento" class="close-btn" />
           </div>
 
-          <q-form class="q-gutter-md" @submit.prevent="procesarSeguimiento(clienteSeleccionado)">
+          <q-form class="q-gutter-md" @submit.prevent="agregarSeguimiento()">
             <q-input filled v-model="fecha" label="Fecha" type="date"
               :rules="[(val) => !!val || 'Fecha no puede estar vacía']" />
             <q-input filled v-model="peso" label="Peso" type="number"
@@ -161,7 +161,7 @@
 
         <template v-slot:body-cell-opciones="props">
           <q-td :props="props">
-            <q-btn @click="editar(props.row)">✍
+            <q-btn @click="traer(props.row)">✍
               <q-tooltip class="bg-accent">Editar</q-tooltip>
             </q-btn>
 
@@ -186,7 +186,7 @@
 
         <template v-slot:body-cell-seguimiento="props">
           <q-td :props="props">
-            <q-btn @click="agregarSeguimiento(props.row)">➕
+            <q-btn @click="agregarSeguimiento(props.row.id,props.row)">➕
               <q-tooltip class="bg-accent">Agregar Seguimiento</q-tooltip>
             </q-btn>
             <q-btn @click="verSeguimiento(props.row)">👁️
@@ -209,11 +209,11 @@
 
        
         <q-table :rows="selectedClienteSeguimiento" :columns="columnsSeguimiento" row-key="fecha" class="table">
-  <template #body-cell-opciones="props">
+          <template v-slot:body-cell-opciones="props">
     <q-td :props="props">
-      <q-btn icon="edit" @click="editarSeguimiento(props.row)" />
+        <q-btn icon="edit" @click="editarSeguimiento(clienteSeleccionado.value, props.row)" />
     </q-td>
-  </template>
+</template>
   <template #body-cell-IMC="props">
     <q-td :props="props" :style="{ backgroundColor: getIMCColor(props.row.IMC).color }">
       {{ props.row.IMC.toFixed(2) }} - {{ getIMCColor(props.row.IMC).description }}
@@ -235,9 +235,9 @@ import { useQuasar, Notify } from 'quasar';
 
 const useClientes = useClientesStore();
 const usePlanes = usePlanesStore()
-
+let id = ref("")
 const verFormulario = ref(false);
-const verFormularioSeguimiento = ref(false);
+
 const clienteSeleccionado = ref(null);
 const tituloFormulario = ref("Agregar Cliente");
 const tituloFormularioSeguimiento = ref("Agregar Seguimiento");
@@ -248,17 +248,17 @@ const direccion = ref('');
 const telefono = ref('');
 const fechaNacimiento = ref('');
 const idPlan = ref('');
+const idplanes=ref('')
 const foto = ref('');
 const objetivo = ref('');
 const observaciones = ref('');
-const fechaVencimiento = ref('');
+
 
 const nombreCliente = ref('')
-
-const planOptions = ref([])
-
-const isEditing = ref(false);
-const seguimientoSeleccionado = ref(null);
+let datos={}
+let planes =[]
+const planOptions = ref(planes)
+let accion = ref(1);
 
 const fecha = ref('');
 const peso = ref('');
@@ -267,10 +267,17 @@ const tPierna = ref('');
 const tCintura = ref('');
 const estatura = ref('');
 
-const rowsSeguimiento = ref([])
+
 const rows = ref([]);
+
+
+const verFormularioSeguimiento = ref(false);
 const selectedClienteSeguimiento = ref([]);
 const clienteSeleccionado1 = ref(null);
+const rowsSeguimiento = ref([])
+const isEditing = ref(false);
+const seguimientoSeleccionado = ref(null);
+
 
 const loading = ref(false);
 const loadingList = ref(null);
@@ -305,7 +312,7 @@ const isOverFourteen = (val) => {
   const monthDiff = today.getMonth() - birthDate.getMonth();
 
   if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-    age--;
+    age;
   }
 
   return age >= 14;
@@ -318,7 +325,7 @@ const columns = ref([
   { name: "telefono", label: "Teléfono", field: "telefono", align: "center" },
   { name: "fechaNacimiento", label: "Fecha Nacimiento", field: "fechaNacimiento", align: "center" },
   { name: "estado", label: "Estado", field: "estado", align: "center" },
-  { name: "plan", label: "Tipo de Plan", field: "plan", align: "center" },
+  { name: "idPlan", label: "Tipo de Plan", field:(row)=>row.idPlan?.descripcion, align: "center" },
 
   { name: "objetivo", label: "Objetivo", field: "objetivo", align: "center" },
   { name: "observaciones", label: "Observaciones", field: "observaciones", align: "center" },
@@ -388,22 +395,29 @@ async function listarClientes() {
 
 async function listarPlanes() {
   try {
-    const r = await usePlanes.getPlanes();
-    if (r && r.data.plan) {
-      planOptions.value = r.data.plan.map(idplan => ({
-        label: idplan.descripcion,
-        value: idplan._id
-      }));
-      console.log(planOptions.value); // Mostrar contenido real del array
-    } else {
-      console.error("Estructura de respuesta inesperada:", r.data.plan);
-    }
+    const r = await usePlanes.getPlanesActivos();
+    r.data.planActivo.forEach(item => {
+      datos={
+        label:item.descripcion,
+        value:item._id
+      }
+      planes.push(datos)
+    });
+    console.log(planes);  
+    
+
+
   } catch (error) {
     console.error("Error al obtener los planes:", error);
   }
 }
 
-
+function filterFn(val, update, abort) {
+  update(() => {
+    const needle = val.toLowerCase();
+    planOptions.value = planes.filter(v => v.label.toLowerCase().indexOf(needle) > -1);
+  })
+}
 
 
 
@@ -471,7 +485,7 @@ async function listarNombre() {
 
     if (clienteFiltrado.length === 0) {
       Notify.create({
-        type: 'negative',
+        type: 'negative', 
         message: 'Cliente no existe'
       });
     } else {
@@ -496,107 +510,114 @@ onMounted(() => {
 
 });
 
-const procesarFormulario = async (option) => {
-  loading.value = true;
-  loadingList.value = 'guardar';
-  try {
-    console.log(idPlan.value);
-    const idplanseleccionado = idPlan.value
-
-    if (clienteSeleccionado.value !== null) {
-      await useClientes.putClientes(clienteSeleccionado.value._id, {
-        nombre: nombre.value,
-        documento: documento.value,
-        email: email.value,
-        direccion: direccion.value,
-        telefono: telefono.value,
-        fechaNacimiento: fechaNacimiento.value,
-        idPlan: idplanseleccionado.value,
-        foto: foto.value,
-        objetivo: objetivo.value,
-        observaciones: observaciones.value,
-        fechaVencimiento: fechaVencimiento.value,
-      });
-      Notify.create({
-        type: 'positive',
-        message: 'cliente editado exitosamente',
-        classes: 'customNotify',
-        icon: 'check',
-        position: 'top',
-        timeout: 3000,
-        actions: [{ label: '❌', color: 'black' }]
-      });
-    } else {
-      await useClientes.postClientes({
-        nombre: nombre.value,
-        documento: documento.value,
-        email: email.value,
-        direccion: direccion.value,
-        telefono: telefono.value,
-        fechaNacimiento: fechaNacimiento.value,
-        idPlan: idplanseleccionado.value,
-        foto: foto.value,
-        objetivo: objetivo.value,
-        observaciones: observaciones.value,
-        fechaVencimiento: fechaVencimiento.value,
-      });
-      Notify.create({
-        type: 'positive',
-        message: 'cliente agregado exitosamente',
-        classes: 'customNotify',
-        icon: 'check',
-        position: 'top',
-        timeout: 3000,
-        actions: [{ label: '❌', color: 'black' }]
-      });
-    }
-
-    listarClientes();
-    cerrarFormulario();
-    limpiar();
-  } catch (error) {
-    console.error("Error al procesar el formulario:", error);
-  } finally {
-    loading.value = false;
-    loadingList.value = null;
-  }
-};
-
-async function editar(cliente) {
-  clienteSeleccionado.value = cliente;
-  tituloFormulario.value = "Editar Cliente";
-
-  nombre.value = cliente.nombre;
-  documento.value = cliente.documento;
-  email.value = cliente.email;
-  direccion.value = cliente.direccion;
-  telefono.value = cliente.telefono;
-  fechaNacimiento.value = cliente.fechaNacimiento;
-  idPlan.value = cliente.idPlan;
-  foto.value = cliente.foto;
-  objetivo.value = cliente.objetivo;
-  observaciones.value = cliente.observaciones;
-  fechaVencimiento.value = cliente.fechaVencimiento;
-
-  verFormulario.value = true;
-}
-
 async function agregar() {
   loading.value = true;
-  loadingList.value = 'agregar';
-  try {
-    clienteSeleccionado.value = null;
-    verFormulario.value = true;
-    tituloFormulario.value = "Agregar Cliente";
+    loadingList.value = 'agregar';
+    try {
+      
+const cliente =await useClientes.postClientes({
+  idPlan:idplanes.value.value,
+  nombre:nombre.value,
+  documento:documento.value,
+  email:email.value,
+  direccion:direccion.value,
+  telefono:telefono.value,
+  fechaNacimiento:fechaNacimiento.value,
+  foto:foto.value,
+  objetivo:objetivo.value,
+  observaciones:observaciones.value,
+  
+})
 
-  }
-  catch (error) {
-    console.error('Error al agregar cliente:', error);
-  } finally {
-    loading.value = false;
-    loadingList.value = null;
-  }
+Notify.create({
+      type: "positive",
+      message: "Cliente creado exitosamente",
+      icon: "check_circle",
+      position:"top",
+    });
+        
+listar()
+limpiar()
+verFormulario.value= false
+return cliente
+
+  } catch (error) {
+      console.error("Error al agregar cliente:", error);
+    Notify.create({
+      type: "negative",
+      message: "Error al agregar cliente",
+      icon: "error",
+    }); 
+    }
 }
+
+async function traer(cliente) {
+  verFormulario.value=true;
+  accion.value=2;
+  idplanes.value={
+    label:cliente.idPlan.descripcion,
+    value:cliente.idPlan_id
+  }
+  id.value=cliente._id,
+  nombre.value=cliente.nombre,
+  telefono.value=cliente.telefono,
+  email.value=cliente.email,
+  documento.value=cliente.documento,
+  direccion.value=cliente.direccion,
+  fechaNacimiento.value=cliente.fechaNacimiento,
+ 
+  foto.value=cliente.foto,
+  observaciones.value=cliente.observaciones,
+  objetivo.value=cliente.objetivo
+  
+}
+
+async function editar() {
+  try {
+    await useClientes.putClientes(id.value,{
+      idPlan:idplanes.value.value,
+      nombre:nombre.value,
+  telefono:telefono.value,
+  email:email.value,
+  documento:documento.value,
+ direccion: direccion.value,
+ fechaNacimiento: fechaNacimiento.value,
+ 
+  observaciones:observaciones.value,
+  objetivo:objetivo.value
+  });
+  Notify.create({
+            message: 'Cliente actualizado correctamente!', 
+            position: "top",
+            color: "green"
+        });
+ } catch (error) {
+  Notify.create({
+            type: 'negative',
+            message: error.response?.data?.errors?.[0]?.msg || 'Error al modificar el cliente',
+        });
+        console.log('Error al modificar el cliente', error);  
+  }
+  listarClientes()
+  limpiar(
+    verFormulario.value=false
+  )
+}
+function abrir() {
+    verFormulario.value = true;
+    limpiar();
+    accion.value = 1;
+}
+
+function procesar(){
+    if(accion.value===1){
+        agregar()
+    } else{
+        editar()
+    }
+}
+
+
 
 
 async function activar(id) {
@@ -665,151 +686,178 @@ function limpiar() {
   foto.value = "";
   objetivo.value = "";
   observaciones.value = "";
-  fechaVencimiento.value = "";
+ 
 }
+
+
+
+
 
 
 // seguimiento
-function cerrarFormularioSeguimiento() {
-  verFormularioSeguimiento.value = false;
+function verSeguimiento(cliente) {
+    clienteSeleccionado.value = cliente;
+    selectedClienteSeguimiento.value = cliente.seguimiento.map(seg => ({
+        ...seg,
+        fecha: formatDate(seg.fecha),
+        createAt: formatDate(seg.createAt),
+    }));
 }
 
+// function editarSeguimiento(cliente, seguimiento) {
+   
+//     try {
+//         if (!cliente || !seguimiento) {
+//             throw new Error('Datos inválidos para editar el seguimiento');
+//         }
+
+//         clienteSeleccionado.value = cliente;
+//         seguimientoSeleccionado.value = seguimiento;
+
+//         tituloFormularioSeguimiento.value = `Editar Seguimiento para ${cliente.nombre}`;
+//         verFormularioSeguimiento.value = true;
+//         isEditing.value = true;
+
+//         fecha.value = seguimiento.fecha || '';
+//         peso.value = seguimiento.peso || '';
+//         tBrazo.value = seguimiento.tBrazo || '';
+//         tPierna.value = seguimiento.tPierna || '';
+//         tCintura.value = seguimiento.tCintura || '';
+//         estatura.value = seguimiento.estatura || '';
+//     } catch (error) {
+//         console.error('Error al editar seguimiento:', error);
+//         Notify.create({
+//             type: 'negative',
+//             message: error.message,
+//             icon: 'error',
+//         });
+//     }
+// }
 
 
-async function procesarSeguimiento() {
-  if (!clienteSeleccionado.value) {
+// // Al guardar el seguimiento
+// async function procesarSeguimiento() {
+//     if (!clienteSeleccionado.value) {
+//         Notify.create({
+//             type: 'negative',
+//             message: 'No se ha seleccionado un cliente',
+//             icon: 'error',
+//         });
+//         return;
+//     }
+
+//     const seguimiento = {
+//         fecha: fecha.value,
+//         peso: peso.value,
+//         tBrazo: tBrazo.value,
+//         tPierna: tPierna.value,
+//         tCintura: tCintura.value,
+//         estatura: estatura.value,
+//     };
+
+//     try {
+//         let response;
+//         if (isEditing.value && seguimientoSeleccionado.value) {
+//             response = await putSeguimiento(clienteSeleccionado.value._id, seguimientoSeleccionado.value._id, seguimiento);
+//             Notify.create({
+//                 type: 'positive',
+//                 message: 'Seguimiento editado exitosamente',
+//                 icon: 'check_circle',
+//             });
+//         } else {
+//             response = await postSeguimiento(clienteSeleccionado.value._id, seguimiento);
+//             Notify.create({
+//                 type: 'positive',
+//                 message: 'Seguimiento agregado exitosamente',
+//                 icon: 'check_circle',
+//             });
+//             verSeguimiento(clienteSeleccionado.value);
+//         }
+
+//         cerrarFormularioSeguimiento();
+//     } catch (error) {
+//         console.error('Error al procesar seguimiento:', error);
+//         Notify.create({
+//             type: 'negative',
+//             message: 'Error al procesar seguimiento',
+//             icon: 'error',
+//         });
+//     }
+// }
+
+
+
+
+// function agregarSeguimiento(cliente) {
+//   verSeguimiento(cliente)
+//   try {
+//     if (!cliente || !cliente.nombre) {
+//       throw new Error('El cliente seleccionado es inválido');
+//     }
+
+//     clienteSeleccionado.value = cliente;
+//     tituloFormularioSeguimiento.value = `Agregar Seguimiento para ${cliente.nombre}`;
+//     verFormularioSeguimiento.value = true;
+//     isEditing.value = false;
+//     seguimientoSeleccionado.value = null;
+
+//     // Limpiar el formulario
+//     limpiarFormularioSeguimiento();
+//   } catch (error) {
+//     console.error('Error al agregar seguimiento:', error);
+//     Notify.create({
+//       type: 'negative',
+//       message: error.message,
+//       icon: 'error',
+//     });
+//   }
+// }
+
+async function agregarSeguimiento(id,cliente) {
+  
+  console.log('Cliente:', cliente);
+  if (!cliente) {
+    console.error("Cliente es undefined");
     Notify.create({
-      type: 'negative',
-      message: 'No se ha seleccionado un cliente',
-      icon: 'error',
+      type: "negative",
+      message: "No se pudo agregar el seguimiento porque el cliente es inválido",
+      icon: "error",
     });
     return;
   }
-
-  const seguimiento = {
-    fecha: fecha.value,
-    peso: peso.value,
-    tBrazo: tBrazo.value,
-    tPierna: tPierna.value,
-    tCintura: tCintura.value,
-    estatura: estatura.value,
-  };
-
+  
+  clienteSeleccionado1.value = cliente;
+  verFormularioSeguimiento.value = true;
+  tituloFormularioSeguimiento.value = `Agregar Seguimiento para ${cliente.nombre}`;
+  
   try {
-    let response;
-    if (isEditing.value && seguimientoSeleccionado.value) {
-      response = await useClientes.putSeguimiento(seguimiento);
-    } else {
-      response = await useClientes.postSeguimiento(clienteSeleccionado.value._id, seguimiento);
-      Notify.create({
-        type: 'positive',
-        message:  'Seguimiento agregado exitosamente',
-        icon: 'check_circle',
-      });
-      verSeguimiento()
-    }
-
-    console.log(response);  
-
-    if (response && response.seguimiento) {
-      Notify.create({
-        type: 'positive',
-        message: isEditing.value ? 'Seguimiento actualizado exitosamente' : 'Seguimiento agregado exitosamente',
-        icon: 'check_circle',
-      });
-      if (isEditing.value) {
-        const index = clienteSeleccionado.value.seguimiento.findIndex(seg => seg._id === seguimientoSeleccionado.value._id);
-        if (index !== -1) {
-          clienteSeleccionado.value.seguimiento[index] = seguimiento;
-        }
-      } else {
-        clienteSeleccionado.value.seguimiento.push(response.seguimiento);
-      }
-      verSeguimiento(clienteSeleccionado.value);
-    } else {
-      Notify.create({
-        type: 'negative',
-        message: 'Error al procesar el seguimiento',
-        icon: 'error',
-      });
-    }
-
-    cerrarFormularioSeguimiento();
-  } catch (error) {
-    console.error('Error al procesar seguimiento:', error);
-    Notify.create({
-      type: 'negative',
-      message: 'Error al procesar seguimiento',
-      icon: 'error',
+    const seguimiento = await useClientes.postSeguimiento(id, {
+      fecha: fecha.value,
+      peso: peso.value,
+      tBrazo: tBrazo.value,
+      tPierna: tPierna.value,
+      tCintura: tCintura.value,
+      estatura: estatura.value,
     });
-  }
-}
 
-
-function verSeguimiento(cliente) {
-  clienteSeleccionado.value = cliente;
-  selectedClienteSeguimiento.value = cliente.seguimiento.map(seg => ({
-    ...seg,
-    fecha: formatDate(seg.fecha),
-    createAt: formatDate(seg.createAt),
-  }));
-}
-function agregarSeguimiento(cliente) {
-  verSeguimiento(cliente)
-  try {
-    if (!cliente || !cliente.nombre) {
-      throw new Error('El cliente seleccionado es inválido');
-    }
-
-    clienteSeleccionado.value = cliente;
-    tituloFormularioSeguimiento.value = `Agregar Seguimiento para ${cliente.nombre}`;
-    verFormularioSeguimiento.value = true;
-    isEditing.value = false;
-    seguimientoSeleccionado.value = null;
-
-    // Limpiar el formulario
+    Notify.create({
+      type: "positive",
+      message: "Seguimiento agregado exitosamente",
+      icon: "check_circle",
+      position: "top",
+    });
+    verSeguimiento();
     limpiarFormularioSeguimiento();
   } catch (error) {
-    console.error('Error al agregar seguimiento:', error);
+    console.error("Error al agregar seguimiento:", error);
     Notify.create({
-      type: 'negative',
-      message: error.message,
-      icon: 'error',
+      type: "negative",
+      message: "Error al agregar seguimiento",
+      icon: "error",
     });
   }
 }
 
-function editarSeguimiento(seguimiento) {
-
-  // console.log(cliente);
-  console.log(seguimiento);
-  try {
-    // if (!cliente || !cliente.nombre || !seguimiento) {
-    //   throw new Error('Datos inválidos para editar el seguimiento');
-    // }
-
-    clienteSeleccionado.value = seguimiento;
-    seguimientoSeleccionado.value = seguimiento;
-    tituloFormularioSeguimiento.value = `Editar Seguimiento para `;
-    verFormularioSeguimiento.value = true;
-    isEditing.value = true;
-
-   
-    fecha.value = seguimiento.fecha;
-    peso.value = seguimiento.peso;
-    tBrazo.value = seguimiento.tBrazo;
-    tPierna.value = seguimiento.tPierna;
-    tCintura.value = seguimiento.tCintura;
-    estatura.value = seguimiento.estatura;
-  } catch (error) {
-    console.error('Error al editar seguimiento:', error);
-    Notify.create({
-      type: 'negative',
-      message: error.message,
-      icon: 'error',
-    });
-  }
-}
 
 function limpiarFormularioSeguimiento() {
   fecha.value = '';
@@ -824,6 +872,9 @@ function limpiarFormularioSeguimiento() {
 
 function cerrarSeguimiento() {
   clienteSeleccionado.value = false
+}
+function cerrarFormularioSeguimiento() {
+  verFormularioSeguimiento.value = false;
 }
 
 

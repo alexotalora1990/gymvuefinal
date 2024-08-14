@@ -46,14 +46,15 @@ export const useClientesStore = defineStore("clientes", ()=>{
     };
 
     const postClientes = async(cliente)=>{
+        console.log(cliente);
         try {
-            loading.value=true
+           
             const r = await axios.post("clientes", cliente)
+           
+            
             return r
         } catch (error) {
-            return error
-        }finally{
-            loading.value=false
+            throw error
         }
     };
 
@@ -67,17 +68,10 @@ export const useClientesStore = defineStore("clientes", ()=>{
             return error;
         }
     };
-    // const putSeguimiento = async (seguimiento)=>{
-    //     try {
-    //         const r= await axios.put(`seguimiento/`,seguimiento)
-    //         return r
-    //     } catch (error) {
-    //         return error
-    //     }
-
-
-    // };
+  
     const putSeguimiento= async(clienteId, seguimientoId, seguimiento)=> {
+        
+        
         try {
           const response = await axios.put(`clientes/${clienteId}/seguimiento/${seguimientoId}`, seguimiento);
           return response.data;
