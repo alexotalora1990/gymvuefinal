@@ -13,18 +13,14 @@ export const useCompraStore = defineStore("compras", ()=>{
             return error
         }
     };
-
-    const getComprasPorFecha = async (fecha) => {
-        try {
-          const res = await axios.get('/compras/porFecha?fecha=${fecha}');
-          return res;
-        } catch (error) {
-          return error;
-        }
-      };
+ 
+   
     const postCompras=async(compra)=>{
+        console.log(compra);
 try {
     const r=await axios.post("compras", compra)
+    console.log(compra);
+        
     return r
 } catch (error) {
     return error
@@ -42,5 +38,5 @@ try {
         }
             };
 
-    return{ getCompras, postCompras, putCompras, getComprasPorFecha}
+    return{ getCompras, postCompras, putCompras}
 })

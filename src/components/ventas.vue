@@ -52,18 +52,18 @@
             <div>
               <q-select filled v-model="idcliente" label="Seleccione un cliente" :options="clienteOptions"
                 :rules="[val => !!val || 'Debe seleccionar un cliente']" use-input input-debounce="300"
-                @filter="filterClienteOptions" />
+                @filter="filterCliente" />
 
             </div>
             <div>
               <q-select filled v-model="idproducto" label="Seleccione un producto" :options="productoOptions"
                 :rules="[val => !!val || 'Debe seleccionar un Producto']" use-input input-debounce="300"
-                @filter="filterProductoOptions" />
+                @filter="filterProducto" />
             </div>
             <div>
               <q-select filled v-model="idsede" label="Seleccione una sede" :options="sedeOptions"
                 :rules="[val => !!val || 'Debe seleccionar una sede']" use-input input-debounce="300"
-                @filter="filterSedeOptions" />
+                @filter="filterSede" />
             </div>
             <div>
               <q-input v-model="cantidad" label="Cantidad"
@@ -131,13 +131,18 @@ const idcliente = ref()
 const idproducto = ref()
 const idsede = ref()
 const cantidad = ref()
+let datoSedes={}
+let sedes=[]
+const sedeOptions = ref(datoSedes);
+let datoClientes={}
+let clientes=[]
+const clienteOptions = ref(datoClientes)
+let datoProductos
+let productos=[]
+const productoOptions = ref(datoProductos)
 
-const sedeOptions = ref([]);
-const clienteOptions = ref([])
-const productoOptions = ref([])
-const filteredClienteOptions = ref([]);
-const filteredProductoOptions = ref([]);
-const filteredSedeOptions = ref([]);
+
+
 const fechaFiltro = ref('');
 const ventas = ref([]);
 const totalVentas = ref(0);
@@ -173,19 +178,7 @@ const columns = ref([
 
 const loadingState = ref({});
 
-const filterClienteOptions = (val, update) => {
-  if (val === '') {
-    update(() => {
-      filteredClienteOptions.value = clienteOptions.value;
-    });
-    return;
-  }
 
-  const needle = val.toLowerCase();
-  update(() => {
-    filteredClienteOptions.value = clienteOptions.value.filter(v => v.label.toLowerCase().includes(needle));
-  });
-};
 const filterProductoOptions = (val, update) => {
   if (val === '') {
     update(() => {
@@ -200,28 +193,18 @@ const filterProductoOptions = (val, update) => {
   });
 };
 
-const filterSedeOptions = (val, update) => {
-  if (val === '') {
-    update(() => {
-      filteredSedeOptions.value = sedeOptions.value;
-    });
-    return;
-  }
 
-  const needle = val.toLowerCase();
-  update(() => {
-    filteredSedeOptions.value = sedeOptions.value.filter(v => v.label.toLowerCase().includes(needle));
-  });
-};
 
 async function listarVentas() {
 
   loading.value = true;
   loadingList.value = 'todos';
   try {
-    const r = await useCompra.getCompras()
-    // console.log(r.data.Compra);
-    rows.value = r.data.Compra
+    const r = await useVentas.getVentas()
+   
+    rows.value = r.data.Venta
+    console.log(r.data.Venta);
+    
   } catch (error) {
     console.error('Error al listar todos las Compras :', error);
   } finally {
@@ -230,36 +213,98 @@ async function listarVentas() {
   }
 }
 
-const listarSedes = async () => {
-  try {
-    const r = await useSedes.getSede();
-    sedeOptions.value = r.sede.map(sede => ({ label: sede.nombre, value: sede._id }));
-  } catch (error) {
-    console.error('Error al obtener las sedes:', error);
-  }
-};
+async function listarSedes() {
 
-const listarClientes = async () => {
-  try {
-    const r = await useClientes.getCliente();
-    clienteOptions.value = r.data.Cliente.map(cliente => ({ value: cliente._id, label: cliente.nombre }));
-    filteredClienteOptions.value = clienteOptions.value;
-  } catch (error) {
-    console.error('Error al obtener los clientes:', error);
-  }
-};
+try {
+  const r = await useSedes.getSedesActivas();
+  r.data.sedeActiva.forEach(item=>{
+    datoSedes={
+      label:item.nombre,
+      value:item._id
+    }
+    sedes.push(datoSedes)
+  })
+  
+
+  
+  console.log(sedeOptions);
+  
+} catch (error) {
+  console.error('Error al obtener las sedes:', error);
+}
+}
+
+function filterSede(val, update, abort) {
+  update(() => {
+    const needle = val.toLowerCase();
+    sedeOptions.value = sedes.filter(v => v.label.toLowerCase().indexOf(needle) > -1);
+  })
+}
+
+async function listarClientes() {
+
+try {
+  const r = await useClientes.getClientesActivos();
+  console.log();
+  
+  r.data.clientesActivos.forEach(item=>{
+    datoClientes={
+      label:item.nombre,
+      value:item._id
+    }
+    clientes.push(datoClientes)
+  })
+  
+
+  
+  console.log(clienteOptions);
+  
+} catch (error) {
+  console.error('Error al obtener las sedes:', error);
+}
+}
+
+function filterCliente(val, update, abort) {
+  update(() => {
+    const needle = val.toLowerCase();
+    clienteOptions.value = clientes.filter(v => v.label.toLowerCase().indexOf(needle) > -1);
+  })
+}
+
+async function listarProductos() {
+
+try {
+  const r = await useProductos.getProductsActivos();
+  console.log();
+  
+  r.data.productosActivos.forEach(item=>{
+    datoProductos={
+      label:item.nombre,
+      value:item._id
+    }
+    productos.push(datoProductos)
+  })
+  
+
+  
+  console.log(productoOptions);
+  
+} catch (error) {
+  console.error('Error al obtener los productos:', error);
+}
+}
+
+function filterProducto(val, update, abort) {
+  update(() => {
+    const needle = val.toLowerCase();
+    productoOptions.value = productos.filter(v => v.label.toLowerCase().indexOf(needle) > -1);
+  })
+}
 
 
-const listarProductos = async () => {
-  try {
-    const r = await useProductos.getProducts();
 
-    productoOptions.value = r.data.producto.map(producto => ({ value: producto._id, label: producto.nombre }));
-    filteredProductoOptions.value = productoOptions.value;
-  } catch (error) {
-    console.error('Error al obtener los clientes:', error);
-  }
-};
+
+
 
 const listarPorFecha = async () => {
   if (!fechaFiltro.value) {
