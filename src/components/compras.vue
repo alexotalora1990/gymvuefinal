@@ -6,27 +6,23 @@
         <div class="q-pa-md">
       <div class="flex justify-end">
        
-        <q-input filled v-model="fechaFiltro" label="Filtrar por fecha" type="date" style="width: 30%; margin-left: 16px;" @input="listarPorFecha">
-          <template v-slot:append>
-            <q-btn icon="search" @click="listarPorFecha" style="background-color:#ffff;" />
-          </template>
-        </q-input>
-        <q-btn color="green" icon="add" @click="agregarCompra()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
+      
+        <q-btn color="green" icon="add" @click="abrir()" :loading="loading && loadingList === 'agregar'">agregar</q-btn>
       </div>
         <div class="form-container q-pa-md q-mx-auto" v-show="verFormulario">
         <q-page class="form-content q-pa-lg shadow-2 rounded-borders">
   
           <div class="q-flex q-justify-between q-items-center form-header">
-            <h5 class="form-title">{{ tituloFormulario }}</h5>
+            <h5 class="form-title">{{  accion == 1 ? "Crear Usuario" : "Editar Usuario" }}</h5>
             <q-btn flat icon="close" color="white" @click="cerrarFormulario" class="close-btn" />
           </div>
   
-            <q-form class="q-gutter-md" @submit.prevent="procesarFormulario">
+            <q-form class="q-gutter-md" @submit.prevent="procesar">
   
               <div>
                 <q-select
                  filled
-                  v-model="idProveedor"
+                  v-model="idproveedores"
                    label="Seleccione un proveedor"
                     :options="proveedorOptions"
                 :rules="[val => !!val || 'Debe seleccionar un proveedor']" 
@@ -39,30 +35,34 @@
               <div>
                 <q-select 
                 filled 
-                v-model="idproducto" 
+                v-model="idproductos" 
                 label="Seleccione un producto" 
                 :options="productoOptions"
                 :rules="[val => !!val || 'Debe seleccionar un Producto']"
                 use-input
               input-debounce="300"
-              @filter="filterProductoOptions"
+              @filter="filterProducto"
                />
               </div>
               <div>
                 <q-select
                  filled 
-                 v-model="idsede"
+                 v-model="idsedes"
                   label="Seleccione una sede"
                    :options="sedeOptions"
                     :rules="[val => !!val || 'Debe seleccionar una sede']"
                     use-input
               input-debounce="300"
-              @filter="filterSedeOptions"
+              @filter="filterSede"
                />
               </div>
               <div>
-                <q-input v-model="cantidad" label="Cantidad"
+                <q-input v-model="cantidad" label="Cantidad" type="number"
                   :rules="[val => /^[0-9]+$/.test(val) || 'La cantidad no puede estar vacio y solo recibe numeros']" />
+              </div>
+              <div>
+                <q-input v-model="valorUnidad" label="Valor Unidad" type="number"
+                  :rules="[val => /^[0-9]+$/.test(val) || 'valor unidadno puede estar vacio y solo recibe numeros']" />
               </div>
               <div class="q-mt-md q-flex q-justify-end">
                 <q-btn label="Cerrar" color="grey" outline class="q-mr-sm" @click="cerrarFormulario()" />
@@ -78,7 +78,7 @@
       </div>
 
 
-        <q-table title="Ventas" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
+        <q-table title="Compras" title-class="table-title" :rows="rows" :columns="columns" row-key="_id" class="table">
 
         
 <template v-slot:header="props">
@@ -88,7 +88,7 @@
 </template>
           <template v-slot:body-cell-opciones="props">
             <q-td :props="props">
-              <q-btn @click="editar(props.row)">
+              <q-btn @click="traer(props.row)">
                 <q-tooltip class="bg-accent">Editar</q-tooltip>🖋️
               </q-btn>
             </q-td>
@@ -120,22 +120,32 @@
   const useSedes = useSedesStore();
   const useProveedor = useProveedorStore();
   const useProductos = useProductsStore();
-  const idProveedor = ref()
+  const idproveedor = ref()
+  const idproveedores=ref()
   const idproducto = ref ()
+  const idproductos =ref()
   const idsede = ref()
+  const idsedes = ref()
   const cantidad = ref()
+  const valorUnidad =ref()
+  let id = ref("")
+  let datoSedes={}
+let sedes=[]
+const sedeOptions = ref([datoSedes]);
+let datoProductos={}
+  let productos = []
+
   
-  const sedeOptions = ref([]);
   const proveedorOptions = ref([])
-  const productoOptions = ref([])
+  const productoOptions = ref([datoProductos])
   const filteredProveedorOptions = ref([]);
-  const filteredProductoOptions = ref([]);
-  const filteredSedeOptions = ref([]);
-  const fechaFiltro = ref('');
+ 
+ 
   
   const rows = ref([])
   const loading = ref(false); 
   const loadingList = ref(null); 
+  const accion =ref(1)
 
   const columns = ref([
     { name: "idProveedor", label: "Proveedor",
@@ -174,33 +184,9 @@
     filteredSedeOptions.value = clienteOptions.value.filter(v => v.label.toLowerCase().includes(needle));
   });
 };
-const filterProductoOptions = (val, update) => {
-  if (val === '') {
-    update(() => {
-      filteredProductoOptions.value = productoOptions.value;
-    });
-    return;
-  }
-  
-  const needle = val.toLowerCase();
-  update(() => {
-    filteredProductoOptions.value = productoOptions.value.filter(v => v.label.toLowerCase().includes(needle));
-  });
-};
 
-const filterSedeOptions = (val, update) => {
-  if (val === '') {
-    update(() => {
-      filteredSedeOptions.value = sedeOptions.value;
-    });
-    return;
-  }
-  
-  const needle = val.toLowerCase();
-  update(() => {
-    filteredSedeOptions.value = sedeOptions.value.filter(v => v.label.toLowerCase().includes(needle));
-  });
-};
+
+
 
   async function listarCompras()  {
   loading.value = true;
@@ -217,65 +203,61 @@ const filterSedeOptions = (val, update) => {
   }
 }
 
-const listarSedes = async () => {
-  try {
-    const r = await useSedes.getSede();
-    sedeOptions.value = r.sede.map(sede => ({ label: sede.nombre, value: sede._id }));
-  } catch (error) {
-    console.error('Error al obtener las sedes:', error);
-  }
-};
+async function listarSedes() {
+try {
+  const r = await useSedes.getSedesActivas();
+  r.data.sedeActiva.forEach(item=>{
+    datoSedes={
+      label:item.nombre,
+      value:item._id
+    }
+    sedes.push(datoSedes)
+  })  
+  console.log(sedeOptions);  
+} catch (error) {
+  console.error('Error al obtener las sedes:', error);
+}
+}
+function filterSede(val, update, abort) {
+  update(() => {
+    const needle = val.toLowerCase();
+    sedeOptions.value = sedes.filter(v => v.label.toLowerCase().indexOf(needle) > -1);
+  })
+}
 
 const listarProveedores = async () => {
   try {
     const r = await useProveedor.getProveedor();
-    proveedorOptions.value = r.data.Proveedor.map(proveedor => ({ value: proveedor._id, label: proveedor.nombre }));
-    filteredSedeOptions.value = proveedorOptions.value;
+console.log(r.data.proveedor);
+
+    proveedorOptions.value = r.data.proveedor.map(proveedor => ({ value: proveedor._id, label: proveedor.nombre }));
+    filterProveedorOptions.value = proveedorOptions.value;
   } catch (error) {
     console.error('Error al obtener los proveedores:', error);
   }
 };
 
-
-const listarProductos = async () => {
-  try {
-    const r = await useProductos.getProducts();
-    console.log(r.data._id
-    );
-    productoOptions.value = r.data.producto.map(producto => ({ value: producto._id, label: producto.nombre }));
-    filteredProductoOptions.value = productoOptions.value;
-  } catch (error) {
-    console.error('Error al obtener los clientes:', error);
-  }
-};
-
-const listarPorFecha = async () => {
-  if (!fechaFiltro.value) {
-    $q.notify({
-      type: 'negative',
-      message: 'Seleccione una fecha para filtrar'
-    });
-    return;
-  }
-
-  loading.value = true;
-  loadingList.value = 'fecha';
-  try {
-    const r = await useCompra.getVentasPorFecha(fechaFiltro.value);
-    if (r.data.ComprasPorFecha) {
-      rows.value = r.data.createAt
-      ;
-    } else {
-      console.error('Error: La respuesta no contiene Compra Por Fecha');
+async function listarProductos() {
+try {
+  const r = await useProductos.getProductsActivos();
+  r.data.productosActivos.forEach(item=>{
+    datoProductos={
+      label:item.nombre,
+      value:item._id
     }
-  } catch (error) {
-    console.error('Error al listar Compras por fecha:', error);
-  } finally {
-    loading.value = false;
-    loadingList.value = null;
-  }
-};
-  
+    productos.push(datoProductos)
+  })  
+  console.log(productoOptions);  
+} catch (error) {
+  console.error('Error al obtener los Productos:', error);
+}
+}
+function filterProducto(val, update, abort) {
+  update(() => {
+    const needle = val.toLowerCase();
+    productoOptions.value = productos.filter(v => v.label.toLowerCase().indexOf(needle) > -1);
+  })
+}
   
   onMounted(() => {
     listarCompras()
@@ -284,92 +266,107 @@ const listarPorFecha = async () => {
     listarProductos()
   })
   
-  const procesarFormulario = async () => {
-    loading.value = true;
-  loadingList.value = 'guardar';
-    try {
-      const Compra={
-        idProveedor: idProveedor.value.value,
-          idproducto: idproducto.value.value,
-          idsede: idsede.value.value,         
-          cantidad: cantidad.value, 
-      }
-      if (compraSeleccionada.value !== null) {
-        
-       const compra= await useCompra.putCompras(compraSeleccionada.value._id, Compra);
-        Notify.create({
-        type: 'positive',
-        message: 'Compra editada exitosamente',
-        classes: 'customNotify',
-        icon: 'check',
-        position: 'top',
-        timeout: 3000,
-        actions: [{ label: '❌', color: 'black' }]
-      });
-      } else {
-        
-  
-     const compra=   await useCompra.postCompras(Compra);
-        Notify.create({
-        type: 'positive',
-        message: 'Compra creada exitosamente',
-        classes: 'customNotify',
-        icon: 'check',
-        position: 'top',
-        timeout: 3000,
-        actions: [{ label: '❌', color: 'black' }]
-      });
-      }
-  
-      listarCompras();
-      cerrarFormulario();
-      limpiar();
-      compraSeleccionada.value = null;
-    } catch (error) {
-      console.error('Error al procesar el formulario:', error);
-    }finally {
-    loading.value = false;
-    loadingList.value = null;
-  }
-  };
-  
-  
-  
-  function editar(compra) {
-    
-    compraSeleccionada.value = compra
-    tituloFormulario.value = 'Editar Compra'
-   
-  
-    idProveedor.value = compra.idProveedor.nombre;
-    idproducto.value = compra.idproducto.nombre;
-    idsede.value = compra.idsede.nombre;
-    cantidad.value = compra.cantidad;
-    verFormulario.value = (true)
-   
-  
-  }
-  
-  async function agregarCompra() {
+//  agregar y editar 
+async function agregar() {
   loading.value = true;
-  loadingList.value = 'agregar';
+    loadingList.value = 'agregar';
+    
   try {
-    compraSeleccionada.value = null
-    verFormulario.value = (true)
-    tituloFormulario.value = 'Agregar Compra'
-    idProveedor.value=null;
-   idproducto.value=null;
-  idsede.value=null;         
-  cantidad.value=null    
-  } 
-  catch (error) {
-    console.error('Error al agregar compra:', error); 
-  } finally {
-    loading.value = false;
-    loadingList.value = null;
-  }
-}
   
+    const user= await useCompra.postCompras({
+      idsede:idsedes.value.value,
+      idproducto:idproductos.value.value,
+      idproveedor:idproveedores.value.value,
+      cantidad:parseInt(cantidad.value),
+      valorUnidad:parseFloat(valorUnidad.value)
+
+    })
+    Notify.create({
+      type: "positive",
+      message: "Compra creado exitosamente",
+      icon: "check_circle",
+      position:"top",
+    });
+    listarCompras()
+    limpiar()
+    verFormulario.value=false
+    return user
+  } catch (error) {
+    console.error("Error al agregar COMPRA:", error);
+    Notify.create({
+      type: "negative",
+      message: "Error al agregar COMPRA",
+      icon: "error",
+    });
+  }
+
+}
+
+
+async function traer(compra) {
+  verFormulario.value=true
+  accion.value=2;
+  idsedes.value={
+    label:compra.idsede.nombre,
+    value:compra.idsede._id
+  }
+  idproveedores.value={
+    label:compra.idproveedor.nombre,
+    value:compra.idproveedor._id,
+      }
+
+      idproductos.value={
+    label:compra.idproducto.nombre,
+    value:compra.idproducto._id,
+      }
+  id.value=compra._id,
+  idsede.value=compra.idsede,
+  idproveedor.value=compra.idproveedor,
+  idproducto.value=compra.idproducto,
+  cantidad.value=compra.cantidad
+  valorUnidad.value=compra.valorUnidad
+    }
+    
+    
+async function editar() {
+  try {
+    await useCompra.putCompras(id.value,{
+      idsede:idsedes.value.value,
+      idproducto:idproductos.value.value,
+      idproveedor:idproveedores.value.value,
+     cantidad:cantidad.value,
+     valorUnidad:valorUnidad.value  })
+    Notify.create({
+            message: 'compra actualizado correctamente!', 
+            position: "top",
+            color: "green"
+        });
+  } catch (error) {
+    Notify.create({
+            type: 'negative',
+            message: error.response?.data?.errors?.[0]?.msg || 'Error al modificar la compra',
+        });
+        console.log('Error al modificar la compra', error);  
+    
+  }
+  listarCompras()
+    limpiar()
+    verFormulario.value=false
+}
+
+
+function abrir() {
+    verFormulario.value = true;
+    limpiar();
+    accion.value = 1;
+}
+function procesar(){
+    if(accion.value===1){
+        agregar()
+    } else{
+        editar()
+    }
+}
   function cerrarFormulario() {
     verFormulario.value = (false)
     compraSeleccionada.value = null;
@@ -380,7 +377,7 @@ const listarPorFecha = async () => {
     idproveedor.value = ("")
     idproducto.value = ("")
     idsede.value = ("")
-    
+    valorUnidad.value=("")
     cantidad.value = ("")
     
 

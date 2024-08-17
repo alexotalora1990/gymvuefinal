@@ -195,12 +195,14 @@ async function listarSedes() {
     console.error('Error al obtener las sedes:', error);
   }
 }
+
 function filterFn(val, update, abort) {
   update(() => {
     const needle = val.toLowerCase();
     sedeOptions.value = sedes.filter(v => v.label.toLowerCase().indexOf(needle) > -1);
   })
 }
+
 async function listarUsuariosActivos() {
   loading.value = true;
   loadingList.value = 'activos';
@@ -317,29 +319,41 @@ onMounted(() => {
 
 async function agregar() {
   loading.value = true;
-    loadingList.value = 'agregar';
-    
+  loadingList.value = 'agregar';
+
   try {
-  
-    const user= await useUsuarios.postUser({
-      idsede:idsedes.value.value,
+    // Verifica si el email ya existe
+    const existe = rows.value.some(user => user.email === email.value);
+    if (existe) {
+      Notify.create({
+        type: 'negative',
+        message: 'El email ya está registrado',
+        icon: 'error',
+        position: 'top',
+      });
+      return;
+    }
+
+    const user = await useUsuarios.postUser({
+      idsede: idsedes.value.value,
       nombre: nombre.value,
       telefono: telefono.value,
       email: email.value,
       roll: roll.value,
       password: password.value
+    });
 
-    })
     Notify.create({
       type: "positive",
       message: "Usuario creado exitosamente",
       icon: "check_circle",
-      position:"top",
+      position: "top",
     });
-    listarUsuarios()
-    limpiar()
-    verFormulario.value=false
-    return user
+
+    listarUsuarios();
+    limpiar();
+    verFormulario.value = false;
+    return user;
   } catch (error) {
     console.error("Error al agregar usuario:", error);
     Notify.create({
@@ -347,8 +361,10 @@ async function agregar() {
       message: "Error al agregar usuario",
       icon: "error",
     });
+  } finally {
+    loading.value = false;
+    loadingList.value = '';
   }
-
 }
 
 async function traer(user) {
@@ -367,31 +383,45 @@ async function traer(user) {
 }
 async function editar() {
   try {
-    await useUsuarios.putUser(id.value,{
-      idsede:idsedes.value.value,
-      nombre:nombre.value,
-      telefono:telefono.value,
-      email:email.value,
-      roll:roll.value,
-      password:password.value
-    })
+    // Verifica si el email ya existe (excluyendo al usuario actual)
+    const existe = rows.value.some(user => user.email === email.value && user._id !== id.value);
+    if (existe) {
+      Notify.create({
+        type: 'negative',
+        message: 'El email ya está registrado',
+        icon: 'error',
+        position: 'top',
+      });
+      return;
+    }
+
+    await useUsuarios.putUser(id.value, {
+      idsede: idsedes.value.value,
+      nombre: nombre.value,
+      telefono: telefono.value,
+      email: email.value,
+      roll: roll.value,
+      password: password.value
+    });
+
     Notify.create({
-            message: 'Usuario actualizado correctamente!', 
-            position: "top",
-            color: "green"
-        });
+      message: 'Usuario actualizado correctamente!',
+      position: "top",
+      color: "green"
+    });
   } catch (error) {
     Notify.create({
-            type: 'negative',
-            message: error.response?.data?.errors?.[0]?.msg || 'Error al modificar el usuario',
-        });
-        console.log('Error al modificar el usuario', error);  
-    
+      type: 'negative',
+      message: error.response?.data?.errors?.[0]?.msg || 'Error al modificar el usuario',
+    });
+    console.log('Error al modificar el usuario', error);
+  } finally {
+    listarUsuarios();
+    limpiar();
+    verFormulario.value = false;
   }
-  listarUsuarios()
-    limpiar()
-    verFormulario.value=false
 }
+
 
 async function activar(id) {
   loadingState.value[id] = true;
