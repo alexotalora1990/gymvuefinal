@@ -71,11 +71,20 @@ export const useClientesStore = defineStore("clientes", ()=>{
   
     const putSeguimiento= async(clienteId, seguimientoId, seguimiento)=> {
         
+        console.log(seguimiento);
+        console.log(seguimientoId);
+        console.log(clienteId);
+        
+        
         
         try {
           const response = await axios.put(`clientes/${clienteId}/seguimiento/${seguimientoId}`, seguimiento);
           return response.data;
-        } catch (error) {
+          
+        } 
+       
+        
+        catch (error) {
           console.error("Error al actualizar el seguimiento:", error);
           throw error;
         }

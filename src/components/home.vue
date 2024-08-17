@@ -71,16 +71,26 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUsuariosStore } from '../store/usuarios.js';
-import { routes } from "../routes/routes.js"
+import { routes } from "../routes/routes.js";
 
 const rightDrawerOpen = ref(false);
 const router = useRouter();
 const usuariosStore = useUsuariosStore();
-
 const user = usuariosStore.user;
+
+const selectedCard = ref(null);
+
+
+onMounted(() => {
+  const savedRoute = localStorage.getItem('selectedRoute');
+  if (savedRoute) {
+    selectedCard.value = JSON.parse(savedRoute);
+    router.push(selectedCard.value.path);
+  }
+});
 
 const toggleRightDrawer = () => {
   rightDrawerOpen.value = !rightDrawerOpen.value;
@@ -88,23 +98,25 @@ const toggleRightDrawer = () => {
 
 const logout = () => {
   usuariosStore.logout();
+  localStorage.removeItem('selectedRoute'); 
   router.push('/');
 };
 
 const goHome = () => {
   selectedCard.value = null;
+  localStorage.removeItem('selectedRoute'); 
   router.push('/home');
 };
 
-const selectedCard = ref(null);
-
 const handleNavigation = (route) => {
   selectedCard.value = route;
+  localStorage.setItem('selectedRoute', JSON.stringify(route)); 
   router.push(route.path);
 };
 
 const deselectCard = () => {
   selectedCard.value = null;
+  localStorage.removeItem('selectedRoute'); 
   router.push('/home');
 };
 
@@ -114,6 +126,7 @@ const filteredRoutes = computed(() => {
     return childRoute.meta.rol.includes(userRole);
   });
 });
+
 </script>
 
 <style scoped>

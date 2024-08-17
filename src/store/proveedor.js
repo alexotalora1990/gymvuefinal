@@ -1,160 +1,106 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
-import { Notify } from "quasar";
-// import { useUsuarioStore } from "./usuario.js";
-import axios from "axios";
+import {defineStore} from "pinia"
+import axios from "axios"
+import {ref} from "vue"
 
-export const useProveedorStore = defineStore("proveedor",()=>{
-    let loading = ref(false);
-    let proveedor = ref({})
-    // const useUsuario = useUsuarioStore();
-
- const listarProveedor= async () => {
-    try{
-        loading.value = true;
-        let res = await axios.get("api/proveedor/listar", {
-            // headers: {
-            //     token: useUsuario.token
-            // }
-        })
-        proveedor.value = res.data;
-        return res;
-    } catch (error){
-        console.error('Error al obtener la lista de proveedores', error);
-        throw error;
-    } finally {
-        loading.value = false;
-    } 
-    }
-
-    const listarProveedorActivo = async () => {
+export const useProveedorStore = defineStore("proveedores", ()=>{
+    let loading = ref(false)
+    
+    const getProveedor = async()=>{
         try {
-            loading.value = true
-            let res = await axios.get("api/proveedor/activos", {
-                // headers: {
-                //     token: useUsuario.token
-                // }
-            })
-            proveedor.value = res.data;
+            loading.value=true
+            const r = await axios.get("proveedor")
+            return r
+        } catch (error) {
+            return error
+        }finally{
+            loading.value=false
+        }
+    };
+
+
+    const getProveedoresActivos = async()=>{
+        try {
+            loading.value=true
+            const r = await axios.get("proveedor/activos",{
+              
+        });
+            return r
+        } catch (error) {
+            return error
+        }finally{
+            loading.value=false
+        }
+    };
+    const getProveedoresInactivos = async()=>{
+        try {
+            loading.value=true
+            const r = await axios.get("proveedor/inactivos",{
+               
+        });
+            return r
+        } catch (error) {
+            return error
+        }finally{
+            loading.value=false
+        }
+    };
+
+ 
+
+    const postProveedor = async (proveedor) => {
+        console.log(proveedor);
+        
+        try {
+            
+            let res = await axios.post('proveedor/agregar', proveedor);
+            console.log(proveedor);
+            
             return res;
+        } catch (error) {
+            console.error('Error al enviar el proveedor:', error);
+            throw error;  
+        } 
+    };
+    
+    const putProveedores =async (id, proveedor)=>{
+      
+        try {
+          
+            const r = await axios.put(`proveedor/editar/${id}`,proveedor)
+        console.log(proveedor);
+        
+            return r
+        } catch (error) {
+            return error
+        }
+    };
+    const putProveedoresActivar=async(id)=>{
+        loading.value=true
+        try {
+            const r = await axios.put(`proveedor/activar/${id}`)
+            return r
 
         } catch (error) {
-            console.error('Error al obtener la lista de proveedores activos', error);
-            throw error;
-
-        } finally {
-            loading.value = false
+            return error
+        }finally{
+            loading.value=false
         }
-    }  
-
-    const listarProveedorInactivo = async () => {
+    };
+    const putProveedoresDesactivar=async(id)=>{
+        loading.value=true
         try {
-            loading.value = true
-            let res = await axios.get("api/proveedor/inactivos", {
-                // headers: {
-                //     token: useUsuario.token
-                // }
-            })
-            proveedor.value = res.data;
-            return res;
+            const r = await axios.put(`proveedor/desactivar/${id}`)
+            return r
 
         } catch (error) {
-            console.error('Error al obtener la lista de proveedores inactivos', error);
-            throw error;
-
-        } finally {
-            loading.value = false
+            return error
+        }finally{
+            loading.value=false
         }
-    } 
+    };
 
- const postProveedor = async (data) => {
-    try {
-        loading.value = true;
-        let res = await axios.post("api/proveedor/agregar", data, {
-            // headers: {
-            //     token: useUsuario.token
-            // }
-        })
-        return res;
-    } catch (error){
-        loading.value = true
-        console.log(error);
-        throw error;
-    }finally{
-        loading.value = false;
-    }
-}
+   
 
-const putProveedor = async (id, data) => {
-    try {
-        loading.value = true;
-        let r = await axios.put(`api/proveedor/editar/${id}`, data, {
-            // headers: {
-            //     token: useUsuario.token
-            // }
-        });
-        return r;
-    } catch (error){
-        loading.value = true
-        console.log(error);
-        Notify.create({
-            type: "negative",
-            message: error.res.data.errors[0].msg,
-        });
-    }finally{
-        loading.value = false;
-    }
-};
+    return{ getProveedor, postProveedor, putProveedores,putProveedoresActivar,putProveedoresDesactivar,  getProveedoresActivos, getProveedoresInactivos, loading}
 
-const putProveedorActivo = async (id) => {
-    try {
-        loading.value = true;
-        let r = await axios.put(`api/proveedor/activar/${id}`, {}, {
-        //     headers: {
-        //         token: useUsuario.token
-        //     }
-        })
-        return r;
-
-    } catch (error){
-        loading.value = true
-        console.log(error);
-        Notify.create({
-            type: "negative",
-            message: error.res.data.errors[0].msg,
-        });
-    }finally{
-        loading.value = false;
-    }
-}
-const putProveedorInactivo = async (id) => {
-    try {
-        loading.value = true;
-        let r = await axios.put(`api/proveedor/desactivar/${id}`, {}, {
-            // headers: {
-            //     token: useUsuario.token
-            // }
-        })
-        return r;
-
-    } catch (error){
-        loading.value = true
-        console.log(error);
-        Notify.create({
-            type: "negative",
-            message: error.res.data.errors[0].msg,
-        });
-    }finally{
-        loading.value = false;
-    }
-}
-
-return { listarProveedor, listarProveedorActivo, listarProveedorInactivo, postProveedor, putProveedor, putProveedorActivo, putProveedorInactivo, loading, proveedor }
-
-},
-
-{
-    persist: true,
-},
-)
-
+})
